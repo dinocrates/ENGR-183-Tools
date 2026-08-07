@@ -21,7 +21,7 @@ Students install Octave locally in Week 1. This project is **not** a replacement
 - Embedded per-unit exercises inside Canvas pages, zero friction
 - A known-good environment for reproducing "it works on my machine" reports
 
-A working rubric harness already exists and runs under local Octave 8.4 (`engr183-octave` repo, `+engr183` package). **That harness is the contract.** This project wraps it in a browser runtime. It does not reimplement it.
+A working rubric harness exists at `octave-playground/testing-harness/` (`+engr183` package), verified locally under Octave 11.3.0 — not yet against the 8.4 students actually install; see M0-FINDINGS.md T0.3. **That harness is the contract.** This project wraps it in a browser runtime. It does not reimplement it. Whether it stays at this path or moves to a separate `engr183-octave` repo is still open — see §9.3.
 
 ## 2. Prior art — the CSIS-118B NASM playground
 
@@ -170,8 +170,8 @@ Note the split between `vfs/` and `starters/`. The harness and test specs are **
 
 ## 7. Milestones
 
-- **M0 — Feasibility spike (GATE).** Prove the kernel works. Go/no-go.
-- **M1 — Minimum viable playground.** One unit, harness running, deployed.
+- **M0 — Feasibility spike (GATE). DONE.** Prove the kernel works. See `M0-FINDINGS.md` — recommendation: proceed to M1, no scope cuts.
+- **M1 — Minimum viable playground (in progress).** One unit, harness running, deployed.
 - **M2 — Course content.** All units, scaffolding tooling.
 - **M3 — Student experience.** Persistence, export, reset, branding.
 - **M4 — Canvas integration.** Embedding, per-unit deep links.
@@ -180,9 +180,11 @@ Note the split between `vfs/` and `starters/`. The harness and test specs are **
 
 ## 8. Tickets
 
-### M0 — Feasibility spike (GATE)
+### M0 — Feasibility spike (GATE) — DONE
 
 > **Do not start M1 until M0 is complete and the go/no-go is recorded.** Every downstream ticket assumes the kernel works. If it doesn't, we want to know in a day, not a fortnight. Timebox: 1 day.
+
+**Complete — see `M0-FINDINGS.md` for the full per-ticket writeup.** T0.1–T0.9 all done; recommendation is to proceed to M1 with no scope reduction. Two new, non-blocking findings surfaced: native Windows can't run the build (needs WSL2/CI), and the harness prints two extra cosmetic warnings under WASM worth suppressing.
 
 **T0.1 — Stand up a bare JupyterLite + xeus-octave build**
 Build locally from the `jupyterlite/xeus-lite-demo` template. `environment.yml` targets `emscripten-forge-dev` and `conda-forge`, dependency `xeus-octave`.
@@ -362,15 +364,16 @@ Confirmed during design research (August 2026):
 - Template repo: `jupyterlite/xeus-lite-demo` (GitHub Pages quickstart).
 - Upstream caveat: adding custom conda packages is documented as supported for `xeus-python`; other kernels may be more limited. File mounting is separate and should be unaffected.
 
-Unverified and gating (see M0):
+Resolved by M0 (see `M0-FINDINGS.md` for full detail):
 
-- Whether files written via the JupyterLite contents drive are visible to the xeus-octave kernel filesystem (R6, T0.8).
-- Whether a xeus-octave kernel can be driven through `@jupyterlab/services` with no notebook frontend (T0.9).
-- The Octave version inside the WASM build, and its distance from the 8.4 students install locally (R2, T0.3).
-- Whether Octave graphics render under Emscripten at all (R4, T0.7).
+- **R6/T0.8 — contents drive → kernel filesystem:** confirmed working, both directions, live, no kernel restart needed. No fallback required.
+- **T0.9 — driving a kernel with no notebook frontend:** confirmed the kernel itself needs zero notebook-*cell* UI, but a generic external `@jupyterlab/services` client can't attach to a running kernel from outside the site's own JS bundle — `@jupyterlite/services` must be part of the same app bundle M1 builds (as already planned).
+- **R2/T0.3 — kernel Octave version:** 10.3.0, vs. 11.3.0 on the dev machine used for local comparison, vs. 8.4+ students actually install. A true 8.4 baseline is still outstanding — action item before signing off Goal 3.
+- **R4/T0.7 — graphics under Emscripten:** confirmed working (Plotly-backed `plot()`, verified visually). Units 8+ are not blocked. Only basic line plots tested so far; `subplot`/`hold on`/3D/image display are unverified.
 
-Confirmed by direct testing under local Octave 8.4.0:
+Confirmed by direct testing (`octave-playground/testing-harness/_verify/run.m`, local Octave 11.3.0, and in-kernel via M0's T0.4):
 
-- The `+engr183` harness passes, fails, and reports correctly across solved, unsolved, wrong-answer, missing-file, unset-output, and syntax-error cases.
-- `evalc` captures student stdout while assigning results — used to stop missing semicolons flooding the rubric report.
-- `onCleanup` path restoration prevents cross-unit function shadowing.
+- The `+engr183` harness passes and fails correctly for the solved and unsolved cases, with byte-identical report output between local Octave and the WASM kernel.
+- `evalc` captures student stdout while assigning results — used to stop missing semicolons flooding the rubric report. Confirmed under both local Octave and the WASM kernel (T0.5).
+- `onCleanup` path restoration works, but under the WASM kernel it also triggers two extra `warning()` lines not seen locally (xeus-octave's own `pause.m` gets shadowed during cleanup) — cosmetic, not tested locally, see M0-FINDINGS.md T0.4 for the fix.
+- **Not yet verified:** the wrong-answer, missing-file, unset-output, and syntax-error report paths (`compare.m`/`runTests.m` support them structurally, but only the solved/unsolved paths have actually been exercised). Worth a quick pass before M1 ships Unit 00.
