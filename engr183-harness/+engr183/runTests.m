@@ -46,7 +46,7 @@ function varargout = runTests(unit, varargin)
 
   % ---- put the student's work and the test specs on the path ------------
   oldPath = path();
-  cleanup = onCleanup(@() path(oldPath));
+  cleanup = onCleanup(@() engr183.restorePathQuietly(oldPath));
   addpath(workDir);
   addpath(testDir);
 
