@@ -1,0 +1,8 @@
+{
+  "XeusAddon": {
+    "mounts": [
+      "testing-harness:/engr183",
+      "testing-harness-solved:/engr183-solved"
+    ]
+  }
+}

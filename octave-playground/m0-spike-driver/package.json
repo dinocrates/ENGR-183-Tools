@@ -1,0 +1,19 @@
+{
+  "name": "m0-spike-driver",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@jupyterlab/services": "^7.5.10",
+    "@jupyterlite/services": "^0.8.1",
+    "esbuild": "^0.28.1",
+    "playwright": "^1.62.1"
+  }
+}
