@@ -28,20 +28,20 @@ You should see a version number printed back. Write it down — you will submit 
 
 ### 2. Get this repository
 
-Either clone it with git:
+This folder (`engr183-harness/`) lives inside the `ENGR-183-Tools` repo. Either clone the whole thing with git:
 
 ```
 git clone <repo-url>
 ```
 
-…or download the ZIP from the repository page and unzip it somewhere you will remember. Your Desktop is fine. A folder path with no spaces in it will save you headaches later.
+…or download the ZIP from the repository page and unzip it somewhere you will remember. Your Desktop is fine. A folder path with no spaces in it will save you headaches later. Either way, the files you need are in its `engr183-harness/` subfolder.
 
 ### 3. Point Octave at the course tools
 
-In Octave, navigate to the folder you just downloaded and run `setup`:
+In Octave, navigate to the `engr183-harness` folder inside what you just downloaded and run `setup`:
 
 ```matlab
-cd  ~/Desktop/engr183-octave      % <- change this to wherever you put it
+cd  ~/Desktop/ENGR-183-Tools/engr183-harness      % <- change this to wherever you put it
 setup
 ```
 

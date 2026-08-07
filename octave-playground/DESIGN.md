@@ -21,7 +21,7 @@ Students install Octave locally in Week 1. This project is **not** a replacement
 - Embedded per-unit exercises inside Canvas pages, zero friction
 - A known-good environment for reproducing "it works on my machine" reports
 
-A working rubric harness exists at `octave-playground/testing-harness/` (`+engr183` package), verified locally under Octave 11.3.0 — not yet against the 8.4 students actually install; see M0-FINDINGS.md T0.3. **That harness is the contract.** This project wraps it in a browser runtime. It does not reimplement it. Whether it stays at this path or moves to a separate `engr183-octave` repo is still open — see §9.3.
+A working rubric harness exists at `engr183-harness/` (`+engr183` package, a sibling top-level folder in this monorepo — see §9.3), verified locally under Octave 11.3.0 — not yet against the 8.4 students actually install; see M0-FINDINGS.md T0.3. **That harness is the contract.** This project wraps it in a browser runtime. It does not reimplement it.
 
 ## 2. Prior art — the CSIS-118B NASM playground
 
@@ -129,7 +129,7 @@ This also simplifies two downstream features. **Export** becomes a direct downlo
 
 ## 6. Repository layout
 
-This project lives at `octave-playground/` inside the `ENGR-183-Tools` monorepo, alongside sibling tools (visualizers, calculators, graphing tools — each in their own top-level folder). Everything below is relative to that folder:
+This project lives at `octave-playground/` inside the `ENGR-183-Tools` monorepo, alongside sibling tools (visualizers, calculators, graphing tools — each in their own top-level folder) and alongside `engr183-harness/`, the source-of-truth `+engr183` package students run locally under plain Octave. Everything below is relative to `octave-playground/` unless noted:
 
 ```
 ENGR-183-Tools/
@@ -157,7 +157,7 @@ ENGR-183-Tools/
     │       ├── +engr183/                # harness — VENDORED, see below
     │       └── tests/
     ├── scripts/
-    │   ├── sync_harness.py              # pull harness from engr183-octave
+    │   ├── sync_harness.py              # pull harness from ../engr183-harness
     │   └── new_unit.py                  # scaffold a unit
     └── DESIGN.md
 ```
@@ -166,7 +166,7 @@ Note: `.github/workflows/` for a single tool inside a monorepo normally lives at
 
 Note the split between `vfs/` and `starters/`. The harness and test specs are **build-time mounts** — read-only, identical for every student, never editable. Starter files are **seeds** copied into the student's writable contents drive on first visit to a unit. Students can break their own files freely; they cannot break the harness or edit the tests.
 
-**On vendoring the harness:** `vfs/engr183/` is a *copy* of the `engr183-octave` repo, synced by script, never hand-edited. The source of truth is `engr183-octave`. If the two drift, students get different rubric results in browser vs. local, which destroys the core guarantee. `sync_harness.py` must fail loudly on local modification.
+**On vendoring the harness:** `vfs/engr183/` is a *copy* of `../engr183-harness/` (`+engr183/` and `tests/`), and `starters/` is a copy of `../engr183-harness/assignments/`, both synced by script, never hand-edited. The source of truth is `engr183-harness/` — same monorepo, own top-level folder, so it stays independently clone/download-able for students who never touch the browser (§9.3). If the two drift, students get different rubric results in browser vs. local, which destroys the core guarantee. `sync_harness.py` must fail loudly on local modification.
 
 ## 7. Milestones
 
@@ -235,7 +235,7 @@ Layout per §6, under `octave-playground/` in the `ENGR-183-Tools` monorepo. Vit
 *Acceptance:* Push to main touching `octave-playground/**` publishes a working site at `<pages-url>/octave-playground/`, and does not disturb other tools already on Pages.
 
 **T1.2 — `sync_harness.py`**
-Copies `+engr183/` and `tests/` from the `engr183-octave` repo into `vfs/engr183/`, and `assignments/` into `starters/`. Records source commit SHA in `vfs/engr183/HARNESS_VERSION`. Refuses to overwrite locally-modified files without `--force`.
+Copies `+engr183/` and `tests/` from `../engr183-harness/` into `vfs/engr183/`, and `../engr183-harness/assignments/` into `starters/`. Records the source commit SHA (same monorepo, so this is `git log -1 --format=%H -- engr183-harness/`) in `vfs/engr183/HARNESS_VERSION`. Refuses to overwrite locally-modified files without `--force`.
 *Acceptance:* Sync works; drift is detected and reported; SHA recorded.
 
 **T1.3 — Pin the kernel environment**
@@ -337,8 +337,8 @@ Usable at Canvas iframe dimensions and on tablets.
 ## 9. Decisions needed from Stephen
 
 1. ~~**Notebook cells vs. file-based editing.**~~ **RESOLVED — file-based.** Students have zero tolerance for divergence from the local workflow, so the notebook layer is dropped entirely rather than disguised. See §4.1. This raises M1 cost meaningfully; see §11 for the interim plan.
-2. **Scope if plotting fails (R4).** Units 0–7 only, or invoke a fallback?
-3. **Repo split.** Keep `engr183-octave` (harness) and `engr183-playground` separate with a sync script, or merge into a monorepo? *Recommendation: separate — the harness must stay usable by students who never touch the browser.*
+2. ~~**Scope if plotting fails (R4).**~~ **RESOLVED — moot.** M0/T0.7 confirmed plotting works under Emscripten. No fallback needed; Units 8+ are in scope.
+3. ~~**Repo split.**~~ **RESOLVED — monorepo, own top-level folder.** `engr183-harness/` sits alongside `octave-playground/` in `ENGR-183-Tools`, not a separate GitHub repo. Same rationale as the original recommendation (independently usable by students who never touch the browser) without the overhead of two repos to keep in sync.
 4. **Theme reuse.** Should the theme derive tokens from the existing visualizer suite's design system, or stand alone?
 
 ## 10. Interim coverage while M1 is built
@@ -371,7 +371,7 @@ Resolved by M0 (see `M0-FINDINGS.md` for full detail):
 - **R2/T0.3 — kernel Octave version:** 10.3.0, vs. 11.3.0 on the dev machine used for local comparison, vs. 8.4+ students actually install. A true 8.4 baseline is still outstanding — action item before signing off Goal 3.
 - **R4/T0.7 — graphics under Emscripten:** confirmed working (Plotly-backed `plot()`, verified visually). Units 8+ are not blocked. Only basic line plots tested so far; `subplot`/`hold on`/3D/image display are unverified.
 
-Confirmed by direct testing (`octave-playground/testing-harness/_verify/run.m`, local Octave 11.3.0, and in-kernel via M0's T0.4):
+Confirmed by direct testing (`engr183-harness/_verify/run.m`, local Octave 11.3.0, and in-kernel via M0's T0.4):
 
 - The `+engr183` harness passes and fails correctly for the solved and unsolved cases, with byte-identical report output between local Octave and the WASM kernel.
 - `evalc` captures student stdout while assigning results — used to stop missing semicolons flooding the rubric report. Confirmed under both local Octave and the WASM kernel (T0.5).
