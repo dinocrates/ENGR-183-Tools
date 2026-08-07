@@ -37,6 +37,13 @@ Last semester's x86-64 NASM playground is the model. Feature parity target:
 | GitHub Pages hosting | Same |
 | — (new) | Persistence + export, reset-to-starter |
 
+**Confirmed by inspecting the actual repo (`dinocrates/x86-64-CSIS-118`, `webapp/src/`)
+during M1 planning:** its runtime — `blink`, a general x86-64 emulator compiled to WASM,
+bound via raw memory-struct access, with a bespoke sentinel-injection test harness — is
+architecturally unrelated to JupyterLite + xeus-octave and not something to replicate,
+in runtime or in UX. M1's UI instead mirrors the actual GNU Octave desktop GUI as
+closely as possible (Command Window, Editor, file browser) — see §4 and M1's plan.
+
 ## 3. Goals and non-goals
 
 ### Goals
@@ -58,18 +65,20 @@ Last semester's x86-64 NASM playground is the model. Feature parity target:
 
 ## 4. Architecture
 
-The student sees files. There is no notebook UI anywhere in the product.
+The student sees files. There is no notebook UI anywhere in the product. The UI mirrors
+the real GNU Octave desktop GUI as closely as possible — same panel names, same default
+arrangement — so a student who has only used desktop Octave recognizes it immediately:
 
 ```
 GitHub Pages (static, no server)
-└── engr183-playground  (Vite + TypeScript app)
-    ├── UI shell
-    │   ├── File tree        assignments/unit03/  →  addTwo.m, circleArea.m …
-    │   ├── Editor tabs      Monaco, one tab per .m file
-    │   ├── Console pane     rubric report + Octave stdout
-    │   └── Actions          Run Tests · Run File · Reset · Download
+└── octave-playground  (Vite + React + TypeScript app)
+    ├── UI shell — modeled on the actual Octave desktop GUI
+    │   ├── File Browser (left)     assignments/unit03/  →  addTwo.m, circleArea.m …
+    │   ├── Editor (top-right)      Monaco, one tab per .m file, tabbed like Octave's own
+    │   ├── Command Window (bottom-right)   rubric report + Octave stdout
+    │   └── Toolbar                 Run Tests · Run File · Reset · Download
     │
-    ├── @jupyterlab/services  ──►  JupyterLite kernel manager
+    ├── @jupyterlite/services  ──►  JupyterLite kernel manager
     │                               └── xeus-octave (WebAssembly)
     │                                   └── Emscripten virtual filesystem
     │                                       ├── /engr183/+engr183/   harness (build-time mount, read-only)
@@ -79,7 +88,7 @@ GitHub Pages (static, no server)
     └── No notebook. No cells. No Jupyter chrome.
 ```
 
-We use JupyterLite for its kernel plumbing — the WASM build, the kernel lifecycle, the contents drive — and discard its frontend entirely. Kernels are driven directly through `@jupyterlab/services` by sending execute requests and reading the reply stream.
+We use JupyterLite for its kernel plumbing — the WASM build, the kernel lifecycle, the contents drive — and discard its frontend entirely. Kernels are driven directly through `@jupyterlite/services`, imported into our own app bundle, by sending execute requests and reading the reply stream (see M0-FINDINGS.md T0.9 for why it has to be built in from app-startup rather than attached after the fact).
 
 ### 4.1 Why files, not notebooks
 
@@ -100,8 +109,8 @@ This also simplifies two downstream features. **Export** becomes a direct downlo
 | Decision | Choice | Rationale |
 |---|---|---|
 | Runtime | `xeus-octave` compiled to `emscripten-wasm32` | Only maintained path to real Octave in-browser |
-| Frontend | Vite + TypeScript, Monaco editor | Matches the existing visualizer suite stack; full control over the file-based UI |
-| Kernel plumbing | JupyterLite + `@jupyterlab/services` | Kernel lifecycle and contents drive without the notebook frontend |
+| Frontend | Vite + React + TypeScript + Tailwind, Monaco editor | Matches the actual sibling-tool stack (`web-demos`, `engr-120-tools`); full control over the file-based UI |
+| Kernel plumbing | JupyterLite + `@jupyterlite/services` | Kernel lifecycle and contents drive without the notebook frontend. M0/T0.9: must be imported into our own app bundle at startup, not attached externally after the fact — a bare `@jupyterlab/services` client doesn't work against a running jupyterlite site |
 | Package source | `emscripten-forge-dev` + `conda-forge` | Where the WASM build is published |
 | Build tool | `jupyterlite-xeus` (PyPI, 4.0.5) | Handles env solve + VFS mounting |
 | Hosting | GitHub Pages via Actions | Matches existing course tooling |
@@ -137,17 +146,18 @@ ENGR-183-Tools/
     ├── .github/workflows/deploy.yml     # build + publish to Pages — scoped to this path; see §3 note on multi-tool Pages layout, deferred to T1.1
     ├── environment.yml                  # kernel env spec
     ├── jupyter_lite_config.json         # mounts, addon config
-    ├── src/                             # the Vite + TS application
-    │   ├── main.ts
-    │   ├── kernel/                      # @jupyterlab/services wrapper
+    ├── src/                             # the Vite + React + TS application
+    │   ├── main.tsx
+    │   ├── App.tsx
+    │   ├── kernel/                      # @jupyterlite/services wrapper
     │   │   ├── session.ts               # start, restart, execute, stream stdout
     │   │   └── files.ts                 # contents drive <-> editor buffers
-    │   ├── ui/
-    │   │   ├── FileTree.ts
-    │   │   ├── EditorTabs.ts            # Monaco
-    │   │   ├── Console.ts
-    │   │   └── Toolbar.ts
-    │   └── theme/                       # MSJC dark blueprint tokens
+    │   ├── components/                 # named after their real Octave GUI counterparts
+    │   │   ├── FileBrowser.tsx          # left panel
+    │   │   ├── Editor.tsx               # top-right, Monaco, tabbed
+    │   │   ├── CommandWindow.tsx        # bottom-right
+    │   │   └── Toolbar.tsx
+    │   └── styles/                      # MSJC dark blueprint tokens (Tailwind)
     ├── starters/                        # seed files copied into the drive per unit
     │   └── unit00/  addTwo.m  circleArea.m  greet.m
     ├── units/                           # per-unit metadata + problem statements
@@ -243,19 +253,19 @@ Lock exact versions in `environment.yml`. Do not float on a dev channel — a si
 *Acceptance:* Two builds a week apart produce the same kernel version.
 
 **T1.4 — Kernel session wrapper (`src/kernel/session.ts`)**
-Start a xeus-octave kernel via `@jupyterlab/services`. Expose `execute(code)` returning streamed stdout/stderr, plus `restart()`. Handle kernel-not-ready and kernel-died states with actionable messages.
-*Acceptance:* Unit-testable module; arbitrary Octave runs and returns output; restart recovers a wedged kernel.
+Start a xeus-octave kernel via `@jupyterlite/services`, imported directly into the app bundle (see M0-FINDINGS.md T0.9 — a bare `@jupyterlab/services` client doesn't work against jupyterlite from outside its own bundle). Expose `execute(code)` returning streamed stdout/stderr, plus `restart()`. Handle kernel-not-ready and kernel-died states with actionable messages. Treat this ticket as the M1 risk spike: validate it standalone before building the file tree/editor/console on top of it.
+*Acceptance:* Unit-testable module; arbitrary Octave runs and returns output; restart recovers a wedged kernel; zero notebook/lab frontend needed to make it work.
 
 **T1.5 — File bridge (`src/kernel/files.ts`)**
 Read and write `.m` files through the contents drive. Seed a unit's starters on first visit. Track dirty buffers and flush them before any execution. Implements the R6 fallback path if T0.8 failed.
 *Acceptance:* A file edited in the browser is what the kernel executes, every time, with no manual save step.
 
-**T1.6 — File tree and editor tabs**
-Monaco with Octave/MATLAB syntax highlighting. Tree lists the current unit's `.m` files. Tabs, dirty indicators, keyboard save.
+**T1.6 — File Browser and Editor**
+Monaco with Octave/MATLAB syntax highlighting, named and arranged after Octave's own GUI (File Browser left, Editor top-right, tabbed). Tree lists the current unit's `.m` files. Tabs, dirty indicators, keyboard save.
 *Acceptance:* A student can open, edit, and switch between the three Unit 00 files.
 
-**T1.7 — Console pane and Run Tests**
-Toolbar button executes `engr183.runTests('unitNN')`. Stdout renders as monospace preformatted text, unmodified. Also wire Run File.
+**T1.7 — Command Window and Run Tests**
+Toolbar button executes `engr183.runTests('unitNN')`. Stdout renders as monospace preformatted text, unmodified, in the Command Window panel (bottom-right, matching Octave's own layout). Also wire Run File.
 *Acceptance:* Rubric report in the browser is **character-for-character identical** to the same report in a local terminal.
 
 **T1.8 — Unit 00 end to end**
