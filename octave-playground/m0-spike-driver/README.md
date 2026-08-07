@@ -20,3 +20,21 @@ Requires the M0 spike site built and served locally (see M0-FINDINGS.md T0.1) at
   from *outside* the site's own JS bundle (a fresh `@jupyterlab/services` client, and a
   raw WebSocket to the app's own kernel id). Both fail — see M0-FINDINGS.md T0.9 for
   why, and what it means for M1.
+
+## T1.4 (M1 kernel session wrapper spike)
+
+Requires `octave-playground` built and served locally (`npm run build && npm run
+preview -- --port 5183`), with `public/xeus/` populated (`scripts/build-kernel-assets.sh`).
+
+- `t14-spike.js` — first pass: start the kernel, check status only.
+- `t14-full.js` — start the kernel and execute `1+1`, checking real output.
+- `t14-netdebug.js` — traces every `/xeus/`-ish network request/response, used to find
+  two upstream `@jupyterlite/xeus` + Vite bugs (see `../src/kernel/session.ts`'s header
+  comment and `../scripts/vendor-worker-assets.mjs`): a hardcoded `{type: 'module'}`
+  Worker option that breaks Emscripten's `importScripts()`-based glue (patched via
+  `../patches/`), and two binary assets (`libz.so`, `unpack-*.wasm`) that Vite
+  references by hashed URL but never actually copies into the build output.
+- `t14-harness-run.js` — the full loop: write unsolved-stub Octave source directly into
+  the mounted `/engr183/assignments/unit00/` path in the kernel filesystem, then run
+  `engr183.runTests('unit00')` — validates the "write dirty buffers to the VFS, then
+  execute" pattern DESIGN.md §4.2 and T1.5 (file bridge) depend on.

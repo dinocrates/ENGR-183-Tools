@@ -1,0 +1,95 @@
+name: Deploy ENGR-183 Tools to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'octave-playground/**'
+      - 'engr183-harness/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: octave-playground/package-lock.json
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup micromamba
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          micromamba-version: '1.5.8-0'
+          environment-name: placeholder
+          create-args: python=3.12
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Sync harness into octave-playground
+        working-directory: octave-playground
+        run: python3 scripts/sync_harness.py
+
+      - name: Install octave-playground dependencies
+        working-directory: octave-playground
+        run: npm ci
+
+      - name: Build kernel assets
+        working-directory: octave-playground
+        shell: bash -l {0}
+        run: ./scripts/build-kernel-assets.sh
+
+      - name: Build octave-playground
+        working-directory: octave-playground
+        run: npm run build
+
+      - name: Assemble Pages artifact
+        run: |
+          mkdir -p _site/octave-playground
+          cp index.html _site/index.html
+          cp -R octave-playground/dist/. _site/octave-playground/
+          touch _site/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

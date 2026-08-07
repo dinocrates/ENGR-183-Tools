@@ -5,3 +5,6 @@ octave-playground/m0-spike/
 octave-playground/m0-spike-driver/node_modules/
 octave-playground/m0-spike-driver/*.png
 octave-playground/m0-spike-driver/driver-bundle.js
+
+# Claude Code session-local artifacts (lock files etc.)
+.claude/

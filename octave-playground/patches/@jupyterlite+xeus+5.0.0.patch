@@ -1,0 +1,19 @@
+diff --git a/node_modules/@jupyterlite/xeus/lib/kernel.js b/node_modules/@jupyterlite/xeus/lib/kernel.js
+index 5c56914..f8a7699 100644
+--- a/node_modules/@jupyterlite/xeus/lib/kernel.js
++++ b/node_modules/@jupyterlite/xeus/lib/kernel.js
+@@ -22,12 +22,12 @@ export class WebWorkerKernel extends WebWorkerKernelBase {
+     initWorker(options) {
+         if (crossOriginIsolated) {
+             return new Worker(new URL('./coincident.worker.js', import.meta.url), {
+-                type: 'module'
++                
+             });
+         }
+         else {
+             return new Worker(new URL('./comlink.worker.js', import.meta.url), {
+-                type: 'module'
++                
+             });
+         }
+     }

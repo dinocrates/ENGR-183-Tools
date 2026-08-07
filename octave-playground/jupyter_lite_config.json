@@ -1,0 +1,5 @@
+{
+  "XeusAddon": {
+    "mounts": ["vfs/engr183:/engr183"]
+  }
+}
