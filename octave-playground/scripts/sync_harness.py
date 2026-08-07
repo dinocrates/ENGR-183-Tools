@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Vendor engr183-harness/ into octave-playground/vfs and starters.
+"""Vendor engr183-harness/ into octave-playground/vfs and public/starters.
 
 Source of truth is ../engr183-harness (same monorepo). This script copies:
     engr183-harness/+engr183/    -> vfs/engr183/+engr183/
     engr183-harness/tests/       -> vfs/engr183/tests/
-    engr183-harness/assignments/ -> starters/
+    engr183-harness/assignments/ -> public/starters/
+
+public/starters/ (not a bare starters/) because the React app fetches
+starter content at runtime to seed the browser drive on first visit --
+it has to be under public/ to be servable as a static asset.
 
 and records the source commit SHA in vfs/engr183/HARNESS_VERSION.
 
@@ -28,7 +32,7 @@ MANIFEST_PATH = ROOT / "scripts" / ".sync_manifest.json"
 SYNC_PAIRS = [
     (HARNESS_SRC / "+engr183", ROOT / "vfs" / "engr183" / "+engr183"),
     (HARNESS_SRC / "tests", ROOT / "vfs" / "engr183" / "tests"),
-    (HARNESS_SRC / "assignments", ROOT / "starters"),
+    (HARNESS_SRC / "assignments", ROOT / "public" / "starters"),
 ]
 
 

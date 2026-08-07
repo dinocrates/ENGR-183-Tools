@@ -1,0 +1,6 @@
+{
+  "id": "unit00",
+  "title": "Unit 00 — Getting Started",
+  "description": "Prove that Octave is installed and working, and get used to how your work is checked all semester. The math is deliberately easy.",
+  "files": ["addTwo.m", "circleArea.m", "greet.m"]
+}

@@ -38,5 +38,5 @@ public/assets/
 # these and must stay gitignored alongside them, or a fresh clone falsely
 # detects "drift" against a manifest whose files were never checked out.
 vfs/
-starters/
+public/starters/
 scripts/.sync_manifest.json

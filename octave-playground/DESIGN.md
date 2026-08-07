@@ -143,8 +143,8 @@ This project lives at `octave-playground/` inside the `ENGR-183-Tools` monorepo,
 ```
 ENGR-183-Tools/
 └── octave-playground/
-    ├── .github/workflows/deploy.yml     # build + publish to Pages — scoped to this path; see §3 note on multi-tool Pages layout, deferred to T1.1
-    ├── environment.yml                  # kernel env spec
+    ├── .github/build-environment.yml    # the *build tool* env (jupyterlite-xeus itself) -- not the kernel
+    ├── environment.yml                  # kernel env spec (pinned, T1.3)
     ├── jupyter_lite_config.json         # mounts, addon config
     ├── src/                             # the Vite + React + TS application
     │   ├── main.tsx
@@ -157,26 +157,30 @@ ENGR-183-Tools/
     │   │   ├── Editor.tsx               # top-right, Monaco, tabbed
     │   │   ├── CommandWindow.tsx        # bottom-right
     │   │   └── Toolbar.tsx
+    │   ├── units/                       # per-unit metadata (id, title, description, file list)
+    │   │   └── unit00.json
     │   └── styles/                      # MSJC dark blueprint tokens (Tailwind)
-    ├── starters/                        # seed files copied into the drive per unit
-    │   └── unit00/  addTwo.m  circleArea.m  greet.m
-    ├── units/                           # per-unit metadata + problem statements
-    │   └── unit00.json
+    ├── public/
+    │   ├── starters/                    # seed files fetched at runtime to seed the drive per unit
+    │   │   └── unit00/  addTwo.m  circleArea.m  greet.m
+    │   └── xeus/                        # kernel assets, built not committed (T1.3/T1.4)
     ├── vfs/                             # build-time mount into kernel FS
     │   └── engr183/
     │       ├── +engr183/                # harness — VENDORED, see below
     │       └── tests/
     ├── scripts/
     │   ├── sync_harness.py              # pull harness from ../engr183-harness
+    │   ├── build-kernel-assets.sh       # runs jupyter lite build -> public/xeus/
+    │   ├── vendor-worker-assets.mjs     # Vite/@jupyterlite/xeus asset workaround, see T1.4
     │   └── new_unit.py                  # scaffold a unit
     └── DESIGN.md
 ```
 
-Note: `.github/workflows/` for a single tool inside a monorepo normally lives at the repo root (GitHub only triggers workflows defined there), scoped with a `paths:` filter on this folder. It's placed here for readability; T1.1 should move the actual YAML to `ENGR-183-Tools/.github/workflows/` when the multi-tool CI story is settled.
+`.github/workflows/pages.yml` actually lives at the `ENGR-183-Tools` repo root, not here — GitHub only triggers workflows defined at the repo root. It's `paths`-filtered to `octave-playground/**` and `engr183-harness/**`, and handles the full pipeline: sync harness, `npm ci`, build kernel assets, `vite build`, assemble into `_site/octave-playground/`.
 
-Note the split between `vfs/` and `starters/`. The harness and test specs are **build-time mounts** — read-only, identical for every student, never editable. Starter files are **seeds** copied into the student's writable contents drive on first visit to a unit. Students can break their own files freely; they cannot break the harness or edit the tests.
+Note the split between `vfs/` and `public/starters/`. The harness and test specs are **build-time mounts** — read-only, identical for every student, never editable. Starter files are **seeds** the app fetches at runtime to seed the student's writable contents drive on first visit to a unit. Students can break their own files freely; they cannot break the harness or edit the tests.
 
-**On vendoring the harness:** `vfs/engr183/` is a *copy* of `../engr183-harness/` (`+engr183/` and `tests/`), and `starters/` is a copy of `../engr183-harness/assignments/`, both synced by script, never hand-edited. The source of truth is `engr183-harness/` — same monorepo, own top-level folder, so it stays independently clone/download-able for students who never touch the browser (§9.3). If the two drift, students get different rubric results in browser vs. local, which destroys the core guarantee. `sync_harness.py` must fail loudly on local modification.
+**On vendoring the harness:** `vfs/engr183/` is a *copy* of `../engr183-harness/` (`+engr183/` and `tests/`), and `public/starters/` is a copy of `../engr183-harness/assignments/`, both synced by script, never hand-edited. The source of truth is `engr183-harness/` — same monorepo, own top-level folder, so it stays independently clone/download-able for students who never touch the browser (§9.3). If the two drift, students get different rubric results in browser vs. local, which destroys the core guarantee. `sync_harness.py` must fail loudly on local modification.
 
 ## 7. Milestones
 
@@ -245,7 +249,7 @@ Layout per §6, under `octave-playground/` in the `ENGR-183-Tools` monorepo. Vit
 *Acceptance:* Push to main touching `octave-playground/**` publishes a working site at `<pages-url>/octave-playground/`, and does not disturb other tools already on Pages.
 
 **T1.2 — `sync_harness.py`**
-Copies `+engr183/` and `tests/` from `../engr183-harness/` into `vfs/engr183/`, and `../engr183-harness/assignments/` into `starters/`. Records the source commit SHA (same monorepo, so this is `git log -1 --format=%H -- engr183-harness/`) in `vfs/engr183/HARNESS_VERSION`. Refuses to overwrite locally-modified files without `--force`.
+Copies `+engr183/` and `tests/` from `../engr183-harness/` into `vfs/engr183/`, and `../engr183-harness/assignments/` into `public/starters/`. Records the source commit SHA (same monorepo, so this is `git log -1 --format=%H -- engr183-harness/`) in `vfs/engr183/HARNESS_VERSION`. Refuses to overwrite locally-modified files without `--force`.
 *Acceptance:* Sync works; drift is detected and reported; SHA recorded.
 
 **T1.3 — Pin the kernel environment**
@@ -385,5 +389,5 @@ Confirmed by direct testing (`engr183-harness/_verify/run.m`, local Octave 11.3.
 
 - The `+engr183` harness passes and fails correctly for the solved and unsolved cases, with byte-identical report output between local Octave and the WASM kernel.
 - `evalc` captures student stdout while assigning results — used to stop missing semicolons flooding the rubric report. Confirmed under both local Octave and the WASM kernel (T0.5).
-- `onCleanup` path restoration works, but under the WASM kernel it also triggers two extra `warning()` lines not seen locally (xeus-octave's own `pause.m` gets shadowed during cleanup) — cosmetic, not tested locally, see M0-FINDINGS.md T0.4 for the fix.
+- `onCleanup` path restoration used to trigger extra `warning()` lines under the WASM kernel not seen locally (xeus-octave's own `pause.m` gets shadowed during cleanup, plus a downstream `__have_gnuplot__` warning). **Fixed in M1**: `+engr183/restorePathQuietly.m` wraps the restore in `warning('off'/'on', 'all')`. Verified clean (zero extra output) in both local Octave and the browser kernel.
 - **Not yet verified:** the wrong-answer, missing-file, unset-output, and syntax-error report paths (`compare.m`/`runTests.m` support them structurally, but only the solved/unsolved paths have actually been exercised). Worth a quick pass before M1 ships Unit 00.

@@ -4,11 +4,10 @@
 // see M0-FINDINGS.md T0.9 for why a bare @jupyterlab/services client can't
 // do this from outside its own bundle, and why this has to be built in here
 // instead.
-import { KernelMessage, ContentsManager } from '@jupyterlab/services';
-import { KernelSpecs, BrowserStorageDrive, type IKernel } from '@jupyterlite/services';
+import { KernelMessage, type ContentsManager } from '@jupyterlab/services';
+import { KernelSpecs, type IKernel } from '@jupyterlite/services';
 import { WebWorkerKernel } from '@jupyterlite/xeus';
 import { PageConfig } from '@jupyterlab/coreutils';
-import localforage from 'localforage';
 
 const KERNEL_NAME = 'xoctave';
 const ENV_NAME = 'xeus-kernel';
@@ -36,15 +35,14 @@ export class OctaveKernelSession {
   private kernel: IKernel | null = null;
   private kernelSpecs = new KernelSpecs();
   private sessionId = crypto.randomUUID();
+  private contentsManager: ContentsManager | null = null;
 
-  async start(): Promise<void> {
+  /** contentsManager is shared with files.ts's UnitFiles -- both the kernel
+   *  (mountDrive: true, below) and the browser-side file bridge need to see
+   *  the same BrowserStorageDrive. */
+  async start(contentsManager: ContentsManager): Promise<void> {
     ensurePageConfig();
-
-    const drive = new BrowserStorageDrive({
-      name: 'engr183-drive',
-      localforage,
-    });
-    const contentsManager = new ContentsManager({ defaultDrive: drive });
+    this.contentsManager = contentsManager;
 
     const kernelSpec = {
       name: KERNEL_NAME,
@@ -88,9 +86,12 @@ export class OctaveKernelSession {
   }
 
   async restart(): Promise<void> {
+    if (!this.contentsManager) {
+      throw new Error('Kernel was never started');
+    }
     this.kernel?.dispose();
     this.kernel = null;
-    await this.start();
+    await this.start(this.contentsManager);
   }
 
   /** Execute code, streaming stdout/stderr chunks as they arrive. */

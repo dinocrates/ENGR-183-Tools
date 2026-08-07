@@ -38,3 +38,23 @@ preview -- --port 5183`), with `public/xeus/` populated (`scripts/build-kernel-a
   the mounted `/engr183/assignments/unit00/` path in the kernel filesystem, then run
   `engr183.runTests('unit00')` — validates the "write dirty buffers to the VFS, then
   execute" pattern DESIGN.md §4.2 and T1.5 (file bridge) depend on.
+
+## T1.5-T1.7 (real UI: file bridge, File Browser/Editor, Command Window/Toolbar)
+
+Same serving setup as T1.4 above.
+
+- `t16-app.js` — loads the real app, screenshots it once the kernel reports ready.
+- `t16-runtests.js` — clicks Run Tests against the unsolved starters, checks the
+  report shown in the Command Window.
+- `t16-solve-all.js` — types real solutions into all three files via the actual Monaco
+  editor (tab-switching included), clicks Run Tests, expects 30/30.
+- `t16-persist.js` — edits a file, reloads the page, confirms the edit is still there
+  (`files.ts`'s `BrowserStorageDrive`-backed persistence).
+- `t16-final-screenshot.js` — same as `t16-solve-all.js`, saved for a clean reference
+  screenshot rather than debugging.
+
+Note: `files.ts`'s `buildWriteFilesCode` originally used `base64_decode` to get file
+content into the kernel without Octave string-escaping issues. That approach is
+abandoned — `base64_decode` is broken in this xeus-octave build (fails even round-
+tripping Octave's own `base64_encode` output, confirmed directly against the kernel).
+It now writes raw `uint8` byte arrays via `fwrite` instead.
