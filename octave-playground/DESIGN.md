@@ -3,8 +3,10 @@
 **Status:** Draft for implementation
 **Owner:** Stephen Hamrick, MSJC
 **Implementer:** Claude Code
-**Target repo:** `dinocrates/engr183-playground`
+**Target repo:** `dinocrates/ENGR-183-Tools`, path `octave-playground/`
 **Deploy target:** GitHub Pages, embedded in Canvas via iframe
+
+`ENGR-183-Tools` is a monorepo hosting multiple course tools (this playground, visualizers, calculators, graphing tools). Everything below that refers to "the repo" or gives root-relative paths (`src/`, `starters/`, `.github/workflows/`, etc.) means `octave-playground/` within that monorepo, not the repo root — see §6. The multi-tool GitHub Pages layout (shared workflow, URL structure, whether tools share a build step) is an open question deferred to T1.1; M0 has no deploy step and isn't blocked by it.
 
 ---
 
@@ -127,35 +129,40 @@ This also simplifies two downstream features. **Export** becomes a direct downlo
 
 ## 6. Repository layout
 
+This project lives at `octave-playground/` inside the `ENGR-183-Tools` monorepo, alongside sibling tools (visualizers, calculators, graphing tools — each in their own top-level folder). Everything below is relative to that folder:
+
 ```
-engr183-playground/
-├── .github/workflows/deploy.yml     # build + publish to Pages
-├── environment.yml                  # kernel env spec
-├── jupyter_lite_config.json         # mounts, addon config
-├── src/                             # the Vite + TS application
-│   ├── main.ts
-│   ├── kernel/                      # @jupyterlab/services wrapper
-│   │   ├── session.ts               # start, restart, execute, stream stdout
-│   │   └── files.ts                 # contents drive <-> editor buffers
-│   ├── ui/
-│   │   ├── FileTree.ts
-│   │   ├── EditorTabs.ts            # Monaco
-│   │   ├── Console.ts
-│   │   └── Toolbar.ts
-│   └── theme/                       # MSJC dark blueprint tokens
-├── starters/                        # seed files copied into the drive per unit
-│   └── unit00/  addTwo.m  circleArea.m  greet.m
-├── units/                           # per-unit metadata + problem statements
-│   └── unit00.json
-├── vfs/                             # build-time mount into kernel FS
-│   └── engr183/
-│       ├── +engr183/                # harness — VENDORED, see below
-│       └── tests/
-├── scripts/
-│   ├── sync_harness.py              # pull harness from engr183-octave
-│   └── new_unit.py                  # scaffold a unit
-└── DESIGN.md
+ENGR-183-Tools/
+└── octave-playground/
+    ├── .github/workflows/deploy.yml     # build + publish to Pages — scoped to this path; see §3 note on multi-tool Pages layout, deferred to T1.1
+    ├── environment.yml                  # kernel env spec
+    ├── jupyter_lite_config.json         # mounts, addon config
+    ├── src/                             # the Vite + TS application
+    │   ├── main.ts
+    │   ├── kernel/                      # @jupyterlab/services wrapper
+    │   │   ├── session.ts               # start, restart, execute, stream stdout
+    │   │   └── files.ts                 # contents drive <-> editor buffers
+    │   ├── ui/
+    │   │   ├── FileTree.ts
+    │   │   ├── EditorTabs.ts            # Monaco
+    │   │   ├── Console.ts
+    │   │   └── Toolbar.ts
+    │   └── theme/                       # MSJC dark blueprint tokens
+    ├── starters/                        # seed files copied into the drive per unit
+    │   └── unit00/  addTwo.m  circleArea.m  greet.m
+    ├── units/                           # per-unit metadata + problem statements
+    │   └── unit00.json
+    ├── vfs/                             # build-time mount into kernel FS
+    │   └── engr183/
+    │       ├── +engr183/                # harness — VENDORED, see below
+    │       └── tests/
+    ├── scripts/
+    │   ├── sync_harness.py              # pull harness from engr183-octave
+    │   └── new_unit.py                  # scaffold a unit
+    └── DESIGN.md
 ```
+
+Note: `.github/workflows/` for a single tool inside a monorepo normally lives at the repo root (GitHub only triggers workflows defined there), scoped with a `paths:` filter on this folder. It's placed here for readability; T1.1 should move the actual YAML to `ENGR-183-Tools/.github/workflows/` when the multi-tool CI story is settled.
 
 Note the split between `vfs/` and `starters/`. The harness and test specs are **build-time mounts** — read-only, identical for every student, never editable. Starter files are **seeds** copied into the student's writable contents drive on first visit to a unit. Students can break their own files freely; they cannot break the harness or edit the tests.
 
@@ -222,8 +229,8 @@ Summarize T0.1–T0.9 into a recommendation: proceed to M1, proceed with reduced
 ### M1 — Minimum viable playground
 
 **T1.1 — Repo scaffold and CI**
-Layout per §6. Vite + TypeScript app. GitHub Actions workflow building and deploying to Pages on push to `main`.
-*Acceptance:* Push to main publishes a working site at the Pages URL.
+Layout per §6, under `octave-playground/` in the `ENGR-183-Tools` monorepo. Vite + TypeScript app. Decide and implement the multi-tool Pages strategy: a workflow at the monorepo root, `paths`-filtered to `octave-playground/**`, that builds this tool into its own subdirectory of the published site (e.g. `/octave-playground/`) without clobbering sibling tools' output.
+*Acceptance:* Push to main touching `octave-playground/**` publishes a working site at `<pages-url>/octave-playground/`, and does not disturb other tools already on Pages.
 
 **T1.2 — `sync_harness.py`**
 Copies `+engr183/` and `tests/` from the `engr183-octave` repo into `vfs/engr183/`, and `assignments/` into `starters/`. Records source commit SHA in `vfs/engr183/HARNESS_VERSION`. Refuses to overwrite locally-modified files without `--force`.
