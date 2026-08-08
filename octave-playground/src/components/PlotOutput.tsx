@@ -98,6 +98,11 @@ export function PlotOutput({ mimeBundle, width, height }: PlotOutputProps) {
       Plotly.newPlot(container, figure.data as never, layout, {
         responsive: width === undefined,
         displaylogo: false,
+        // Plotly's modebar (zoom/pan/box-select/reset/camera) defaults to
+        // hover-reveal, which is easy for a student to never discover.
+        // Desktop Octave's own Figure toolbar is always visible -- match
+        // that instead of relying on a hover affordance.
+        displayModeBar: true,
       })
     }).catch((err) => setError(String(err)))
 

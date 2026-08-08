@@ -290,3 +290,13 @@ a Figure window blocking the Toolbar, and a doubled legend on multi-trace plots.
   `update_display_data` messages for one `hold on` plot sequence) could in
   principle draw on top of itself before being cleared. Fixed by caching the
   resolved module at module scope so cleanup can `purge()` synchronously.
+
+## Always-visible Figure toolbar (T3.8)
+
+- `t39-modebar.js` -- Plotly's modebar (zoom/pan/box-select/reset/camera
+  icons) defaults to hover-reveal. Moves the mouse away from the plot after
+  it renders and confirms `.modebar`'s computed style is still visible
+  (`display: block`, `opacity: 1`, non-zero bounding box), i.e. not waiting
+  on a hover to appear. Fixed via `displayModeBar: true` in the `Plotly.
+  newPlot` config, matching desktop Octave's own always-visible Figure
+  toolbar.
