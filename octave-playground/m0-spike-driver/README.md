@@ -414,3 +414,9 @@ Settings -> Environments -> github-pages -> Deployment branches and tags.
   window itself) -- worth remembering if this button structure changes again,
   since getting this depth wrong silently measures the title bar instead of
   the window (exactly what happened once while writing this script).
+- `t50-prod-dev-resize.js` / `t50b-prod-main-resize.js` -- the same
+  resize/minimize/expand checks as `t49`, run against the live
+  `octave-playground-dev/` staging deploy and then the live
+  `octave-playground/` production deploy respectively, following this
+  session's now-standard pattern: verify on `dev` first, merge, verify the
+  same thing again on `main` post-merge.
