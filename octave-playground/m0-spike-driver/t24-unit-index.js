@@ -11,7 +11,7 @@ const { chromium } = require('playwright');
   await page.screenshot({ path: 't24-index.png' });
 
   await page.getByText('Unit 1 — Getting Started', { exact: true }).click();
-  await page.waitForFunction(() => document.body.innerText.includes('Ready'), { timeout: 30000 });
+  await page.waitForFunction(() => document.body.innerText.includes('Ready'), null, { timeout: 30000 });
   console.log('URL after selecting unit:', page.url());
   await page.screenshot({ path: 't24-playground.png' });
 

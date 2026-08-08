@@ -6,14 +6,14 @@ const { chromium } = require('playwright');
 
   // Deep link directly to unit01
   await page.goto('http://localhost:5183/?unit=unit01', { waitUntil: 'load', timeout: 30000 });
-  await page.waitForFunction(() => document.body.innerText.includes('Ready'), { timeout: 30000 });
+  await page.waitForFunction(() => document.body.innerText.includes('Ready'), null, { timeout: 30000 });
   const text1 = await page.evaluate(() => document.body.innerText);
   console.log('deep link skips index, shows playground:', !text1.includes('Pick a unit'));
   console.log('URL stayed at ?unit=unit01:', page.url());
 
   // Run Tests through the new Playground component
   await page.getByText('Run Tests', { exact: true }).click();
-  await page.waitForFunction(() => document.body.innerText.includes('/30'), { timeout: 30000 });
+  await page.waitForFunction(() => document.body.innerText.includes('/30'), null, { timeout: 30000 });
   const text2 = await page.evaluate(() => document.body.innerText);
   const match = text2.match(/(\d+)\/(\d+)/);
   console.log('Run Tests result:', match ? match[0] : 'NOT FOUND');

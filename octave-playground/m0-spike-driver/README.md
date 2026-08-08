@@ -146,3 +146,12 @@ delivers DESIGN.md T4.2's deep-link mechanism as a side effect.
   harness report renders through the extracted `Playground` component exactly as
   before the refactor (0/30 against the unsolved starters — expected, since they
   raise "not implemented" errors).
+- `t25-prod-verify.js` — the same index/select/back/deep-link checks as `t24*`, run
+  against the live `https://dinocrates.github.io/ENGR-183-Tools/octave-playground/`
+  deploy rather than local preview. Caught a real bug in `t24*`/itself: `page.
+  waitForFunction(fn, { timeout })` silently treats the options object as the
+  *second positional arg* (`arg`), not `options`, when `arg` is omitted — so the
+  intended timeout is dropped and Playwright's actual 30s default applies instead.
+  Locally this was invisible (30s was already enough), but production's slower
+  first-visit kernel startup exceeded it. Fixed by passing `null` explicitly for
+  `arg`: `waitForFunction(fn, null, { timeout })`.
