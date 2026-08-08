@@ -22,7 +22,9 @@ const { chromium } = require('playwright');
 
   const labels = await page.evaluate(() =>
     Array.from(document.querySelectorAll('[title="Close figure"]')).map(
-      (btn) => btn.parentElement?.querySelector('span')?.textContent,
+      // Close button's parent is now a button-group div (minimize+close),
+      // one level up from the title bar row that holds the label span.
+      (btn) => btn.parentElement?.parentElement?.querySelector('span')?.textContent,
     ),
   );
   console.log('figure labels:', JSON.stringify(labels));

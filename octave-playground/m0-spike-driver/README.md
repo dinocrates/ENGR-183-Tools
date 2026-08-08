@@ -398,3 +398,19 @@ Settings -> Environments -> github-pages -> Deployment branches and tags.
   and runs Run Tests, confirming a correct `0/30` for unsolved starters with
   no filesystem error -- proving the dev environment is genuinely
   functional, not just serving a 200.
+
+## Resizable / minimizable Figure windows (T3.9)
+
+- `t49-resize-minimize.js` -- drags the new bottom-right resize handle and
+  confirms the window actually grows (both dimensions), confirms the plot
+  redraws to roughly match the new window size, then drags far past the
+  minimum size and confirms the clamp holds. Clicks the minimize button and
+  confirms the window collapses to just its title bar and the plot content
+  unmounts entirely (not just hidden). Confirms an "Expand figure"-titled
+  button appears in the minimize button's place once minimized, clicks it,
+  and confirms the window is restored and the plot re-renders correctly.
+  Uses an XPath three levels up from the "Close figure" button to locate the
+  whole window element (button -> button-group div -> title bar row -> the
+  window itself) -- worth remembering if this button structure changes again,
+  since getting this depth wrong silently measures the title bar instead of
+  the window (exactly what happened once while writing this script).
