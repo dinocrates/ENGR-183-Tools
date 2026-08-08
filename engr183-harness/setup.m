@@ -5,7 +5,7 @@
 %     >> cd  <the folder where you cloned this repo>
 %     >> setup
 %
-% After that, engr183.runTests('unit00') and friends will work from
+% After that, engr183.runTests('unit01') and friends will work from
 % anywhere.  Running it twice is harmless.
 
 thisDir = fileparts(mfilename('fullpath'));
@@ -17,7 +17,7 @@ fprintf('Repo location: %s\n', thisDir);
 fprintf('Octave version: %s\n', version());
 fprintf('\n');
 fprintf('Check your work at any time with:\n');
-fprintf('    engr183.runTests(''unit00'')\n');
+fprintf('    engr183.runTests(''unit01'')\n');
 fprintf('\n');
 
 clear thisDir

@@ -1,15 +1,15 @@
 function varargout = runTests(unit, varargin)
 %RUNTESTS  Check your work for one ENGR-183 unit against the rubric.
 %
-%   ENGR183.RUNTESTS('unit00')
+%   ENGR183.RUNTESTS('unit01')
 %       Runs every rubric criterion for that unit and prints a report
 %       showing which ones you have met and which you have not.
 %
-%   R = ENGR183.RUNTESTS('unit00')
+%   R = ENGR183.RUNTESTS('unit01')
 %       Also returns a struct array of results, one entry per criterion,
 %       with fields: name, points, earned, passed, message.
 %
-%   ENGR183.RUNTESTS('unit00', 'showHidden', true)
+%   ENGR183.RUNTESTS('unit01', 'showHidden', true)
 %       Instructor use.  Includes criteria marked hidden.
 %
 %   You can run this as many times as you like.  It never submits
@@ -29,7 +29,7 @@ function varargout = runTests(unit, varargin)
 
   if nargin < 1 || ~ischar(unit)
     error('engr183:runTests:badUnit', ...
-          'Give the unit name as text, for example: engr183.runTests(''unit00'')');
+          'Give the unit name as text, for example: engr183.runTests(''unit01'')');
   end
 
   root = engr183.root();

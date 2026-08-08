@@ -1,5 +1,5 @@
-function specs = unit00_tests()
-%UNIT00_TESTS  Rubric criteria for Unit 00: Getting Started.
+function specs = unit01_tests()
+%UNIT01_TESTS  Rubric criteria for Unit 1: Getting Started.
 %
 %   The purpose of this unit is to confirm that Octave is installed and
 %   working on your machine, and to introduce the way every later unit

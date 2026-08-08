@@ -1,6 +1,6 @@
 % CHECK_GOLDEN  CI guardrail on Goal 3 (byte-identical rubric output).
 %
-% Runs engr183.runTests('unit00') for the unsolved and solved cases and
+% Runs engr183.runTests('unit01') for the unsolved and solved cases and
 % compares the exact output against committed golden files. Fails (nonzero
 % exit via error()) on any mismatch, so a change to report.m/runTests.m/
 % compare.m that alters the rubric report gets caught in CI instead of
@@ -15,7 +15,7 @@
 here = fileparts(mfilename('fullpath'));
 root = fileparts(here);
 goldenDir = fullfile(here, 'golden');
-stubDir = fullfile(root, 'assignments', 'unit00');
+stubDir = fullfile(root, 'assignments', 'unit01');
 solvedDir = fullfile(here, 'solved');
 unsolvedDir = fullfile(here, 'unsolved');
 fns = {'addTwo.m', 'circleArea.m', 'greet.m'};
@@ -36,8 +36,8 @@ for c = 1:numel(cases)
     clear addTwo circleArea greet
   end
 
-  actual = evalc("engr183.runTests('unit00')");
-  goldenPath = fullfile(goldenDir, sprintf('unit00_%s.txt', caseName));
+  actual = evalc("engr183.runTests('unit01')");
+  goldenPath = fullfile(goldenDir, sprintf('unit01_%s.txt', caseName));
 
   if exist(goldenPath, 'file') ~= 2
     fprintf('MISSING golden file: %s\n', goldenPath);

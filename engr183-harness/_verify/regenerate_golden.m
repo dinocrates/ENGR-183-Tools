@@ -8,7 +8,7 @@
 here = fileparts(mfilename('fullpath'));
 root = fileparts(here);
 goldenDir = fullfile(here, 'golden');
-stubDir = fullfile(root, 'assignments', 'unit00');
+stubDir = fullfile(root, 'assignments', 'unit01');
 solvedDir = fullfile(here, 'solved');
 unsolvedDir = fullfile(here, 'unsolved');
 fns = {'addTwo.m', 'circleArea.m', 'greet.m'};
@@ -31,8 +31,8 @@ for c = 1:numel(cases)
     clear addTwo circleArea greet
   end
 
-  actual = evalc("engr183.runTests('unit00')");
-  goldenPath = fullfile(goldenDir, sprintf('unit00_%s.txt', caseName));
+  actual = evalc("engr183.runTests('unit01')");
+  goldenPath = fullfile(goldenDir, sprintf('unit01_%s.txt', caseName));
   fid = fopen(goldenPath, 'w');
   fputs(fid, actual);
   fclose(fid);

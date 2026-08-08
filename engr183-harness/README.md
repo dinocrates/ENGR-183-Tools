@@ -4,7 +4,7 @@ Course tools and assignments. Everything here runs in **GNU Octave**, which is f
 
 ---
 
-## Unit 00 — Getting Started
+## Unit 1 — Getting Started
 
 The goal of this first unit is simple: prove that Octave is installed and working on your machine, and get you used to how you will check your work all semester. The math is deliberately easy. If you find yourself stuck on the math, you have misread the problem.
 
@@ -50,14 +50,14 @@ You should see a confirmation message with your Octave version. **You need to ru
 ### 4. Run the checker before writing any code
 
 ```matlab
-engr183.runTests('unit00')
+engr183.runTests('unit01')
 ```
 
 Everything will fail. That is correct and expected — you have not written anything yet. Read the output. Each line is one criterion from the grading rubric, and the arrow underneath tells you what went wrong.
 
 ### 5. Do the work
 
-Open the three files in `assignments/unit00/` and replace the `error(...)` line in each with your solution:
+Open the three files in `assignments/unit01/` and replace the `error(...)` line in each with your solution:
 
 - **`addTwo.m`** — return the sum of two numbers
 - **`circleArea.m`** — return the area of a circle given its radius
@@ -68,7 +68,7 @@ Each file has instructions and examples in its comments. Read them.
 ### 6. Check your work as often as you like
 
 ```matlab
-engr183.runTests('unit00')
+engr183.runTests('unit01')
 ```
 
 Run it after every change. It never submits anything, it never modifies your files, and there is no penalty for running it a thousand times. When all six criteria pass, you are done.
@@ -77,8 +77,8 @@ Run it after every change. It never submits anything, it never modifies your fil
 
 In Canvas, submit:
 
-1. The three `.m` files from `assignments/unit00/`
-2. A copy-paste of your final `engr183.runTests('unit00')` output
+1. The three `.m` files from `assignments/unit01/`
+2. A copy-paste of your final `engr183.runTests('unit01')` output
 3. The version number you saw in step 1
 
 ---
