@@ -29,10 +29,14 @@ MONOREPO_ROOT = ROOT.parent
 HARNESS_SRC = MONOREPO_ROOT / "engr183-harness"
 MANIFEST_PATH = ROOT / "scripts" / ".sync_manifest.json"
 
+# public/starters/scratch/ is hand-authored (the Scratch Pad's starter, see
+# src/units/index.ts's scratchUnit) -- it has no engr183-harness counterpart,
+# so it's excluded from both the wipe-and-resync and the drift manifest,
+# leaving it untouched by every sync run.
 SYNC_PAIRS = [
-    (HARNESS_SRC / "+engr183", ROOT / "vfs" / "engr183" / "+engr183"),
-    (HARNESS_SRC / "tests", ROOT / "vfs" / "engr183" / "tests"),
-    (HARNESS_SRC / "assignments", ROOT / "public" / "starters"),
+    (HARNESS_SRC / "+engr183", ROOT / "vfs" / "engr183" / "+engr183", frozenset()),
+    (HARNESS_SRC / "tests", ROOT / "vfs" / "engr183" / "tests", frozenset()),
+    (HARNESS_SRC / "assignments", ROOT / "public" / "starters", frozenset({"scratch"})),
 ]
 
 
@@ -42,14 +46,18 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
-def collect_files(base: Path) -> dict[str, str]:
+def collect_files(base: Path, exclude: frozenset[str] = frozenset()) -> dict[str, str]:
     if not base.exists():
         return {}
-    return {
-        str(p.relative_to(base)): sha256_file(p)
-        for p in base.rglob("*")
-        if p.is_file()
-    }
+    result: dict[str, str] = {}
+    for p in base.rglob("*"):
+        if not p.is_file():
+            continue
+        rel = p.relative_to(base)
+        if rel.parts and rel.parts[0] in exclude:
+            continue
+        result[str(rel)] = sha256_file(p)
+    return result
 
 
 def load_manifest() -> dict:
@@ -65,10 +73,10 @@ def save_manifest(manifest: dict) -> None:
 
 def check_for_local_drift(manifest: dict, force: bool) -> None:
     drifted = []
-    for _src, dest in SYNC_PAIRS:
+    for _src, dest, preserve in SYNC_PAIRS:
         key = str(dest.relative_to(ROOT))
         recorded = manifest.get(key, {})
-        current = collect_files(dest)
+        current = collect_files(dest, exclude=preserve)
         for rel_path, recorded_hash in recorded.items():
             current_hash = current.get(rel_path)
             if current_hash != recorded_hash:
@@ -95,13 +103,21 @@ def get_harness_sha() -> str:
     return sha
 
 
-def sync_dir(src: Path, dest: Path) -> None:
+def sync_dir(src: Path, dest: Path, preserve: frozenset[str] = frozenset()) -> None:
     if not src.exists():
         print(f"Warning: source {src} does not exist, skipping.", file=sys.stderr)
         return
-    if dest.exists():
-        shutil.rmtree(dest)
-    shutil.copytree(src, dest)
+    dest.mkdir(parents=True, exist_ok=True)
+    for entry in dest.iterdir():
+        if entry.name in preserve:
+            continue
+        shutil.rmtree(entry) if entry.is_dir() else entry.unlink()
+    for entry in src.iterdir():
+        target = dest / entry.name
+        if entry.is_dir():
+            shutil.copytree(entry, target)
+        else:
+            shutil.copy2(entry, target)
 
 
 def main() -> None:
@@ -117,10 +133,10 @@ def main() -> None:
     check_for_local_drift(manifest, args.force)
 
     new_manifest: dict[str, dict[str, str]] = {}
-    for src, dest in SYNC_PAIRS:
-        sync_dir(src, dest)
+    for src, dest, preserve in SYNC_PAIRS:
+        sync_dir(src, dest, preserve=preserve)
         key = str(dest.relative_to(ROOT))
-        new_manifest[key] = collect_files(dest)
+        new_manifest[key] = collect_files(dest, exclude=preserve)
         print(f"synced {src.relative_to(MONOREPO_ROOT)} -> {dest.relative_to(ROOT)} ({len(new_manifest[key])} files)")
 
     sha = get_harness_sha()
