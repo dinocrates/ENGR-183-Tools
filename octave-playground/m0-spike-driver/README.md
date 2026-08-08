@@ -204,3 +204,18 @@ delivers DESIGN.md T4.2's deep-link mechanism as a side effect.
   (required directly from `node_modules` in the test script) to confirm it
   contains all three unit files, flat with no folders, including the same live
   edit in the zipped copy of the active file.
+
+## Floating figure windows + theme (T3.1, T3.6)
+
+- `t31-floating-figures.js` — runs code producing two separate plots (`plot(...)`
+  then `figure; plot(...)`), confirms two separate `.js-plotly-plot` windows open
+  (labeled "Figure 1"/"Figure 2" instead of both landing inline in the Command
+  Window), confirms the Command Window's text output still shows both `disp()`
+  calls with no plot content mixed in, drags the first figure by its title bar and
+  confirms its position actually changes, then closes one figure and confirms only
+  that one is removed.
+- No dedicated theme test script -- the re-skin (T3.1) is a from-classes-only
+  Tailwind change (no new components, no new state), verified by re-running the
+  full existing suite (`t24*`, `t27-scratch.js`, `t29-download.js`,
+  `t31-floating-figures.js`) after the change and confirming zero functional
+  regressions, plus visual review via screenshots (not committed).

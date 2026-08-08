@@ -5,27 +5,38 @@ import { downloadFile, downloadZip } from './kernel/download'
 import { FileBrowser } from './components/FileBrowser'
 import { Editor } from './components/Editor'
 import { CommandWindow } from './components/CommandWindow'
+import { FloatingFigure } from './components/FloatingFigure'
 import { Toolbar, type KernelStatus } from './components/Toolbar'
 import { StartupOverlay } from './components/StartupOverlay'
 import { ProblemStatement } from './components/ProblemStatement'
 import type { UnitMeta } from './units'
-import type { OutputBlock } from './components/CommandWindow'
 
 interface PlaygroundProps {
   unit: UnitMeta
   onBackToUnits: () => void
 }
 
+interface Figure {
+  id: string
+  label: string
+  mimeBundle: Record<string, unknown>
+  position: { x: number; y: number }
+}
+
 function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   const sessionRef = useRef<OctaveKernelSession | null>(null)
   const unitFilesRef = useRef<UnitFiles | null>(null)
   const saveTimers = useRef<Record<string, number>>({})
+  const figureCount = useRef(0)
+  const zCounter = useRef(1)
 
   const [status, setStatus] = useState<KernelStatus>('starting')
   const [contents, setContents] = useState<Record<string, string>>({})
   const [dirtyFiles, setDirtyFiles] = useState<Set<string>>(new Set())
   const [activeFile, setActiveFile] = useState<string>(unit.files[0])
-  const [output, setOutput] = useState<OutputBlock[]>([])
+  const [output, setOutput] = useState('')
+  const [figures, setFigures] = useState<Figure[]>([])
+  const [zIndices, setZIndices] = useState<Record<string, number>>({})
 
   // Separate from `status`: once the kernel has started successfully the
   // first time, a later Run Tests/Run File failure sets status to 'error'
@@ -75,53 +86,60 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     }, 500)
   }
 
-  // Consecutive text chunks are merged into one block so the Command Window
-  // doesn't spawn a new <pre> per stream event; a display chunk (a plot)
-  // always starts its own block so text before/after it stays in order.
-  function appendText(text: string) {
-    setOutput((prev) => {
-      const last = prev[prev.length - 1]
-      if (last?.kind === 'text') {
-        return [...prev.slice(0, -1), { kind: 'text', text: last.text + text }]
-      }
-      return [...prev, { kind: 'text', text }]
-    })
+  function focusFigure(id: string) {
+    zCounter.current += 1
+    setZIndices((prev) => ({ ...prev, [id]: zCounter.current }))
   }
 
+  function closeFigure(id: string) {
+    setFigures((prev) => prev.filter((f) => f.id !== id))
+  }
+
+  // Desktop Octave opens each plot in its own Figure window, not inline in
+  // the Command Window -- figures are tracked separately from text output.
+  // A plot arrives as an empty display_data placeholder (reserving a
+  // displayId) followed by an update_display_data with the real figure;
+  // patch the existing window in place rather than opening a second one.
   function handleExecuteChunk(chunk: ExecuteChunk) {
     if (chunk.kind === 'stream') {
-      appendText(chunk.text)
+      setOutput((prev) => prev + chunk.text)
       return
     }
-    // A plot arrives as an empty display_data placeholder (reserving a
-    // displayId) followed by an update_display_data with the real figure --
-    // patch the existing block in place rather than appending a second one.
-    setOutput((prev) => {
-      const existingIdx = chunk.displayId
-        ? prev.findIndex((b) => b.kind === 'plot' && b.displayId === chunk.displayId)
-        : -1
-      const block: OutputBlock = {
-        kind: 'plot',
-        displayId: chunk.displayId,
-        mimeBundle: chunk.mimeBundle,
-      }
+    setFigures((prev) => {
+      const existingIdx = chunk.displayId ? prev.findIndex((f) => f.id === chunk.displayId) : -1
       if (existingIdx !== -1) {
-        return [...prev.slice(0, existingIdx), block, ...prev.slice(existingIdx + 1)]
+        const next = [...prev]
+        next[existingIdx] = { ...next[existingIdx], mimeBundle: chunk.mimeBundle }
+        return next
       }
-      return [...prev, block]
+      figureCount.current += 1
+      const id = chunk.displayId ?? `figure-${figureCount.current}`
+      zCounter.current += 1
+      setZIndices((z) => ({ ...z, [id]: zCounter.current }))
+      const cascade = (prev.length % 5) * 28
+      return [
+        ...prev,
+        {
+          id,
+          label: `Figure ${figureCount.current}`,
+          mimeBundle: chunk.mimeBundle,
+          position: { x: 24 + cascade, y: 24 + cascade },
+        },
+      ]
     })
   }
 
   async function runCode(code: string) {
     if (!sessionRef.current) return
     setStatus('running')
-    setOutput([])
+    setOutput('')
+    setFigures([])
     try {
       await sessionRef.current.execute(code, handleExecuteChunk)
       setDirtyFiles(new Set())
       setStatus('ready')
     } catch (err) {
-      appendText('\n' + String(err))
+      setOutput((prev) => prev + '\n' + String(err))
       setStatus('error')
     }
   }
@@ -151,8 +169,14 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="relative flex h-full flex-col">
       {!kernelReady && <StartupOverlay error={startupError} />}
+      <div className="flex items-center gap-2 border-b border-slate-800 bg-slate-950 px-3 py-1">
+        <span className="h-2 w-2 rounded-full bg-cyan-400" />
+        <span className="text-xs font-medium text-slate-400">
+          ENGR-183 Octave Playground <span className="text-slate-600">—</span> {unit.title}
+        </span>
+      </div>
       <Toolbar
         status={status}
         onRunTests={unit.isScratch ? undefined : handleRunTests}
@@ -182,6 +206,18 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
           <CommandWindow output={output} />
         </div>
       </div>
+      {figures.map((figure) => (
+        <FloatingFigure
+          key={figure.id}
+          id={figure.id}
+          label={figure.label}
+          mimeBundle={figure.mimeBundle}
+          initialPosition={figure.position}
+          zIndex={zIndices[figure.id] ?? 1}
+          onClose={closeFigure}
+          onFocus={focusFigure}
+        />
+      ))}
     </div>
   )
 }

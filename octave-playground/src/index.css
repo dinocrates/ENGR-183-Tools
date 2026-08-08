@@ -13,8 +13,8 @@ body,
 
 body {
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-  background: #16171d;
-  color: #d5d7dd;
+  background: #020617; /* slate-950 */
+  color: #f1f5f9; /* slate-100 */
 }
 
 code,

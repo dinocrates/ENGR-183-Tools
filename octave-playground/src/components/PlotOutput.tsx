@@ -58,15 +58,15 @@ export function PlotOutput({ mimeBundle }: PlotOutputProps) {
       return null
     }
     return (
-      <div className="my-2 text-xs text-neutral-500">
+      <div className="text-xs text-neutral-500">
         (unsupported output type: {Object.keys(mimeBundle).join(', ')})
       </div>
     )
   }
 
   if (error) {
-    return <div className="my-2 text-xs text-red-400">Couldn't render plot: {error}</div>
+    return <div className="text-xs text-red-400">Couldn't render plot: {error}</div>
   }
 
-  return <div ref={containerRef} className="my-2 h-72 w-full max-w-2xl" />
+  return <div ref={containerRef} className="h-full w-full" />
 }
