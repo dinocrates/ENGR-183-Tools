@@ -334,9 +334,9 @@ Toolboxes (octave-forge packages like `signal`, `image`, `statistics`) were rais
 Theme the app to match the existing course tool aesthetic (see the recursion visualizer and PHY-201 simulations for the established palette). Blueprint-derived: dark ground, cyan/white technical linework, monospace for code, restrained.
 *Acceptance:* File tree, editor, console, and toolbar are themed coherently. Legible at Canvas iframe widths. Meets WCAG AA contrast.
 
-**T3.2 — Download files**
-Download the active file, or the whole unit as a zip, for Canvas submission. These are the exact bytes the kernel executed — no packaging, no transformation.
-*Acceptance:* Downloaded files run unmodified under local Octave 8.4.
+**T3.2 — Download files — DONE**
+Bumped ahead of the rest of M3: with LTI/grade-passback confirmed out of scope for now (§7 — "Not an autograder... Grading stays local"), manual download-then-upload-to-Canvas is the actual submission path, not a placeholder for something else. `src/kernel/download.ts`'s `downloadFile`/`downloadZip` read straight from `Playground.tsx`'s live `contents` state (not the browser-persisted drive), so a download is never stale relative to unsaved autosave debounce. `downloadZip` (via `jszip`) writes files flat, no folders — matching the local Octave mental model of one working directory per unit. Toolbar gained "Download File" and "Download All (.zip)" buttons, available in every unit including the Scratch Pad.
+*Acceptance:* Downloaded files run unmodified under local Octave 8.4 — no packaging/transformation is applied (plain UTF-8 text in, plain UTF-8 text out), so this reduces to "is the content byte-identical to the editor buffer," verified directly via `m0-spike-driver/t29-download.js` (single-file and zipped copies both reflect a live in-editor edit, not the original starter).
 
 **T3.3 — Reset to starter**
 Per-file and per-unit restore from `starters/`, with confirmation naming what will be lost.

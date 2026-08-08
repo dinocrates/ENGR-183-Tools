@@ -195,3 +195,12 @@ delivers DESIGN.md T4.2's deep-link mechanism as a side effect.
   dist-min` is a ~1.4MB gzipped chunk fetched over the real network in
   production (vs. local disk under `npm run preview`), so a short fixed delay
   that was reliable locally intermittently missed the render in prod.
+
+## Download (T3.2 — manual Canvas submission path)
+
+- `t29-download.js` — edits the active file in Monaco, downloads it via "Download
+  File" and confirms the downloaded content is the live edit (not the original
+  starter), then downloads "Download All (.zip)" and inspects it with `jszip`
+  (required directly from `node_modules` in the test script) to confirm it
+  contains all three unit files, flat with no folders, including the same live
+  edit in the zipped copy of the active file.

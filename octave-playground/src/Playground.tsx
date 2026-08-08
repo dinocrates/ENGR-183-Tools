@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { OctaveKernelSession, type ExecuteChunk } from './kernel/session'
 import { createContentsManager, UnitFiles, buildWriteFilesCode } from './kernel/files'
+import { downloadFile, downloadZip } from './kernel/download'
 import { FileBrowser } from './components/FileBrowser'
 import { Editor } from './components/Editor'
 import { CommandWindow } from './components/CommandWindow'
@@ -141,6 +142,14 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     void runCode([writeCode, `run('/engr183/assignments/${unit.id}/${activeFile}')`].join('\n'))
   }
 
+  function handleDownloadFile() {
+    downloadFile(activeFile, contents[activeFile] ?? '')
+  }
+
+  function handleDownloadZip() {
+    void downloadZip(unit.id, contents)
+  }
+
   return (
     <div className="flex h-full flex-col">
       {!kernelReady && <StartupOverlay error={startupError} />}
@@ -148,6 +157,8 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
         status={status}
         onRunTests={unit.isScratch ? undefined : handleRunTests}
         onRunFile={handleRunFile}
+        onDownloadFile={handleDownloadFile}
+        onDownloadZip={handleDownloadZip}
         onBackToUnits={onBackToUnits}
       />
       <div className="flex flex-1 overflow-hidden">
