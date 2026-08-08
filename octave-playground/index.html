@@ -2,9 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ENGR-183 Octave Playground</title>
+    <script src="./coi-serviceworker.js"></script>
+    <!--
+      GitHub Pages can't set custom response headers, so without this the
+      page never gets crossOriginIsolated -- which forces the kernel onto
+      its comlink.worker.js transport (vs. coincident.worker.js) instead of
+      the SharedArrayBuffer one, and that fallback turned out to be broken
+      for filesystem/cwd operations (confirmed live: "unable to find current
+      directory" on every Run Tests/Run File, even though the kernel itself
+      booted fine). This is the standard COI shim
+      (github.com/gzuidhof/coi-serviceworker): it registers a service worker
+      that injects COOP/COEP on the page's own responses and reloads once to
+      pick them up, achieving isolation on static hosting with no server
+      config. Vendored verbatim, not modified.
+    -->
     <script>
       // Must run before any module script (below) is evaluated: @jupyterlab's
       // PageConfig memoizes its config on first read, and something in the
