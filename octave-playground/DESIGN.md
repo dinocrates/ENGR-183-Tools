@@ -4,7 +4,7 @@
 **Owner:** Stephen Hamrick, MSJC
 **Implementer:** Claude Code
 **Target repo:** `dinocrates/ENGR-183-Tools`, path `octave-playground/`
-**Deploy target:** GitHub Pages, embedded in Canvas via iframe
+**Deploy target:** GitHub Pages. Reached from Canvas via a link/module item that opens in a new tab — **not** an iframe embed (see T4.1: iframe embedding is architecturally impossible here, discovered and reverted during T4.1's own verification work).
 
 `ENGR-183-Tools` is a monorepo hosting multiple course tools (this playground, visualizers, calculators, graphing tools). Everything below that refers to "the repo" or gives root-relative paths (`src/`, `starters/`, `.github/workflows/`, etc.) means `octave-playground/` within that monorepo, not the repo root — see §6. The multi-tool GitHub Pages layout (shared workflow, URL structure, whether tools share a build step) is an open question deferred to T1.1; M0 has no deploy step and isn't blocked by it.
 
@@ -52,7 +52,7 @@ closely as possible (Command Window, Editor, file browser) — see §4 and M1's 
 2. Each unit opens with its `.m` starter files already present, the problem statement visible, and Run Tests working immediately.
 3. `engr183.runTests('unitNN')` produces **byte-identical rubric output** to local Octave. Same harness, same result. No second standard.
 4. Student work survives a browser refresh and can be exported as `.m` files for Canvas submission.
-5. Embeddable in a Canvas page via iframe.
+5. Reachable from a Canvas link/module item that opens in a new tab. Not iframe-embedded — see T4.1: the app can never be `crossOriginIsolated` inside a cross-origin iframe (that requires the *top-level* page to send COOP/COEP, which Canvas doesn't and can't be made to), so an iframe embed silently falls back to a broken code path. A new tab is its own top-level browsing context, which sidesteps the problem entirely rather than working around it.
 6. Instructor can add a new unit by dropping in files and rebuilding — no code changes.
 7. **The browser environment matches the local one.** Students edit `.m` files, one function per file, in a unit folder — the same mental model, the same filenames, and the same files they submit to Canvas. No notebooks, no cells, no Jupyter vocabulary anywhere in the student-facing product.
 
@@ -311,7 +311,7 @@ Only if plotting works. Otherwise raise for a scope decision.
 
 **T2.5 — Unit index / landing page — DONE**
 `src/units/index.ts` auto-discovers every `unitNN.json` via `import.meta.glob` (no hardcoded unit list — adding a unit via T2.1's scaffolder needs no app code changes, per Goal 6). `src/components/UnitIndex.tsx` is the table-of-contents landing page (title + description per unit, links via `?unit=` in the URL). `App.tsx` became a thin router in front of it; the previous single-unit app body was extracted unchanged into `src/Playground.tsx`.
-*Acceptance:* Landing page is the iframe target and links every published unit. Verified via `m0-spike-driver/t24-unit-index.js` (index → select → Ready → back-to-index) and `t24b-deeplink-runtests.js` (direct `?unit=unit01` load skips the index; Run Tests still produces the correct report through the extracted `Playground` component).
+*Acceptance:* Landing page is the entry point students reach from a Canvas link (T4.1: opened as its own tab, not an iframe target) and links every published unit. Verified via `m0-spike-driver/t24-unit-index.js` (index → select → Ready → back-to-index) and `t24b-deeplink-runtests.js` (direct `?unit=unit01` load skips the index; Run Tests still produces the correct report through the extracted `Playground` component).
 
 Building this on top of `?unit=` in the URL (needed just to make the back button and page refresh behave sanely) turned out to already satisfy T4.2's "per-unit deep links" requirement — see T4.2 below.
 
@@ -333,7 +333,7 @@ Toolboxes (octave-forge packages like `signal`, `image`, `statistics`) were rais
 **T3.1 — MSJC dark blueprint theme — DONE**
 Confirmed with Stephen: keep the dark palette shared with the other MSJC tools rather than literally replicating Octave's own (light, Qt-default) desktop GUI colors, but add real desktop-app chrome so it reads as an application, not a themed web page. Re-skinned every panel onto a consistent slate/cyan system (`bg-slate-950/900/800`, `border-slate-700`, `text-slate-100/400`, cyan-400/600 for accents and primary actions) in place of the prior ad hoc `neutral`-palette classes. Chrome additions: an app-level title bar above the Toolbar (`ENGR-183 Octave Playground — <unit title>`, with a status dot), Run Tests/Run File promoted to solid cyan primary buttons with Download File/Download All demoted to outlined secondary buttons, a cyan left-border accent on the active file in the File Browser and a cyan top-border on the active Editor tab (both closer to how a real IDE marks "the thing that's open" than a flat background swap), and a status dot next to the Toolbar's status text (slate while starting, pulsing cyan while running, steady cyan when ready, red on error).
 Caveat: built from DESIGN.md's own textual description of the target palette ("dark ground, cyan/white technical linework, monospace for code, restrained"), not by inspecting the actual recursion visualizer/PHY-201 sims source — no local access to those tools' code from this repo. If their actual palette differs in specifics (exact hex values, accent color), a follow-up pass to align exactly would be cheap, since colors are just Tailwind utility classes throughout, not a custom design-token system.
-*Acceptance:* File tree, editor, console, and toolbar are themed coherently. Legible at Canvas iframe widths. Full regression pass (unit index, deep links, Scratch Pad, download, floating figures) confirmed no functional breakage from the re-skin.
+*Acceptance:* File tree, editor, console, and toolbar are themed coherently. Legible at typical browser widths (T4.1: opened as its own tab, not embedded at Canvas iframe dimensions). Full regression pass (unit index, deep links, Scratch Pad, download, floating figures) confirmed no functional breakage from the re-skin.
 
 **T3.6 — Floating figure windows (added, not in original plan)**
 Plots rendering inline in the Command Window's scrolling text (T2.6's original implementation) wasn't a parity experience with desktop Octave, where `plot()` opens a separate floating Figure window. `src/components/FloatingFigure.tsx` is a draggable (mousedown on its title bar + window-level mousemove/mouseup), closable window rendering `PlotOutput` (unchanged) inside; `Playground.tsx` now tracks figures in their own `figures` state, keyed by the kernel's `display_id` (same correlation mechanism T2.6 built for the placeholder → real-figure update), completely separate from the Command Window's plain-text `output` string — a plot never enters the console text flow at all now. Each new figure is labeled sequentially ("Figure 1", "Figure 2", ...) and cascades its initial position so multiple plots from one run don't stack exactly on top of each other; clicking a figure brings it to front via a monotonic z-index counter. Figures reset (all windows close) at the start of each new Run Tests/Run File, matching how console output already reset per run.
@@ -378,21 +378,25 @@ Brief orientation on first visit: where the files are, what Run Tests does, how 
 
 ### M4 — Canvas integration
 
-**T4.1 — Iframe embedding**
-Verify the site loads in a Canvas iframe. Check frame-ancestors headers, storage partitioning, and third-party cookie behavior — browser storage inside a cross-origin iframe is a common failure point and may interact badly with R5.
-*Acceptance:* Loads and persists inside a real Canvas page. Any storage caveat documented.
+**T4.1 — Verify Canvas delivery (iframe embedding ruled out) — DONE**
+Set out to verify iframe embedding; found during that verification that it's architecturally impossible, and pivoted the deploy plan instead of trying to work around it.
+
+GitHub Pages sends no `X-Frame-Options`/CSP `frame-ancestors` (confirmed via `curl -I`), so nothing blocks a Canvas iframe from loading the page at the HTTP level. But the app requires `crossOriginIsolated` for its fast kernel worker (`coincident.worker.js`, SharedArrayBuffer-based); GitHub Pages sends no COOP/COEP either, which is why `public/coi-serviceworker.js` exists — it fakes those headers via a service worker, and that trick works fine for a direct, top-level visit (confirmed: `crossOriginIsolated: true`). Built a genuine cross-origin test harness (a local page on a different origin than `github.io`, iframing the live production site — not same-origin nesting) to test the real scenario, and found the service worker registers and controls the framed page correctly (`controller: true`) but `crossOriginIsolated` still comes back `false`. Root cause, confirmed by spec: cross-origin isolation requires the **top-level** browsing context to send COOP+COEP — inside an iframe, no amount of cleverness in the embedded page's own service worker can produce that, because the isolation status is gated by the top-level document (Canvas), which we don't control and which will not adopt strict cross-origin isolation (it embeds far too many third-party tools for that to be viable for Instructure). Without isolation, the app silently falls back to `comlink.worker.js` — and that fallback still has the exact filesystem bug M0/M1 already found and never fixed (only routed around, by achieving isolation instead): `Run Tests` fails with `unable to find current directory`, confirmed reproducing inside the iframe harness. This is not an edge case — it's the *only* code path a real Canvas iframe embed could ever reach, so it would have broken the tool's core function for every student, every time, the moment it shipped inside Canvas.
+
+Reported this rather than unilaterally starting on the alternative fix (rewriting `comlink.worker.js`'s filesystem handling directly — unknown scope/risk this close to the deadline). Stephen's call: skip iframe embedding entirely — a Canvas link/module item that opens the tool in a new tab (`target="_blank"`, e.g. Canvas's "External URL" module item type with "Load in a new tab" checked). A new tab is its own top-level browsing context, so it gets the exact same `crossOriginIsolated: true` + working `coincident.worker.js` path that's been verified all session on the live production site — nothing to fix, no new code path, the problem is sidestepped rather than patched around. Verified directly: a fake-Canvas page (`target="_blank"` link, different origin than `github.io`) opened in a new tab reaches `crossOriginIsolated: true` and produces a correct, character-perfect rubric report with no filesystem error.
+*Acceptance (revised):* Opens correctly from a Canvas link/module item configured to open in a new tab; works identically to direct top-level access (already verified extensively all session). Storage is standard same-origin persistence in that model — no third-party/cross-origin partitioning caveat to document, since the tool is never embedded as a subframe. Verified via `m0-spike-driver/t45-iframe.js`/`t45b-iframe-runtests.js`/`t45c-header-check.js` (iframe embedding fails, root cause) and `t46-newtab-flow.js`/`t46b-debug.js` (new-tab flow fully works).
 
 **T4.2 — Per-unit deep links — DONE (landed as a side effect of T2.5)**
 URL parameters that open directly to a given unit.
 *Acceptance:* `?unit=03` opens Unit 03 directly. `App.tsx`'s router reads `?unit=` on mount and renders straight into `Playground` when it names a known unit, skipping `UnitIndex` entirely — this was the natural way to make the T2.5 landing page's back button and page-refresh behavior correct, not separate work. Verified via `m0-spike-driver/t24b-deeplink-runtests.js`.
 
 **T4.3 — Mobile and small-viewport pass**
-Usable at Canvas iframe dimensions and on tablets.
+Usable at typical phone/tablet browser widths — opened as its own tab (T4.1), not an iframe, but still needs to work on the small screens students actually show up with.
 *Acceptance:* No horizontal scroll; controls reachable; text legible.
 
 **T4.4 — Instructor runbook**
-`RUNBOOK.md`: adding a unit, syncing the harness, rolling back a bad deploy, what to tell a student whose work vanished.
-*Acceptance:* Stephen can add a unit from the runbook alone.
+`RUNBOOK.md`: adding a unit, syncing the harness, rolling back a bad deploy, what to tell a student whose work vanished, and how to link a unit into Canvas (T4.1: an "External URL" module item or plain link with "Load in a new tab" checked — not the iframe-embed LTI/redirect flow Canvas defaults to for some content types).
+*Acceptance:* Stephen can add a unit and link it into Canvas from the runbook alone.
 
 ---
 

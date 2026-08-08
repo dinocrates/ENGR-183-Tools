@@ -335,3 +335,42 @@ the new first-visit warning doesn't block clicks meant for whatever each
 script actually tests. Older one-off diagnostic scripts targeting already-resolved investigations
 (the `t14`-`t23` range) were left as historical record rather than
 retrofitted, since they aren't re-run as part of ongoing verification.
+
+## Canvas delivery: iframe embedding ruled out (T4.1)
+
+Set out to verify iframe embedding works; found it's architecturally
+impossible and the deploy plan changed to a new-tab link instead. These
+scripts require a local fake-Canvas harness, not committed to this repo
+(scratch files, built to prove the point rather than to ship):
+`fake-canvas.html`/`fake-canvas-link.html` served on `localhost:8899` by a
+tiny Node `http.createServer`, giving a genuine cross-origin page (different
+origin than `github.io`) to iframe or link the live production site from --
+same-origin nesting wouldn't have caught this at all.
+
+- `t45-iframe.js` -- loads the fake-Canvas page, confirms the real iframe's
+  origin is `github.io` (genuinely cross-origin from the `localhost` parent),
+  dismisses the persistence warning inside the frame, and confirms the
+  kernel reaches "Ready" -- but `window.crossOriginIsolated` is `false`
+  inside the iframe, unlike a direct visit.
+- `t45b-iframe-runtests.js` -- the real test: clicks Run Tests inside the
+  iframe and confirms it fails with `unable to find current directory` --
+  the exact filesystem bug M0/M1 found in the `comlink.worker.js` fallback
+  and never fixed (only routed around, by achieving `crossOriginIsolated`
+  for direct visits via the COI service worker). Proves the failure isn't
+  cosmetic -- the tool's core function breaks inside a real iframe embed.
+- `t45c-header-check.js` -- confirms the COI service worker itself is
+  working correctly inside the iframe (registered, controlling the page),
+  ruling out "the service worker doesn't run in iframes" as the cause, and
+  narrowing it to the real one: `crossOriginIsolated` fundamentally requires
+  the *top-level* browsing context to send COOP+COEP, which only Canvas
+  itself could do and never will (too many third-party tools depend on not
+  having that constraint). Compares directly against the identical check on
+  a non-iframed top-level visit (`crossOriginIsolated: true` there).
+- `t46-newtab-flow.js` -- the fix: simulates the revised plan, a
+  `target="_blank"` link on the fake-Canvas page (not an iframe). Confirms
+  the new tab is genuinely top-level (`window.top === window.self`),
+  reaches `crossOriginIsolated: true`, and Run Tests produces the correct
+  live rubric report with no filesystem error.
+- `t46b-debug.js` -- dumps the full Command Window text from the new-tab
+  flow for a direct visual confirmation: character-perfect rubric report,
+  same as every other Run Tests verification this session.
