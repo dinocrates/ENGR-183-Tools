@@ -13,6 +13,10 @@ const KERNEL_NAME = 'xoctave';
 const ENV_NAME = 'xeus-kernel';
 
 function ensurePageConfig(): void {
+  // Fallback only -- index.html's inline script normally already did this,
+  // and has to: PageConfig memoizes on first read, and something in the
+  // jupyterlite/jupyterlab import graph reads it at module-init time, before
+  // this function ever runs. See index.html's comment for the full story.
   if (document.getElementById('jupyter-config-data')) {
     return;
   }

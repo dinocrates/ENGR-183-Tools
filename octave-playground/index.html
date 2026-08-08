@@ -5,6 +5,24 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ENGR-183 Octave Playground</title>
+    <script>
+      // Must run before any module script (below) is evaluated: @jupyterlab's
+      // PageConfig memoizes its config on first read, and something in the
+      // jupyterlite/jupyterlab import graph reads it at module-init time --
+      // before our own code ever runs -- which locks in an empty baseUrl for
+      // the page's whole lifetime. That broke kernel asset URLs once actually
+      // deployed under a subpath (confirmed live: they resolved to the
+      // domain root instead of .../octave-playground/xeus/...). See
+      // src/kernel/session.ts's ensurePageConfig, which is now just a no-op
+      // fallback since this script wins the race.
+      (function () {
+        var el = document.createElement('script');
+        el.id = 'jupyter-config-data';
+        el.type = 'application/json';
+        el.textContent = JSON.stringify({ baseUrl: new URL('.', window.location.href).href });
+        document.head.appendChild(el);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
