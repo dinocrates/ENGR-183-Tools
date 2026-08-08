@@ -10,6 +10,7 @@ import { Toolbar, type KernelStatus } from './components/Toolbar'
 import { StartupOverlay } from './components/StartupOverlay'
 import { ProblemStatement } from './components/ProblemStatement'
 import { Workspace, type WorkspaceVar } from './components/Workspace'
+import { ConfirmDialog } from './components/ConfirmDialog'
 import { WHOS_QUERY, parseWhosOutput } from './kernel/workspace'
 import type { UnitMeta } from './units'
 
@@ -40,6 +41,12 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   const [figures, setFigures] = useState<Figure[]>([])
   const [zIndices, setZIndices] = useState<Record<string, number>>({})
   const [workspaceVars, setWorkspaceVars] = useState<WorkspaceVar[]>([])
+  const [confirmDialog, setConfirmDialog] = useState<{
+    title: string
+    message: string
+    confirmLabel: string
+    onConfirm: () => void
+  } | null>(null)
 
   // Separate from `status`: once the kernel has started successfully the
   // first time, a later Run Tests/Run File failure sets status to 'error'
@@ -196,6 +203,47 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     void downloadZip(unit.id, contents)
   }
 
+  async function doResetFile(file: string) {
+    const starter = await unitFilesRef.current?.resetToStarter(file)
+    if (starter === undefined) return
+    setContents((prev) => ({ ...prev, [file]: starter }))
+    setDirtyFiles((prev) => {
+      const next = new Set(prev)
+      next.delete(file)
+      return next
+    })
+  }
+
+  async function doResetUnit() {
+    for (const file of unit.files) {
+      await doResetFile(file)
+    }
+  }
+
+  function handleResetFile() {
+    setConfirmDialog({
+      title: `Reset ${activeFile}?`,
+      message: `This discards your changes to ${activeFile} and restores the original starter code. This can't be undone.`,
+      confirmLabel: 'Reset file',
+      onConfirm: () => {
+        void doResetFile(activeFile)
+        setConfirmDialog(null)
+      },
+    })
+  }
+
+  function handleResetUnit() {
+    setConfirmDialog({
+      title: `Reset all of ${unit.title}?`,
+      message: `This discards your changes to every file in this unit (${unit.files.join(', ')}) and restores the original starter code. This can't be undone.`,
+      confirmLabel: 'Reset unit',
+      onConfirm: () => {
+        void doResetUnit()
+        setConfirmDialog(null)
+      },
+    })
+  }
+
   return (
     <div className="relative flex h-full flex-col">
       {!kernelReady && <StartupOverlay error={startupError} />}
@@ -211,6 +259,8 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
         onRunFile={handleRunFile}
         onDownloadFile={handleDownloadFile}
         onDownloadZip={handleDownloadZip}
+        onResetFile={handleResetFile}
+        onResetUnit={handleResetUnit}
         onBackToUnits={onBackToUnits}
       />
       <div className="flex flex-1 overflow-hidden">
@@ -249,6 +299,15 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
           onFocus={focusFigure}
         />
       ))}
+      {confirmDialog && (
+        <ConfirmDialog
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          confirmLabel={confirmDialog.confirmLabel}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={() => setConfirmDialog(null)}
+        />
+      )}
     </div>
   )
 }

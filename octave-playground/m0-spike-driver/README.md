@@ -300,3 +300,15 @@ a Figure window blocking the Toolbar, and a doubled legend on multi-trace plots.
   on a hover to appear. Fixed via `displayModeBar: true` in the `Plotly.
   newPlot` config, matching desktop Octave's own always-visible Figure
   toolbar.
+
+## Reset to starter (T3.3)
+
+- `t41-reset.js` -- edits the active file, clicks "Reset File", confirms the
+  confirm dialog names the specific filename, clicks Cancel and confirms the
+  edit survives, then confirms for real and checks the starter content came
+  back. Edits a *second* file and confirms a per-file reset on the first
+  doesn't touch it (isolation). Clicks "Reset unit", confirms the dialog
+  names every file in the unit, confirms it actually resets all of them.
+  Finally reloads the page and confirms the reset survived -- it's persisted
+  to the browser drive via the same `UnitFiles.resetToStarter` used for
+  first-visit seeding, not just in-memory state.

@@ -6,6 +6,8 @@ interface ToolbarProps {
   onRunFile: () => void
   onDownloadFile: () => void
   onDownloadZip: () => void
+  onResetFile: () => void
+  onResetUnit: () => void
   onBackToUnits?: () => void
 }
 
@@ -29,6 +31,8 @@ export function Toolbar({
   onRunFile,
   onDownloadFile,
   onDownloadZip,
+  onResetFile,
+  onResetUnit,
   onBackToUnits,
 }: ToolbarProps) {
   const busy = status === 'starting' || status === 'running'
@@ -72,6 +76,23 @@ export function Toolbar({
         title="Download all files as a zip, for Canvas submission"
       >
         Download All (.zip)
+      </button>
+      <div className="mx-1 h-5 w-px bg-slate-700" />
+      <button
+        className="rounded border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:bg-slate-800 disabled:opacity-40"
+        disabled={busy}
+        onClick={onResetFile}
+        title="Discard changes to the current file, restoring the original starter"
+      >
+        Reset File
+      </button>
+      <button
+        className="rounded px-2 py-1 text-xs text-slate-500 hover:bg-slate-800 hover:text-slate-300 disabled:opacity-40"
+        disabled={busy}
+        onClick={onResetUnit}
+        title="Discard changes to every file in this unit, restoring the original starters"
+      >
+        Reset unit
       </button>
       <span className="ml-auto flex items-center gap-1.5 text-xs text-slate-400">
         <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[status]}`} />
