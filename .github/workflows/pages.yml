@@ -68,11 +68,21 @@ jobs:
         working-directory: main-checkout/octave-playground
         run: python3 scripts/sync_harness.py
 
+      - name: Install main dependencies
+        working-directory: main-checkout/octave-playground
+        run: npm ci
+
       # Kernel assets (the Octave WASM build) are identical regardless of
       # which branch's *app code* is being tested -- built once from main's
       # pinned environment.yml (T1.3: don't float kernel versions) and reused
       # for dev too, so staging only varies the thing actually being staged
       # (app code) rather than accidentally testing a second moving part.
+      # Must run after npm ci: build-kernel-assets.sh's own last step calls
+      # vendor-worker-assets.mjs, which reads node_modules/@emscripten-forge/
+      # mambajs-core -- confirmed by reproducing this exact failure locally
+      # in WSL after the original single-checkout workflow's step order
+      # (sync -> npm ci -> build kernel assets) got disturbed by this
+      # rewrite.
       - name: Build kernel assets (shared, from main)
         working-directory: main-checkout/octave-playground
         shell: bash -l {0}
@@ -80,9 +90,7 @@ jobs:
 
       - name: Build main
         working-directory: main-checkout/octave-playground
-        run: |
-          npm ci
-          npm run build
+        run: npm run build
 
       - name: Copy shared kernel assets into dev checkout
         run: |
