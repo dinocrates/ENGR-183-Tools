@@ -293,13 +293,13 @@ Building this caught a real bug, not a hypothetical one: Octave caches a functio
 
 ### M2 — Course content
 
-**T2.1 — `new_unit.py` scaffolder**
-Generates `units/unitNN.json` (title, problem statement, file list), `starters/unitNN/` stubs, and `tests/unitNN_tests.m` from a template.
-*Acceptance:* `python scripts/new_unit.py 03 --functions foo,bar` produces a working unit skeleton requiring no app code changes.
+**T2.1 — `new_unit.py` scaffolder — DONE**
+`octave-playground/scripts/new_unit.py` generates `engr183-harness/assignments/unitNN/*.m` stubs, `_verify/unsolved+solved/unitNN/*.m`, `tests/unitNN_tests.m`, and `octave-playground/src/units/unitNN.json` from a template.
+*Acceptance:* `python scripts/new_unit.py 03 --functions foo,bar` produces a working unit skeleton requiring no app code changes. Verified end to end with a throwaway `unit99` (cleaned up before committing) — required no changes to any `.tsx`/`.ts` app code, since `src/units/index.ts`'s glob import (T2.5) picks up any `unitNN.json` automatically.
 
-**T2.2 — Problem statement panel**
-Render each unit's prose from `units/unitNN.json` beside the editor. This replaces what a notebook's markdown cells would have carried.
-*Acceptance:* Problem statement is readable alongside code without switching context; collapsible at narrow widths.
+**T2.2 — Problem statement panel — DONE**
+`src/components/ProblemStatement.tsx` renders each unit's title and description from `units/unitNN.json` above the editor, with a Hide/Show toggle. This replaces what a notebook's markdown cells would have carried.
+*Acceptance:* Problem statement is readable alongside code without switching context; collapsible at narrow widths. Verified via `m0-spike-driver/t23-problem-statement.js` and `t23-collapse.js`.
 
 **T2.3 — Author Units 01–07**
 Following the 15-unit course plan.
@@ -309,9 +309,11 @@ Following the 15-unit course plan.
 Only if plotting works. Otherwise raise for a scope decision.
 *Acceptance:* Same as T2.2, or a written scope-change proposal.
 
-**T2.5 — Unit index / landing page**
-Table of contents linking each unit, with a short description and what it covers.
-*Acceptance:* Landing page is the iframe target and links every published unit.
+**T2.5 — Unit index / landing page — DONE**
+`src/units/index.ts` auto-discovers every `unitNN.json` via `import.meta.glob` (no hardcoded unit list — adding a unit via T2.1's scaffolder needs no app code changes, per Goal 6). `src/components/UnitIndex.tsx` is the table-of-contents landing page (title + description per unit, links via `?unit=` in the URL). `App.tsx` became a thin router in front of it; the previous single-unit app body was extracted unchanged into `src/Playground.tsx`.
+*Acceptance:* Landing page is the iframe target and links every published unit. Verified via `m0-spike-driver/t24-unit-index.js` (index → select → Ready → back-to-index) and `t24b-deeplink-runtests.js` (direct `?unit=unit01` load skips the index; Run Tests still produces the correct report through the extracted `Playground` component).
+
+Building this on top of `?unit=` in the URL (needed just to make the back button and page refresh behave sanely) turned out to already satisfy T4.2's "per-unit deep links" requirement — see T4.2 below.
 
 ---
 
@@ -345,9 +347,9 @@ Brief orientation on first visit: where the files are, what Run Tests does, how 
 Verify the site loads in a Canvas iframe. Check frame-ancestors headers, storage partitioning, and third-party cookie behavior — browser storage inside a cross-origin iframe is a common failure point and may interact badly with R5.
 *Acceptance:* Loads and persists inside a real Canvas page. Any storage caveat documented.
 
-**T4.2 — Per-unit deep links**
+**T4.2 — Per-unit deep links — DONE (landed as a side effect of T2.5)**
 URL parameters that open directly to a given unit.
-*Acceptance:* `?unit=03` opens Unit 03 directly.
+*Acceptance:* `?unit=03` opens Unit 03 directly. `App.tsx`'s router reads `?unit=` on mount and renders straight into `Playground` when it names a known unit, skipping `UnitIndex` entirely — this was the natural way to make the T2.5 landing page's back button and page-refresh behavior correct, not separate work. Verified via `m0-spike-driver/t24b-deeplink-runtests.js`.
 
 **T4.3 — Mobile and small-viewport pass**
 Usable at Canvas iframe dimensions and on tablets.

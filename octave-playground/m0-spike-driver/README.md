@@ -120,3 +120,29 @@ DESIGN.md §6 for the full writeup.
 - `t22-overlay-noreapp.js` — confirms the overlay does *not* reappear after a failed Run
   Tests (a code error, tracked via `status`, is a different thing from `kernelReady`
   being false).
+
+## Problem statement panel (T2.2)
+
+- `t23-problem-statement.js` — confirms `ProblemStatement` renders the unit title and
+  description above the editor.
+- `t23-collapse.js` — clicks the panel's Hide/Show toggle, confirms the description
+  text is removed/restored while the title stays visible.
+
+## Unit index / landing page + multi-unit routing (T2.5)
+
+Same serving setup as T1.4 above (`npm run build && npm run preview -- --port 5183`).
+This ticket turned the app from a single hardcoded `unit01` page into a router: an
+index screen (`src/units/index.ts`'s `import.meta.glob` auto-discovery +
+`UnitIndex.tsx`) in front of the old app body (extracted verbatim into
+`Playground.tsx`), switched via `?unit=` in the URL (`App.tsx`) — which incidentally
+delivers DESIGN.md T4.2's deep-link mechanism as a side effect.
+
+- `t24-unit-index.js` — loads `/`, confirms the index lists "Unit 1", clicks it,
+  confirms the URL becomes `?unit=unit01` and the kernel reaches Ready, clicks
+  "← All units", confirms it's back at the index with the unit param cleared from
+  the URL.
+- `t24b-deeplink-runtests.js` — loads `/?unit=unit01` directly (skipping the index),
+  confirms Playground renders immediately, then clicks Run Tests and checks the
+  harness report renders through the extracted `Playground` component exactly as
+  before the refactor (0/30 against the unsolved starters — expected, since they
+  raise "not implemented" errors).
