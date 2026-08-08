@@ -3,6 +3,7 @@ const { chromium } = require('playwright');
 (async () => {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  await page.addInitScript(() => localStorage.setItem('engr183-persistence-ack', '1')); // T3.4: skip the first-visit warning, not what this script tests
   await page.goto('http://localhost:5183/', { waitUntil: 'load', timeout: 30000 });
   await page.waitForTimeout(500);
 

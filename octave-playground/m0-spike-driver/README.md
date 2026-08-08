@@ -312,3 +312,26 @@ a Figure window blocking the Toolbar, and a doubled legend on multi-trace plots.
   Finally reloads the page and confirms the reset survived -- it's persisted
   to the browser drive via the same `UnitFiles.resetToStarter` used for
   first-visit seeding, not just in-memory state.
+
+## Persistence warning (T3.4)
+
+- `t43-persistence-warning.js` -- fresh visit to the index: confirms the
+  warning shows, mentions the Download File/Download All buttons (R5's
+  mitigation), and can *only* be dismissed by clicking "Got it" -- clicking
+  the backdrop and pressing Escape both leave it up. Confirms it doesn't
+  reappear after a reload once acknowledged (tracked via a `localStorage`
+  flag, separate from the browser-storage drive used for file content).
+- `t43b-deeplink.js` -- same, but landing directly on a unit URL (skipping
+  the index) on a first-ever visit: confirms the warning still shows,
+  layered above the `StartupOverlay` ("Starting Octave..." text present
+  underneath at the same time), and that dismissing it doesn't disrupt the
+  kernel startup already in progress.
+
+Every script in the active regression suite (`t24*`, `t27-scratch.js`,
+`t29-download.js`, `t31-floating-figures.js`, `t34*`, `t37-overlap-legend.js`,
+`t41-reset.js`) now seeds `localStorage.setItem('engr183-persistence-ack',
+'1')` via `page.addInitScript(...)` right after `browser.newPage(...)`, so
+the new first-visit warning doesn't block clicks meant for whatever each
+script actually tests. Older one-off diagnostic scripts targeting already-resolved investigations
+(the `t14`-`t23` range) were left as historical record rather than
+retrofitted, since they aren't re-run as part of ongoing verification.
