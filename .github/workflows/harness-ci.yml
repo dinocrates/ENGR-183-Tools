@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - dev
     paths:
       - 'engr183-harness/**'
       - '.github/workflows/harness-ci.yml'
