@@ -51,12 +51,12 @@ export function FloatingFigure({
 
   return (
     <div
-      className="absolute flex w-[420px] flex-col rounded-md border border-slate-700 bg-slate-900 shadow-2xl shadow-black/50"
+      className="absolute flex w-[560px] flex-col overflow-hidden rounded-md border border-slate-700 bg-slate-900 shadow-2xl shadow-black/50"
       style={{ left: position.x, top: position.y, zIndex }}
       onMouseDown={() => onFocus(id)}
     >
       <div
-        className="flex cursor-move items-center justify-between rounded-t-md border-b border-slate-700 bg-slate-800 px-3 py-1.5 select-none"
+        className="flex cursor-move items-center justify-between border-b border-slate-700 bg-slate-800 px-3 py-1.5 select-none"
         onMouseDown={handleDragStart}
       >
         <span className="text-xs font-semibold text-slate-200">{label}</span>
@@ -68,7 +68,10 @@ export function FloatingFigure({
           ✕
         </button>
       </div>
-      <div className="h-72 w-full p-2">
+      {/* Real Octave/MATLAB figures render on white regardless of app theme
+          -- no padding here so the plot's own white background goes edge to
+          edge, like an actual Figure window's canvas. */}
+      <div className="h-[420px] w-full bg-white">
         <PlotOutput mimeBundle={mimeBundle} />
       </div>
     </div>

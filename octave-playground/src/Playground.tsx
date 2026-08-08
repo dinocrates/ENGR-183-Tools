@@ -9,6 +9,8 @@ import { FloatingFigure } from './components/FloatingFigure'
 import { Toolbar, type KernelStatus } from './components/Toolbar'
 import { StartupOverlay } from './components/StartupOverlay'
 import { ProblemStatement } from './components/ProblemStatement'
+import { Workspace, type WorkspaceVar } from './components/Workspace'
+import { WHOS_QUERY, parseWhosOutput } from './kernel/workspace'
 import type { UnitMeta } from './units'
 
 interface PlaygroundProps {
@@ -37,6 +39,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   const [output, setOutput] = useState('')
   const [figures, setFigures] = useState<Figure[]>([])
   const [zIndices, setZIndices] = useState<Record<string, number>>({})
+  const [workspaceVars, setWorkspaceVars] = useState<WorkspaceVar[]>([])
 
   // Separate from `status`: once the kernel has started successfully the
   // first time, a later Run Tests/Run File failure sets status to 'error'
@@ -129,6 +132,24 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     })
   }
 
+  // Runs after every Run Tests/Run File, matching desktop Octave's Workspace
+  // panel reflecting the base workspace as of the last command. Queried as a
+  // separate execute() call with its own local callback so its output never
+  // touches the Command Window or figures -- those are wired to
+  // handleExecuteChunk, this isn't.
+  async function refreshWorkspace() {
+    if (!sessionRef.current) return
+    let raw = ''
+    try {
+      await sessionRef.current.execute(WHOS_QUERY, (chunk) => {
+        if (chunk.kind === 'stream') raw += chunk.text
+      })
+      setWorkspaceVars(parseWhosOutput(raw))
+    } catch {
+      // best-effort; leave the Workspace panel showing its last-known state
+    }
+  }
+
   async function runCode(code: string) {
     if (!sessionRef.current) return
     setStatus('running')
@@ -138,6 +159,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       await sessionRef.current.execute(code, handleExecuteChunk)
       setDirtyFiles(new Set())
       setStatus('ready')
+      await refreshWorkspace()
     } catch (err) {
       setOutput((prev) => prev + '\n' + String(err))
       setStatus('error')
@@ -186,13 +208,16 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
         onBackToUnits={onBackToUnits}
       />
       <div className="flex flex-1 overflow-hidden">
-        <FileBrowser
-          unitTitle={unit.title}
-          files={unit.files}
-          activeFile={activeFile}
-          dirtyFiles={dirtyFiles}
-          onSelect={setActiveFile}
-        />
+        <div className="flex w-56 flex-col overflow-hidden border-r border-slate-700">
+          <FileBrowser
+            unitTitle={unit.title}
+            files={unit.files}
+            activeFile={activeFile}
+            dirtyFiles={dirtyFiles}
+            onSelect={setActiveFile}
+          />
+          <Workspace vars={workspaceVars} />
+        </div>
         <div className="flex flex-1 flex-col overflow-hidden">
           <ProblemStatement title={unit.title} description={unit.description} />
           <Editor

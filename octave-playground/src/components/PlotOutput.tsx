@@ -29,18 +29,29 @@ export function PlotOutput({ mimeBundle }: PlotOutputProps) {
 
     import('plotly.js-dist-min').then((Plotly) => {
       if (cancelled || !containerRef.current) return
-      Plotly.newPlot(
-        containerRef.current,
-        figure.data as never,
-        {
-          paper_bgcolor: 'transparent',
-          plot_bgcolor: 'transparent',
-          font: { color: '#d4d4d4', size: 11 },
-          margin: { t: 30, r: 20, b: 40, l: 50 },
-          ...figure.layout,
-        },
-        { responsive: true, displaylogo: false },
-      ).then((el) => {
+      // figure.layout comes from xeus-octave's own default Plotly config,
+      // which sets an explicit pixel width/height (e.g. 560x420) and its own
+      // plot_bgcolor -- spread it FIRST so our own choices below always win,
+      // otherwise the kernel's fixed size overrides `responsive` (the figure
+      // window and the plot inside it visibly mismatch) and its transparent
+      // background shows the dark app chrome through the "paper" area. Real
+      // Octave/MATLAB figures render on a white background regardless of the
+      // app's own theme -- that's the authentic look, not something to
+      // reskin to match the surrounding dark UI.
+      const layout: Record<string, unknown> = {
+        ...figure.layout,
+        paper_bgcolor: '#ffffff',
+        plot_bgcolor: '#ffffff',
+        font: { color: '#1e293b', size: 11 },
+        margin: { t: 30, r: 20, b: 40, l: 50 },
+        autosize: true,
+      }
+      delete layout.width
+      delete layout.height
+      Plotly.newPlot(containerRef.current, figure.data as never, layout, {
+        responsive: true,
+        displaylogo: false,
+      }).then((el) => {
         plotEl = el
       })
     }).catch((err) => setError(String(err)))

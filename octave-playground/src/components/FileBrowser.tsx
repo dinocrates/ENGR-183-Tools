@@ -8,7 +8,7 @@ interface FileBrowserProps {
 
 export function FileBrowser({ unitTitle, files, activeFile, dirtyFiles, onSelect }: FileBrowserProps) {
   return (
-    <div className="flex h-full w-56 flex-col border-r border-slate-700 bg-slate-900">
+    <div className="flex flex-1 flex-col overflow-hidden bg-slate-900">
       <div className="border-b border-slate-700 px-3 py-2 text-xs font-semibold text-slate-400">
         File Browser
       </div>

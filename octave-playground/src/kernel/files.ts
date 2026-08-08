@@ -105,5 +105,11 @@ export function buildWriteFilesCode(unitId: string, files: Record<string, string
       `clear ${fnName}`,
     );
   }
+  // `fid` is our own bookkeeping, reused across the loop above -- clear it so
+  // it doesn't show up as a leftover base-workspace variable in the
+  // Workspace panel (T3.7), which reflects exactly what `whos()` sees.
+  if (Object.keys(files).length > 0) {
+    lines.push('clear fid');
+  }
   return lines.join('\n');
 }

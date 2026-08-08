@@ -219,3 +219,30 @@ delivers DESIGN.md T4.2's deep-link mechanism as a side effect.
   full existing suite (`t24*`, `t27-scratch.js`, `t29-download.js`,
   `t31-floating-figures.js`) after the change and confirming zero functional
   regressions, plus visual review via screenshots (not committed).
+
+## Workspace panel + plot sizing/background fixes (T3.6 follow-up, T3.7)
+
+Stephen's review of the first theme+figures pass caught two real bugs and one
+missing panel:
+
+- `t34b-sizing.js` — confirms a Figure window's plot actually fills its window
+  (bounding boxes within 15px) and that Plotly's `_fullLayout.paper_bgcolor`/
+  `plot_bgcolor` are genuinely `#ffffff`, not the dark app chrome showing through
+  transparency. Root cause was `PlotOutput.tsx` spreading xeus-octave's own
+  layout JSON (which carries an explicit pixel `width`/`height` and its own
+  `plot_bgcolor`) *after* our own defaults, letting the kernel's values win;
+  fixed by spreading `figure.layout` first and applying our fixed
+  white/autosize choices after, so ours always wins, plus explicitly deleting
+  the merged layout's `width`/`height` so `autosize`+`responsive` actually
+  drive the size.
+- `t34-workspace.js` — the new Workspace panel (docked under File Browser, T3.7,
+  never in the original plan). Runs a plain script in the Scratch Pad
+  (top-level `x`/`y`/`name` assignments plus a bare unassigned `plot(x,y)`),
+  confirms the panel lists `x`, `y`, `name`, and an auto-assigned `ans` (real
+  Octave behavior when a function's return value isn't captured, not a bug --
+  it appeared unprompted during testing and was verified as correct rather
+  than filtered out), and confirms the internal `fid`/`__ws__`/`__i__`
+  bookkeeping variables used to query and write files never leak into the
+  displayed table. Also confirms a graded unit (function files only) leaves
+  the Workspace panel empty after Run File, matching real Octave -- calling a
+  function doesn't populate the caller's base workspace with its internals.
