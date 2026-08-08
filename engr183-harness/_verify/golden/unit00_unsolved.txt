@@ -1,0 +1,22 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  UNIT00  |  rubric check
+--------------------------------------------------------------------
+[ FAIL ] addTwo returns the sum of two positive numbers          0/5
+         -> your code raised an error: addTwo is not implemented yet. Open addTwo.m and write your code.
+[ FAIL ] addTwo works with negative numbers                      0/5
+         -> your code raised an error: addTwo is not implemented yet. Open addTwo.m and write your code.
+[ FAIL ] addTwo works with decimals                              0/5
+         -> your code raised an error: addTwo is not implemented yet. Open addTwo.m and write your code.
+[ FAIL ] circleArea computes the area of a unit circle           0/5
+         -> your code raised an error: circleArea is not implemented yet. Open circleArea.m and write your code.
+[ FAIL ] circleArea scales correctly with radius                 0/5
+         -> your code raised an error: circleArea is not implemented yet. Open circleArea.m and write your code.
+[ FAIL ] greet builds the expected greeting string               0/5
+         -> your code raised an error: greet is not implemented yet. Open greet.m and write your code.
+--------------------------------------------------------------------
+Score: 0/30 points (0%)   Criteria met: 0 of 6
+
+6 criteria left. Read the arrows above for hints.
+--------------------------------------------------------------------
+

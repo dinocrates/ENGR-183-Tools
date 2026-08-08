@@ -1,0 +1,28 @@
+name: engr183-harness CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'engr183-harness/**'
+      - '.github/workflows/harness-ci.yml'
+  pull_request:
+    paths:
+      - 'engr183-harness/**'
+
+jobs:
+  golden-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Octave
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y octave
+
+      - name: Run harness-parity golden check
+        working-directory: engr183-harness
+        run: octave-cli --no-gui --eval "setup; run('_verify/check_golden.m')"
