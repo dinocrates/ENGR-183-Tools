@@ -158,11 +158,11 @@ ENGR-183-Tools/
     │   │   ├── CommandWindow.tsx        # bottom-right
     │   │   └── Toolbar.tsx
     │   ├── units/                       # per-unit metadata (id, title, description, file list)
-    │   │   └── unit00.json
+    │   │   └── unit01.json
     │   └── styles/                      # MSJC dark blueprint tokens (Tailwind)
     ├── public/
     │   ├── starters/                    # seed files fetched at runtime to seed the drive per unit
-    │   │   └── unit00/  addTwo.m  circleArea.m  greet.m
+    │   │   └── unit01/  addTwo.m  circleArea.m  greet.m
     │   └── xeus/                        # kernel assets, built not committed (T1.3/T1.4)
     ├── vfs/                             # build-time mount into kernel FS
     │   └── engr183/
@@ -221,7 +221,7 @@ Run `version()` in the kernel.
 *Acceptance:* Version recorded in `M0-FINDINGS.md` alongside the locally-installed 8.4. Note any major-version gap explicitly.
 
 **T0.4 — Mount and run the real harness (the critical test)**
-Mount `+engr183`, `tests/`, and `assignments/unit00/` via `--XeusAddon.mount`. Run `engr183.runTests('unit00')` with (a) unsolved stubs and (b) correct solutions.
+Mount `+engr183`, `tests/`, and `assignments/unit01/` via `--XeusAddon.mount`. Run `engr183.runTests('unit01')` with (a) unsolved stubs and (b) correct solutions.
 *Acceptance:* Report output is **character-for-character identical** to local Octave 8.4 for both cases. Any diff is documented. This ticket is the whole project in miniature — if it fails, nothing else matters.
 
 **T0.5 — Verify `evalc` under WASM**
@@ -274,18 +274,18 @@ Read and write `.m` files through the contents drive. Seed a unit's starters on 
 
 **T1.6 — File Browser and Editor**
 Monaco with Octave/MATLAB syntax highlighting, named and arranged after Octave's own GUI (File Browser left, Editor top-right, tabbed). Tree lists the current unit's `.m` files. Tabs, dirty indicators, keyboard save.
-*Acceptance:* A student can open, edit, and switch between the three Unit 00 files.
+*Acceptance:* A student can open, edit, and switch between the three Unit 1 files.
 
 **T1.7 — Command Window and Run Tests**
 Toolbar button executes `engr183.runTests('unitNN')`. Stdout renders as monospace preformatted text, unmodified, in the Command Window panel (bottom-right, matching Octave's own layout). Also wire Run File.
 *Acceptance:* Rubric report in the browser is **character-for-character identical** to the same report in a local terminal.
 
-**T1.8 — Unit 00 end to end**
-Wire the existing Unit 00 starters and specs through the whole stack.
+**T1.8 — Unit 1 end to end**
+Wire the existing Unit 1 starters and specs through the whole stack.
 *Acceptance:* A student opens the URL, edits three files, clicks Run Tests, and reaches 30/30 without ever seeing a notebook, a cell, or the word Jupyter.
 
 **T1.9 — Harness-parity smoke test in CI — DONE**
-`ENGR-183-Tools/.github/workflows/harness-ci.yml` installs Octave on `ubuntu-latest` and runs `engr183-harness/_verify/check_golden.m`, which runs `runTests('unit00')` for both the unsolved and solved cases and diffs the exact output against committed golden files (`_verify/golden/*.txt`, refreshed via `_verify/regenerate_golden.m` after any deliberate report-format change).
+`ENGR-183-Tools/.github/workflows/harness-ci.yml` installs Octave on `ubuntu-latest` and runs `engr183-harness/_verify/check_golden.m`, which runs `runTests('unit01')` for both the unsolved and solved cases and diffs the exact output against committed golden files (`_verify/golden/*.txt`, refreshed via `_verify/regenerate_golden.m` after any deliberate report-format change).
 *Acceptance:* CI fails if harness output changes unexpectedly. This is the guardrail on Goal 3.
 
 Building this caught a real bug, not a hypothetical one: Octave caches a function by the path it first loaded it from, and overwriting the file on disk does **not** invalidate that cache — `rehash` doesn't help, only `clear <name>` does. Without it, a student who runs Tests once, fixes their code, and runs again in the *same* kernel session would silently see the stale first-run result. Fixed in both `check_golden.m`/`regenerate_golden.m` and, more importantly, in `octave-playground/src/kernel/files.ts`'s `buildWriteFilesCode` (verified directly: run unsolved → fix `circleArea.m` → rerun in the same session → correctly shows PASS, not the stale FAIL).
@@ -334,7 +334,7 @@ Prominent, non-dismissable-on-first-visit notice that work lives in browser stor
 
 **T3.5 — First-run onboarding**
 Brief orientation on first visit: where the files are, what Run Tests does, how to read the rubric report, how to download work for submission. Frame it in the same vocabulary the course uses locally — files and functions, not cells and kernels.
-*Acceptance:* A student who has only ever used local Octave can complete Unit 00 unaided and recognizes everything they see.
+*Acceptance:* A student who has only ever used local Octave can complete Unit 1 unaided and recognizes everything they see.
 
 ---
 
@@ -371,7 +371,7 @@ The file-based frontend is more work than a stock JupyterLite deploy, and it wil
 
 Plan:
 
-1. **Week 1 diagnostic.** Unit 00 submissions identify exactly who cannot install. Handle them individually first: most install failures are fixable in one message.
+1. **Week 1 diagnostic.** Unit 1 submissions identify exactly who cannot install. Handle them individually first: most install failures are fixable in one message.
 2. **Unbranded stopgap, if needed.** A stock JupyterLite deploy with the harness mounted can be stood up in hours from the M0 spike artifacts. Share it privately with affected students as a temporary workaround, explicitly labeled as such.
 3. **Do not launch the stopgap course-wide.** Showing 32 students a notebook interface, then replacing it mid-semester with a file interface, creates exactly the mismatch this design exists to avoid. The stopgap is triage for a named handful, not a product.
 4. **Ship M1 when it is genuinely ready**, and migrate the stopgap users over.
@@ -400,4 +400,4 @@ Confirmed by direct testing (`engr183-harness/_verify/run.m`, local Octave 11.3.
 - The `+engr183` harness passes and fails correctly for the solved and unsolved cases, with byte-identical report output between local Octave and the WASM kernel.
 - `evalc` captures student stdout while assigning results — used to stop missing semicolons flooding the rubric report. Confirmed under both local Octave and the WASM kernel (T0.5).
 - `onCleanup` path restoration used to trigger extra `warning()` lines under the WASM kernel not seen locally (xeus-octave's own `pause.m` gets shadowed during cleanup, plus a downstream `__have_gnuplot__` warning). **Fixed in M1**: `+engr183/restorePathQuietly.m` wraps the restore in `warning('off'/'on', 'all')`. Verified clean (zero extra output) in both local Octave and the browser kernel.
-- **Not yet verified:** the wrong-answer, missing-file, unset-output, and syntax-error report paths (`compare.m`/`runTests.m` support them structurally, but only the solved/unsolved paths have actually been exercised). Worth a quick pass before M1 ships Unit 00.
+- **Not yet verified:** the wrong-answer, missing-file, unset-output, and syntax-error report paths (`compare.m`/`runTests.m` support them structurally, but only the solved/unsolved paths have actually been exercised). Worth a quick pass before M1 ships Unit 1.

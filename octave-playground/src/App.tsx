@@ -5,9 +5,9 @@ import { FileBrowser } from './components/FileBrowser'
 import { Editor } from './components/Editor'
 import { CommandWindow } from './components/CommandWindow'
 import { Toolbar, type KernelStatus } from './components/Toolbar'
-import unit00 from './units/unit00.json'
+import unit01 from './units/unit01.json'
 
-const unit = unit00
+const unit = unit01
 
 function App() {
   const sessionRef = useRef<OctaveKernelSession | null>(null)
