@@ -6,6 +6,7 @@ import { Editor } from './components/Editor'
 import { CommandWindow } from './components/CommandWindow'
 import { Toolbar, type KernelStatus } from './components/Toolbar'
 import { StartupOverlay } from './components/StartupOverlay'
+import { ProblemStatement } from './components/ProblemStatement'
 import unit01 from './units/unit01.json'
 
 const unit = unit01
@@ -114,6 +115,7 @@ function App() {
           onSelect={setActiveFile}
         />
         <div className="flex flex-1 flex-col overflow-hidden">
+          <ProblemStatement title={unit.title} description={unit.description} />
           <Editor
             files={unit.files}
             activeFile={activeFile}
