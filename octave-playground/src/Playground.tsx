@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { OctaveKernelSession } from './kernel/session'
+import { OctaveKernelSession, type ExecuteChunk } from './kernel/session'
 import { createContentsManager, UnitFiles, buildWriteFilesCode } from './kernel/files'
 import { FileBrowser } from './components/FileBrowser'
 import { Editor } from './components/Editor'
@@ -8,6 +8,7 @@ import { Toolbar, type KernelStatus } from './components/Toolbar'
 import { StartupOverlay } from './components/StartupOverlay'
 import { ProblemStatement } from './components/ProblemStatement'
 import type { UnitMeta } from './units'
+import type { OutputBlock } from './components/CommandWindow'
 
 interface PlaygroundProps {
   unit: UnitMeta
@@ -23,7 +24,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   const [contents, setContents] = useState<Record<string, string>>({})
   const [dirtyFiles, setDirtyFiles] = useState<Set<string>>(new Set())
   const [activeFile, setActiveFile] = useState<string>(unit.files[0])
-  const [output, setOutput] = useState('')
+  const [output, setOutput] = useState<OutputBlock[]>([])
 
   // Separate from `status`: once the kernel has started successfully the
   // first time, a later Run Tests/Run File failure sets status to 'error'
@@ -73,18 +74,53 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     }, 500)
   }
 
+  // Consecutive text chunks are merged into one block so the Command Window
+  // doesn't spawn a new <pre> per stream event; a display chunk (a plot)
+  // always starts its own block so text before/after it stays in order.
+  function appendText(text: string) {
+    setOutput((prev) => {
+      const last = prev[prev.length - 1]
+      if (last?.kind === 'text') {
+        return [...prev.slice(0, -1), { kind: 'text', text: last.text + text }]
+      }
+      return [...prev, { kind: 'text', text }]
+    })
+  }
+
+  function handleExecuteChunk(chunk: ExecuteChunk) {
+    if (chunk.kind === 'stream') {
+      appendText(chunk.text)
+      return
+    }
+    // A plot arrives as an empty display_data placeholder (reserving a
+    // displayId) followed by an update_display_data with the real figure --
+    // patch the existing block in place rather than appending a second one.
+    setOutput((prev) => {
+      const existingIdx = chunk.displayId
+        ? prev.findIndex((b) => b.kind === 'plot' && b.displayId === chunk.displayId)
+        : -1
+      const block: OutputBlock = {
+        kind: 'plot',
+        displayId: chunk.displayId,
+        mimeBundle: chunk.mimeBundle,
+      }
+      if (existingIdx !== -1) {
+        return [...prev.slice(0, existingIdx), block, ...prev.slice(existingIdx + 1)]
+      }
+      return [...prev, block]
+    })
+  }
+
   async function runCode(code: string) {
     if (!sessionRef.current) return
     setStatus('running')
-    setOutput('')
+    setOutput([])
     try {
-      await sessionRef.current.execute(code, (chunk) => {
-        setOutput((prev) => prev + chunk.text)
-      })
+      await sessionRef.current.execute(code, handleExecuteChunk)
       setDirtyFiles(new Set())
       setStatus('ready')
     } catch (err) {
-      setOutput((prev) => prev + '\n' + String(err))
+      appendText('\n' + String(err))
       setStatus('error')
     }
   }
@@ -110,7 +146,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       {!kernelReady && <StartupOverlay error={startupError} />}
       <Toolbar
         status={status}
-        onRunTests={handleRunTests}
+        onRunTests={unit.isScratch ? undefined : handleRunTests}
         onRunFile={handleRunFile}
         onBackToUnits={onBackToUnits}
       />

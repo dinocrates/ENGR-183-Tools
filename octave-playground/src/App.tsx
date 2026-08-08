@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { units, getUnit } from './units'
+import { units, scratchUnit, getUnit } from './units'
 import { UnitIndex } from './components/UnitIndex'
 import Playground from './Playground'
 
@@ -34,7 +34,7 @@ function App() {
     return <Playground key={unit.id} unit={unit} onBackToUnits={backToUnits} />
   }
 
-  return <UnitIndex units={units} onSelect={selectUnit} />
+  return <UnitIndex units={units} scratchUnit={scratchUnit} onSelect={selectUnit} />
 }
 
 export default App

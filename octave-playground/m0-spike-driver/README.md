@@ -155,3 +155,29 @@ delivers DESIGN.md T4.2's deep-link mechanism as a side effect.
   Locally this was invisible (30s was already enough), but production's slower
   first-visit kernel startup exceeded it. Fixed by passing `null` explicitly for
   `arg`: `waitForFunction(fn, null, { timeout })`.
+
+## Plot rendering + Scratch Pad
+
+- `t26-plot-render.js` — types a `plot(...)` call into the real Monaco editor via
+  `page.keyboard.insertText()` (not `.type()` — Monaco's autoclosing-brackets
+  feature intercepts individual keydown events and duplicates typed `)`/`]`/`'`
+  characters, garbling anything bracket-heavy; `insertText` is paste-like and
+  bypasses that), clicks Run File, confirms a `.js-plotly-plot` element renders.
+  Uncovered the real message-shape bug (see `session.ts`): xeus-octave's `plot()`
+  sends an *empty* `display_data` placeholder first (reserving a `display_id`),
+  then the actual `application/vnd.plotly.v1+json` figure a moment later as an
+  `update_display_data` with the same `display_id` — our `execute()` originally
+  only handled `display_data`/`execute_result` and ignored `update_display_data`
+  entirely, so every plot silently rendered as nothing. Fixed by handling all
+  three message types uniformly and having `Playground.tsx` patch the existing
+  output block in place when a later chunk's `displayId` matches an earlier one.
+- `t27-scratch.js` — full Scratch Pad flow: index lists "Scratch Pad" separately
+  from graded units, selecting it starts the kernel, Run Tests is absent (no
+  rubric exists for free-play code) while Run File still works, a plot renders
+  there too, an edit survives a reload, and the back button returns to the index.
+  The reload check reads Monaco's live model via `window.monaco.editor.getModels()`
+  rather than `.textContent` on the editor DOM — Monaco virtualizes rendering, so
+  `.textContent` right after a render is unreliable and gave a false negative
+  before this was found (persistence itself was fine; verified directly by
+  dumping the `JupyterLite Storage` IndexedDB database's `files` store and seeing
+  `scratch/scratch.m` with the saved content, before fixing the check).

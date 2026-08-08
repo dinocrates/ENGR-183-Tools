@@ -2,10 +2,11 @@ import type { UnitMeta } from '../units'
 
 interface UnitIndexProps {
   units: UnitMeta[]
+  scratchUnit: UnitMeta
   onSelect: (unitId: string) => void
 }
 
-export function UnitIndex({ units, onSelect }: UnitIndexProps) {
+export function UnitIndex({ units, scratchUnit, onSelect }: UnitIndexProps) {
   return (
     <div className="mx-auto flex h-full max-w-2xl flex-col justify-center px-6">
       <h1 className="mb-1 text-xl font-semibold text-neutral-100">ENGR-183 Octave Playground</h1>
@@ -23,6 +24,15 @@ export function UnitIndex({ units, onSelect }: UnitIndexProps) {
           </li>
         ))}
       </ul>
+      <div className="mt-6 border-t border-neutral-800 pt-4">
+        <button
+          className="w-full rounded border border-dashed border-neutral-700 bg-neutral-900 px-4 py-3 text-left hover:border-neutral-500"
+          onClick={() => onSelect(scratchUnit.id)}
+        >
+          <div className="text-sm font-semibold text-neutral-100">{scratchUnit.title}</div>
+          <div className="mt-1 text-xs text-neutral-400">{scratchUnit.description}</div>
+        </button>
+      </div>
     </div>
   )
 }

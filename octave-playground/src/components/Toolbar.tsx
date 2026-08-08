@@ -2,7 +2,7 @@ export type KernelStatus = 'starting' | 'ready' | 'running' | 'error'
 
 interface ToolbarProps {
   status: KernelStatus
-  onRunTests: () => void
+  onRunTests?: () => void
   onRunFile: () => void
   onBackToUnits?: () => void
 }
@@ -26,13 +26,15 @@ export function Toolbar({ status, onRunTests, onRunFile, onBackToUnits }: Toolba
           ← All units
         </button>
       )}
-      <button
-        className="rounded bg-neutral-700 px-3 py-1 text-sm text-neutral-100 disabled:opacity-40"
-        disabled={busy}
-        onClick={onRunTests}
-      >
-        Run Tests
-      </button>
+      {onRunTests && (
+        <button
+          className="rounded bg-neutral-700 px-3 py-1 text-sm text-neutral-100 disabled:opacity-40"
+          disabled={busy}
+          onClick={onRunTests}
+        >
+          Run Tests
+        </button>
+      )}
       <button
         className="rounded bg-neutral-700 px-3 py-1 text-sm text-neutral-100 disabled:opacity-40"
         disabled={busy}

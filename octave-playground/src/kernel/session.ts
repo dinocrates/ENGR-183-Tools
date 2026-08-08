@@ -35,12 +35,11 @@ function ensurePageConfig(): void {
   document.head.appendChild(el);
 }
 
-export interface StreamChunk {
-  channel: 'stdout' | 'stderr';
-  text: string;
-}
+export type ExecuteChunk =
+  | { kind: 'stream'; channel: 'stdout' | 'stderr'; text: string }
+  | { kind: 'display'; displayId?: string; mimeBundle: Record<string, unknown> };
 
-export type StreamListener = (chunk: StreamChunk) => void;
+export type ExecuteListener = (chunk: ExecuteChunk) => void;
 
 /** Thin wrapper around one running Octave kernel. */
 export class OctaveKernelSession {
@@ -106,8 +105,9 @@ export class OctaveKernelSession {
     await this.start(this.contentsManager);
   }
 
-  /** Execute code, streaming stdout/stderr chunks as they arrive. */
-  async execute(code: string, onStream?: StreamListener): Promise<void> {
+  /** Execute code, streaming stdout/stderr text and rich display data (e.g.
+   *  plots) as they arrive, in the order the kernel emits them. */
+  async execute(code: string, onOutput?: ExecuteListener): Promise<void> {
     if (!this.kernel) {
       throw new Error('Kernel is not started');
     }
@@ -135,15 +135,39 @@ export class OctaveKernelSession {
       ) => {
         if (msg.header.msg_type === 'stream') {
           const content = (msg as KernelMessage.IStreamMsg).content;
-          onStream?.({
+          onOutput?.({
+            kind: 'stream',
             channel: content.name === 'stderr' ? 'stderr' : 'stdout',
             text: content.text,
           });
         } else if (msg.header.msg_type === 'error') {
           const content = (msg as KernelMessage.IErrorMsg).content;
-          onStream?.({
+          onOutput?.({
+            kind: 'stream',
             channel: 'stderr',
             text: `${content.ename}: ${content.evalue}`,
+          });
+        } else if (
+          msg.header.msg_type === 'display_data' ||
+          msg.header.msg_type === 'execute_result' ||
+          msg.header.msg_type === 'update_display_data'
+        ) {
+          // xeus-octave's plot() sends an empty display_data placeholder
+          // first (reserving a display_id), then the real Plotly figure a
+          // moment later as an update_display_data with the same
+          // display_id -- confirmed via m0-spike-driver/t26c-msgdump.js.
+          // Both are routed the same way; Playground.tsx uses displayId to
+          // patch the placeholder in place instead of appending a new block.
+          const content = (
+            msg as
+              | KernelMessage.IDisplayDataMsg
+              | KernelMessage.IExecuteResultMsg
+              | KernelMessage.IUpdateDisplayDataMsg
+          ).content;
+          onOutput?.({
+            kind: 'display',
+            displayId: content.transient?.display_id as string | undefined,
+            mimeBundle: content.data as Record<string, unknown>,
           });
         } else if (msg.header.msg_type === 'execute_reply') {
           const content = (msg as KernelMessage.IExecuteReplyMsg).content;

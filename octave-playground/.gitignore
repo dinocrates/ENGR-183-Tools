@@ -38,5 +38,15 @@ public/assets/
 # these and must stay gitignored alongside them, or a fresh clone falsely
 # detects "drift" against a manifest whose files were never checked out.
 vfs/
-public/starters/
 scripts/.sync_manifest.json
+
+# public/starters/* (not a bare trailing-slash "public/starters/") so git
+# still traverses the directory and the negation below can take effect --
+# once a directory itself is excluded, git prunes it and never evaluates
+# patterns for its children, no matter how they're negated.
+public/starters/*
+
+# ...except the Scratch Pad's starter (src/units/index.ts's scratchUnit):
+# there's no engr183-harness counterpart to sync it from, it's hand-authored
+# playground-only content, so it's real source and must be tracked.
+!public/starters/scratch/
