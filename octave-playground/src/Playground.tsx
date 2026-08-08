@@ -120,13 +120,19 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       zCounter.current += 1
       setZIndices((z) => ({ ...z, [id]: zCounter.current }))
       const cascade = (prev.length % 5) * 28
+      // Start past the app title bar + Toolbar (~74px) and the File Browser
+      // column (224px) -- spawning at (24, 24) put every figure directly on
+      // top of Run Tests/Run File, silently blocking the button underneath
+      // (confirmed via m0-spike-driver/t36b-rerun-debug.js: a click there
+      // was being intercepted by the figure window, not reaching the
+      // button -- not a re-run/data bug, a z-order UI bug).
       return [
         ...prev,
         {
           id,
           label: `Figure ${figureCount.current}`,
           mimeBundle: chunk.mimeBundle,
-          position: { x: 24 + cascade, y: 24 + cascade },
+          position: { x: 240 + cascade, y: 90 + cascade },
         },
       ]
     })

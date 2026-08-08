@@ -72,7 +72,7 @@ export function FloatingFigure({
           -- no padding here so the plot's own white background goes edge to
           edge, like an actual Figure window's canvas. */}
       <div className="h-[420px] w-full bg-white">
-        <PlotOutput mimeBundle={mimeBundle} />
+        <PlotOutput mimeBundle={mimeBundle} width={560} height={420} />
       </div>
     </div>
   )

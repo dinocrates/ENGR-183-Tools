@@ -246,3 +246,47 @@ missing panel:
   displayed table. Also confirms a graded unit (function files only) leaves
   the Workspace panel empty after Run File, matching real Octave -- calling a
   function doesn't populate the caller's base workspace with its internals.
+
+## Second review pass: Toolbar occlusion + doubled legend (T3.6 follow-up)
+
+Stephen caught two more issues after the first figures/theme/workspace pass:
+a Figure window blocking the Toolbar, and a doubled legend on multi-trace plots.
+
+- `t36b-rerun-debug.js` -- reproduces "re-running the same code looks weird."
+  Turned out not to be a kernel/data bug at all: the Figure window's default
+  spawn position (24, 24) sat directly on top of Run Tests/Run File, and a
+  click there was silently intercepted by the figure window instead of
+  reaching the button (`element intercepts pointer events`, straight from
+  Playwright's own error). Confirmed the kernel itself behaves correctly on
+  repeated runs -- closing the blocking figure first and re-running dumps a
+  fresh `display_id` each time and renders fine. Fixed by starting the
+  cascade past the app chrome (`x: 240, y: 90` instead of `24, 24`).
+- `t37-overlap-legend.js` -- the final regression check: confirms the figure
+  window no longer overlaps Run File, confirms a *direct* re-run click
+  succeeds with the figure still open (proving the actual fix, not just the
+  absence of overlap), and confirms exactly one legend mechanism is active
+  (`annotation-text` elements only, zero native-Plotly `legendtext` nodes).
+- `t37i-alltraces.js` -- the diagnostic that found the doubled-legend root
+  cause: dumped every SVG `<text>` node containing "sin"/"cos" and found two
+  separate pairs -- one classed `legendtext` (Plotly's own native legend)
+  and one classed `annotation-text` (xeus-octave's own hand-drawn legend,
+  implemented as Plotly annotations + leader-line traces, with
+  `showlegend: false` set deliberately to suppress the native one
+  underneath). The *first* review pass's fix for a different bug (legend
+  clipped past the window edge) had forced `showlegend: true` and a custom
+  `legend` position, not realizing the kernel already draws its own legend
+  -- that reintroduced Plotly's native legend on top of the kernel's,
+  producing the doubled/offset box. Fixed by reverting to trust the
+  kernel's own `showlegend`/`legend`/`margin` entirely; the original
+  clipping bug turned out to already be resolved by the first pass's
+  unrelated fix (matching `FloatingFigure`'s size to the kernel's own
+  560x420 canvas), so nothing else needed forcing. Kept as a diagnostic
+  reference (no pass/fail assertions), matching this repo's convention for
+  scripts that found a root cause (`t14-netdebug.js`, `t19-baseurl-debug.js`).
+- Also fixed in `PlotOutput.tsx` while chasing this: setup and cleanup both
+  independently did `import('plotly.js-dist-min').then(...)`, with nothing
+  guaranteeing an old effect's `purge()` resolved before a new effect's
+  `newPlot()` ran -- a figure updating twice quickly (two
+  `update_display_data` messages for one `hold on` plot sequence) could in
+  principle draw on top of itself before being cleared. Fixed by caching the
+  resolved module at module scope so cleanup can `purge()` synchronously.
