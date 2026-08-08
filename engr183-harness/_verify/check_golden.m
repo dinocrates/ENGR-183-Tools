@@ -1,61 +1,92 @@
 % CHECK_GOLDEN  CI guardrail on Goal 3 (byte-identical rubric output).
 %
-% Runs engr183.runTests('unit01') for the unsolved and solved cases and
-% compares the exact output against committed golden files. Fails (nonzero
-% exit via error()) on any mismatch, so a change to report.m/runTests.m/
-% compare.m that alters the rubric report gets caught in CI instead of
-% silently reaching students.
+% Runs engr183.runTests(unit) for every unit that has committed golden
+% files, for both the unsolved and solved cases, and compares the exact
+% output against those golden files. Units without golden files yet
+% (freshly scaffolded via new_unit.py, still being written) are skipped,
+% not failed -- run regenerate_golden.m once a unit is ready to opt it
+% into this check.
 %
 % Run from Octave with the repo root on the path (after `setup`):
-%     octave-cli --no-gui --eval "check_golden"
-%
-% To regenerate the golden files after a deliberate, reviewed format change,
-% see _verify/regenerate_golden.m.
+%     octave-cli --no-gui --eval "setup; run('_verify/check_golden.m')"
 
 here = fileparts(mfilename('fullpath'));
 root = fileparts(here);
+addpath(here);
+
+units = discoverUnits(root);
+if isempty(units)
+  error('check_golden:nounits', 'No units found under %s', fullfile(root, 'assignments'));
+end
+
 goldenDir = fullfile(here, 'golden');
-stubDir = fullfile(root, 'assignments', 'unit01');
-solvedDir = fullfile(here, 'solved');
-unsolvedDir = fullfile(here, 'unsolved');
-fns = {'addTwo.m', 'circleArea.m', 'greet.m'};
-
 failed = false;
-cases = {'unsolved', 'solved'};
+checkedAny = false;
 
-for c = 1:numel(cases)
-  caseName = cases{c};
-  if strcmp(caseName, 'solved')
-    for k = 1:numel(fns)
-      copyfile(fullfile(solvedDir, fns{k}), fullfile(stubDir, fns{k}));
-    end
-    % Octave caches a function by the path it first loaded it from;
-    % overwriting the file on disk doesn't invalidate that cache (even
-    % rehash doesn't help). Without this, the 'unsolved' pass above leaves
-    % addTwo/circleArea/greet cached in their unsolved form.
-    clear addTwo circleArea greet
+for u = 1:numel(units)
+  unit = units{u};
+  stubDir = fullfile(root, 'assignments', unit);
+  solvedDir = fullfile(here, 'solved', unit);
+  unsolvedDir = fullfile(here, 'unsolved', unit);
+
+  goldenUnsolved = fullfile(goldenDir, sprintf('%s_unsolved.txt', unit));
+  goldenSolved = fullfile(goldenDir, sprintf('%s_solved.txt', unit));
+
+  if exist(goldenUnsolved, 'file') ~= 2 && exist(goldenSolved, 'file') ~= 2
+    fprintf('SKIP %s (no golden files yet)\n', unit);
+    continue;
+  end
+  if exist(unsolvedDir, 'dir') ~= 7 || exist(solvedDir, 'dir') ~= 7
+    fprintf('SKIP %s (missing _verify/unsolved or _verify/solved fixtures)\n', unit);
+    continue;
   end
 
-  actual = evalc("engr183.runTests('unit01')");
-  goldenPath = fullfile(goldenDir, sprintf('unit01_%s.txt', caseName));
+  checkedAny = true;
+  fns = unitFunctionFiles(root, unit);
+  fnNames = cellfun(@(f) f(1:end-2), fns, 'UniformOutput', false);
 
-  if exist(goldenPath, 'file') ~= 2
-    fprintf('MISSING golden file: %s\n', goldenPath);
-    failed = true;
-  else
+  cases = {'unsolved', 'solved'};
+  for c = 1:numel(cases)
+    caseName = cases{c};
+    srcDir = unsolvedDir;
+    if strcmp(caseName, 'solved')
+      srcDir = solvedDir;
+    end
+    for k = 1:numel(fns)
+      copyfile(fullfile(srcDir, fns{k}), fullfile(stubDir, fns{k}));
+    end
+    % Octave caches a function by the path it first loaded it from;
+    % overwriting the file on disk doesn't reliably invalidate that cache
+    % (even rehash doesn't help -- only clear <name> does).
+    if ~isempty(fnNames)
+      clear(fnNames{:});
+    end
+
+    actual = evalc(sprintf('engr183.runTests(''%s'')', unit));
+    goldenPath = fullfile(goldenDir, sprintf('%s_%s.txt', unit, caseName));
+
+    if exist(goldenPath, 'file') ~= 2
+      fprintf('MISSING golden file: %s\n', goldenPath);
+      failed = true;
+      continue;
+    end
     expected = fileread(goldenPath);
     if strcmp(actual, expected)
-      fprintf('OK   %s matches golden\n', caseName);
+      fprintf('OK   %s %s matches golden\n', unit, caseName);
     else
-      fprintf('FAIL %s does not match golden (%s)\n', caseName, goldenPath);
+      fprintf('FAIL %s %s does not match golden (%s)\n', unit, caseName, goldenPath);
       fprintf('--- expected ---\n%s\n--- actual ---\n%s\n', expected, actual);
       failed = true;
     end
   end
+
+  for k = 1:numel(fns)
+    copyfile(fullfile(unsolvedDir, fns{k}), fullfile(stubDir, fns{k}));
+  end
 end
 
-for k = 1:numel(fns)
-  copyfile(fullfile(unsolvedDir, fns{k}), fullfile(stubDir, fns{k}));
+if ~checkedAny
+  fprintf('\nNo units had golden files to check.\n');
 end
 
 if failed
