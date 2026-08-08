@@ -105,3 +105,18 @@ DESIGN.md §6 for the full writeup.
   registration state, `t21-coi-headers.js` shows per-response COOP/COEP headers).
   Fixed in `index.html` with a small guarded retry: if still not isolated ~1.5s after
   load, force one more reload ourselves (once, sessionStorage-guarded so it can't loop).
+- `t21-repeat-check.js` — runs 5 fresh-profile visits to the live site in a row, logging
+  `crossOriginIsolated` and kernel status for each. Used to confirm the guarded-retry
+  fix actually resolved the intermittency rather than just happening to pass once.
+
+## Startup loading overlay (UX: "give it a loading bar")
+
+- `t22-overlay-dom.js` — confirms `StartupOverlay` text is present right after load and
+  gone once the kernel reports ready (DOM-text based, not a screenshot — Playwright's
+  screenshot capture broke partway through this session, likely from ~40 orphaned
+  `chrome.exe` processes left behind by earlier scripts whose `catch` block called
+  `process.exit(1)` without `browser.close()` first; left uninvestigated rather than
+  bulk-killing Chrome processes that couldn't be confidently confirmed as automation-only).
+- `t22-overlay-noreapp.js` — confirms the overlay does *not* reappear after a failed Run
+  Tests (a code error, tracked via `status`, is a different thing from `kernelReady`
+  being false).

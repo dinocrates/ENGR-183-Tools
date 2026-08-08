@@ -5,6 +5,7 @@ import { FileBrowser } from './components/FileBrowser'
 import { Editor } from './components/Editor'
 import { CommandWindow } from './components/CommandWindow'
 import { Toolbar, type KernelStatus } from './components/Toolbar'
+import { StartupOverlay } from './components/StartupOverlay'
 import unit01 from './units/unit01.json'
 
 const unit = unit01
@@ -19,6 +20,13 @@ function App() {
   const [dirtyFiles, setDirtyFiles] = useState<Set<string>>(new Set())
   const [activeFile, setActiveFile] = useState<string>(unit.files[0])
   const [output, setOutput] = useState('')
+
+  // Separate from `status`: once the kernel has started successfully the
+  // first time, a later Run Tests/Run File failure sets status to 'error'
+  // too, but that's a code error in the Command Window, not a reason to
+  // bring back the full-screen "Octave didn't start" overlay.
+  const [kernelReady, setKernelReady] = useState(false)
+  const [startupError, setStartupError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -35,11 +43,12 @@ function App() {
       await session.start(contentsManager)
       if (cancelled) return
       sessionRef.current = session
+      setKernelReady(true)
       setStatus('ready')
     })().catch((err) => {
       if (cancelled) return
+      setStartupError(String(err))
       setStatus('error')
-      setOutput(String(err))
     })
     return () => {
       cancelled = true
@@ -94,6 +103,7 @@ function App() {
 
   return (
     <div className="flex h-full flex-col">
+      {!kernelReady && <StartupOverlay error={startupError} />}
       <Toolbar status={status} onRunTests={handleRunTests} onRunFile={handleRunFile} />
       <div className="flex flex-1 overflow-hidden">
         <FileBrowser
