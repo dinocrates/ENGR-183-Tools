@@ -191,6 +191,14 @@ Note the split between `vfs/` and `public/starters/`. The harness and test specs
 
 Both service-worker fixes share one visible side effect worth carrying into M3 polish: a genuinely first-ever visitor sees one (occasionally two) automatic page reloads a couple seconds in, before the kernel starts for real. Not explained anywhere in the UI yet — a bare reload with no context could look like a glitch to a student.
 
+**Dev/staging environment.** Local `npm run preview` has repeatedly failed to catch bugs that only show up on the real deployed site (the four bugs directly above are all examples) — so "test locally before pushing to main" was never a complete safety net for this project. `.github/workflows/pages.yml` now builds and deploys *both* `main` and a `dev` branch on every run, regardless of which one triggered it, publishing `main` to the real student-facing `octave-playground/` path and `dev` to a separate `octave-playground-dev/` path in the same deploy. GitHub Pages via `deploy-pages` publishes one full-site snapshot per deploy — building both refs every time is what keeps a `dev` push from ever silently wiping out `main`'s last published output (or vice versa). Kernel assets (the slow part — the Octave WASM build) are built once from `main`'s pinned `environment.yml` and reused for `dev`'s build too, so staging only varies the thing actually being staged (app code), not the kernel environment as well.
+
+Two real setup issues surfaced getting this working, worth remembering if it's ever rebuilt from scratch:
+1. `build-kernel-assets.sh`'s own last step calls `vendor-worker-assets.mjs`, which reads `node_modules/@emscripten-forge/mambajs-core` — it must run *after* `npm ci`, not before. Confirmed by reproducing the exact CI failure locally in WSL (no `gh` CLI available and GitHub's Actions log UI is client-rendered enough that `WebFetch` couldn't extract per-step detail, so direct reproduction was the reliable path).
+2. The `github-pages` deployment environment has a branch protection rule, set by default when Pages is first configured, that only allows the original source branch to deploy to it. `dev`'s build succeeded but its deploy was rejected until `dev` was added under **Settings → Environments → github-pages → Deployment branches and tags**.
+
+Also: an `--allow-empty` commit does not trigger this workflow. The `paths:` filter only matches pushes that actually touch matching files, so an empty commit is invisible to it — needed a trivial real change to retrigger during testing.
+
 ## 7. Milestones
 
 - **M0 — Feasibility spike (GATE). DONE.** Prove the kernel works. See `M0-FINDINGS.md` — recommendation: proceed to M1, no scope cuts.

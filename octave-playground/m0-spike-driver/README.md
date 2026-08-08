@@ -374,3 +374,27 @@ same-origin nesting wouldn't have caught this at all.
 - `t46b-debug.js` -- dumps the full Command Window text from the new-tab
   flow for a direct visual confirmation: character-perfect rubric report,
   same as every other Run Tests verification this session.
+
+## Dev/staging deploy environment
+
+`.github/workflows/pages.yml` was rewritten to build and deploy both `main`
+and `dev` on every run, publishing `dev` to a separate
+`octave-playground-dev/` path so there's a real GitHub Pages environment to
+test against, not just `npm run preview` (which has repeatedly missed
+production-only bugs all session -- COI service worker timing, response
+headers, WASM asset MIME handling). Two real issues came up getting this
+working: `build-kernel-assets.sh` needs `npm ci` to have already run (its
+own last step reads `node_modules/@emscripten-forge/mambajs-core`), found
+by reproducing the exact CI failure locally in WSL rather than fighting
+GitHub's client-rendered Actions log UI through `WebFetch`; and the
+`github-pages` environment's default branch protection rule only allows the
+original source branch to deploy, requiring `dev` to be added under
+Settings -> Environments -> github-pages -> Deployment branches and tags.
+
+- `t47-dev-env-check.js` -- the real verification, once both issues were
+  fixed: loads `octave-playground-dev/?unit=unit01` on the live dev
+  deployment (not local preview), dismisses the persistence warning,
+  confirms the kernel reaches Ready, confirms `crossOriginIsolated: true`,
+  and runs Run Tests, confirming a correct `0/30` for unsolved starters with
+  no filesystem error -- proving the dev environment is genuinely
+  functional, not just serving a 200.
