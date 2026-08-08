@@ -59,7 +59,7 @@ jobs:
       - name: Build kernel assets
         working-directory: octave-playground
         shell: bash -l {0}
-        run: ./scripts/build-kernel-assets.sh
+        run: bash scripts/build-kernel-assets.sh
 
       - name: Build octave-playground
         working-directory: octave-playground
