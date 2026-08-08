@@ -92,5 +92,16 @@ DESIGN.md §6 for the full writeup.
   service worker's self-triggered reload completes) and `true` from the second
   navigation on.
 - `t20-live-realistic.js` — the realistic end-to-end check: load, wait for the
-  service-worker reload to settle, *then* interact. This is the one that actually
-  passed 30/30 live.
+  service-worker reload to settle, *then* interact. Passed 30/30 live once, but see
+  below -- turned out to be timing-dependent, not actually reliable.
+- `t21-coi-sw-state.js` / `t21-coi-headers.js` — dug into a *second* live failure after
+  a later deploy: `crossOriginIsolated` sometimes stayed `false` even after the
+  vendored script's reload, with the service worker showing `active` but
+  `navigator.serviceWorker.controller` still `false` and the main document's own
+  response never getting COOP/COEP (only later subresources did). Root cause: the
+  vendored script's `shouldRegister()` guard means it only ever attempts one reload
+  per session; on some timing that reload doesn't land on a controlled load, and it
+  then gives up silently for the rest of the session (`t21-coi-sw-state.js` shows the
+  registration state, `t21-coi-headers.js` shows per-response COOP/COEP headers).
+  Fixed in `index.html` with a small guarded retry: if still not isolated ~1.5s after
+  load, force one more reload ourselves (once, sessionStorage-guarded so it can't loop).
