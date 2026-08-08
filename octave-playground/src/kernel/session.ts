@@ -16,10 +16,18 @@ function ensurePageConfig(): void {
   if (document.getElementById('jupyter-config-data')) {
     return;
   }
+  // import.meta.env.BASE_URL is intentionally relative (vite.config.ts sets
+  // base: './' for portability) -- e.g. just './'. Worker scripts resolve
+  // relative asset paths against their own script location, not the page,
+  // so a bare relative baseUrl silently resolves kernel asset URLs to the
+  // domain root once deployed under a subpath (only reproduces once actually
+  // deployed there -- local dev serves from origin root, where relative and
+  // absolute happen to be identical). Resolve to an absolute URL instead.
+  const absoluteBaseUrl = new URL(import.meta.env.BASE_URL, window.location.href).href;
   const el = document.createElement('script');
   el.id = 'jupyter-config-data';
   el.type = 'application/json';
-  el.textContent = JSON.stringify({ baseUrl: import.meta.env.BASE_URL });
+  el.textContent = JSON.stringify({ baseUrl: absoluteBaseUrl });
   document.head.appendChild(el);
 }
 
