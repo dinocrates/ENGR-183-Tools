@@ -1,3 +1,5 @@
+import { PanelHeader } from './PanelHeader'
+
 export interface WorkspaceVar {
   name: string
   size: string
@@ -6,18 +8,18 @@ export interface WorkspaceVar {
 
 interface WorkspaceProps {
   vars: WorkspaceVar[]
+  collapsed: boolean
+  onToggleCollapse: () => void
 }
 
 // Octave's own desktop GUI docks Workspace directly under File Browser, in
-// the same left-hand column -- see FileBrowser's sibling wrapper in
+// the same left-hand column -- see FileBrowser's sibling Panel in
 // Playground.tsx. Read-only: no variable editor (real Octave's double-click-
 // to-edit is out of scope here).
-export function Workspace({ vars }: WorkspaceProps) {
+export function Workspace({ vars, collapsed, onToggleCollapse }: WorkspaceProps) {
   return (
-    <div className="flex flex-1 flex-col overflow-hidden border-t border-slate-700 bg-slate-900">
-      <div className="border-b border-slate-700 px-3 py-2 text-xs font-semibold text-slate-400">
-        Workspace
-      </div>
+    <div className="flex h-full flex-col overflow-hidden bg-slate-900">
+      <PanelHeader title="Workspace" collapsed={collapsed} onToggleCollapse={onToggleCollapse} />
       <div className="flex-1 overflow-auto">
         {vars.length === 0 ? (
           <div className="px-3 py-2 text-xs text-slate-600">No variables</div>

@@ -29,10 +29,11 @@ const { chromium } = require('playwright');
   );
   console.log('figure labels:', JSON.stringify(labels));
 
-  const commandWindowText = await page.evaluate(() => {
-    const cw = Array.from(document.querySelectorAll('div')).find((d) => d.textContent === 'Command Window');
-    return cw?.parentElement?.textContent ?? '';
-  });
+  // Query the <pre> output directly rather than climbing from the "Command
+  // Window" header text -- PanelHeader wraps that text in a <span> alongside
+  // a collapse button now, so the header div's own textContent is no longer
+  // an exact "Command Window" match (it also contains the button glyph).
+  const commandWindowText = await page.evaluate(() => document.querySelector('pre')?.textContent ?? '');
   console.log('plot NOT inline in command window text:', !commandWindowText.includes('scatter'));
   console.log('command window still shows disp() text:', commandWindowText.includes('done one') && commandWindowText.includes('done two'));
 

@@ -420,3 +420,34 @@ Settings -> Environments -> github-pages -> Deployment branches and tags.
   `octave-playground/` production deploy respectively, following this
   session's now-standard pattern: verify on `dev` first, merge, verify the
   same thing again on `main` post-merge.
+
+## Resizable / collapsible layout panes (T3.10)
+
+- `t52-panel-resize-collapse.js` -- drags the sidebar-vs-main-content
+  separator (`[data-separator]`, index 1 in DOM order -- index 0 is the
+  File Browser/Workspace divider nested *inside* the sidebar, which appears
+  earlier in the DOM despite being visually "below" the outer one; getting
+  this index wrong silently drags the wrong divider with no error) and
+  confirms the sidebar actually widens. Clicks File Browser's collapse
+  button, confirms the pane shrinks to header height and the file list is
+  genuinely clipped out of view (checked geometrically: the file button's Y
+  position falls below the collapsed pane's visible bottom edge --
+  `isVisible()` alone gives a false positive here, since it doesn't account
+  for a flex/overflow-clipped ancestor; confirmed visually via screenshot
+  before trusting the geometric check). Confirms the expand button appears
+  and restores it. Collapses Command Window and confirms Editor grows to
+  fill the reclaimed space. Finally runs Run Tests after all that resizing/
+  collapsing and confirms it still produces a correct report.
+- Real bug caught building this: `react-resizable-panels`' `Panel` size
+  props (`defaultSize`/`minSize`/`maxSize`) interpret a bare number as
+  **pixels**, not percent -- percentages need an explicit string
+  (`defaultSize="18"`). Passed raw numbers on the first attempt, which
+  rendered a several-pixel-wide sidebar; caught immediately via a local
+  screenshot before ever touching a real deploy.
+- Fixed two other test scripts along the way (`t31-floating-figures.js`,
+  `t33-prod-figures-theme.js`): both located the Command Window's output via
+  `document.querySelectorAll('div').find(d => d.textContent === 'Command
+  Window')`, which stopped matching once `PanelHeader` wrapped that label in
+  a `<span>` alongside a collapse button (the header div's own textContent
+  now includes the button glyph too). Fixed by querying the `<pre>` output
+  element directly instead of climbing from the header text.

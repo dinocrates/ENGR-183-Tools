@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Group, Panel, Separator, type PanelImperativeHandle } from 'react-resizable-panels'
 import { OctaveKernelSession, type ExecuteChunk } from './kernel/session'
 import { createContentsManager, UnitFiles, buildWriteFilesCode } from './kernel/files'
 import { downloadFile, downloadZip } from './kernel/download'
@@ -32,6 +33,9 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   const saveTimers = useRef<Record<string, number>>({})
   const figureCount = useRef(0)
   const zCounter = useRef(1)
+  const fileBrowserPanelRef = useRef<PanelImperativeHandle>(null)
+  const workspacePanelRef = useRef<PanelImperativeHandle>(null)
+  const commandWindowPanelRef = useRef<PanelImperativeHandle>(null)
 
   const [status, setStatus] = useState<KernelStatus>('starting')
   const [contents, setContents] = useState<Record<string, string>>({})
@@ -41,6 +45,9 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   const [figures, setFigures] = useState<Figure[]>([])
   const [zIndices, setZIndices] = useState<Record<string, number>>({})
   const [workspaceVars, setWorkspaceVars] = useState<WorkspaceVar[]>([])
+  const [fileBrowserCollapsed, setFileBrowserCollapsed] = useState(false)
+  const [workspaceCollapsed, setWorkspaceCollapsed] = useState(false)
+  const [commandWindowCollapsed, setCommandWindowCollapsed] = useState(false)
   const [confirmDialog, setConfirmDialog] = useState<{
     title: string
     message: string
@@ -244,6 +251,33 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     })
   }
 
+  // Each pane's collapsed state is tracked locally rather than read live from
+  // the panel ref, so the header button's icon can reflect it -- but it also
+  // needs to stay in sync when a panel gets collapsed by dragging the
+  // Separator past its minSize instead of clicking the button, hence the
+  // onResize handlers below re-deriving it from panelRef.isCollapsed() after
+  // every resize regardless of what triggered it.
+  function toggleFileBrowser() {
+    const panel = fileBrowserPanelRef.current
+    if (!panel) return
+    if (panel.isCollapsed()) panel.expand()
+    else panel.collapse()
+  }
+
+  function toggleWorkspace() {
+    const panel = workspacePanelRef.current
+    if (!panel) return
+    if (panel.isCollapsed()) panel.expand()
+    else panel.collapse()
+  }
+
+  function toggleCommandWindow() {
+    const panel = commandWindowPanelRef.current
+    if (!panel) return
+    if (panel.isCollapsed()) panel.expand()
+    else panel.collapse()
+  }
+
   return (
     <div className="relative flex h-full flex-col">
       {!kernelReady && <StartupOverlay error={startupError} />}
@@ -263,30 +297,81 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
         onResetUnit={handleResetUnit}
         onBackToUnits={onBackToUnits}
       />
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex w-56 flex-col overflow-hidden border-r border-slate-700">
-          <FileBrowser
-            unitTitle={unit.title}
-            files={unit.files}
-            activeFile={activeFile}
-            dirtyFiles={dirtyFiles}
-            onSelect={setActiveFile}
-          />
-          <Workspace vars={workspaceVars} />
-        </div>
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <ProblemStatement title={unit.title} description={unit.description} />
-          <Editor
-            files={unit.files}
-            activeFile={activeFile}
-            contents={contents}
-            dirtyFiles={dirtyFiles}
-            onSelectTab={setActiveFile}
-            onChange={handleChange}
-          />
-          <CommandWindow output={output} />
-        </div>
-      </div>
+      <Group orientation="horizontal" className="flex-1 overflow-hidden">
+        <Panel id="sidebar" defaultSize="18" minSize="12" maxSize="40">
+          <Group orientation="vertical" className="h-full border-r border-slate-700">
+            <Panel
+              id="file-browser"
+              defaultSize="50"
+              minSize="10"
+              collapsible
+              collapsedSize={29}
+              panelRef={fileBrowserPanelRef}
+              onResize={() => setFileBrowserCollapsed(!!fileBrowserPanelRef.current?.isCollapsed())}
+            >
+              <FileBrowser
+                unitTitle={unit.title}
+                files={unit.files}
+                activeFile={activeFile}
+                dirtyFiles={dirtyFiles}
+                onSelect={setActiveFile}
+                collapsed={fileBrowserCollapsed}
+                onToggleCollapse={toggleFileBrowser}
+              />
+            </Panel>
+            <Separator className="h-1 cursor-row-resize bg-slate-800 transition-colors hover:bg-cyan-600" />
+            <Panel
+              id="workspace"
+              defaultSize="50"
+              minSize="10"
+              collapsible
+              collapsedSize={29}
+              panelRef={workspacePanelRef}
+              onResize={() => setWorkspaceCollapsed(!!workspacePanelRef.current?.isCollapsed())}
+            >
+              <Workspace
+                vars={workspaceVars}
+                collapsed={workspaceCollapsed}
+                onToggleCollapse={toggleWorkspace}
+              />
+            </Panel>
+          </Group>
+        </Panel>
+        <Separator className="w-1 cursor-col-resize bg-slate-800 transition-colors hover:bg-cyan-600" />
+        <Panel id="main-content" defaultSize="82">
+          <div className="flex h-full flex-col overflow-hidden">
+            <ProblemStatement title={unit.title} description={unit.description} />
+            <Group orientation="vertical" className="flex-1 overflow-hidden">
+              <Panel id="editor" defaultSize="70" minSize="15">
+                <Editor
+                  files={unit.files}
+                  activeFile={activeFile}
+                  contents={contents}
+                  dirtyFiles={dirtyFiles}
+                  onSelectTab={setActiveFile}
+                  onChange={handleChange}
+                />
+              </Panel>
+              <Separator className="h-1 cursor-row-resize bg-slate-800 transition-colors hover:bg-cyan-600" />
+              <Panel
+                id="command-window"
+                defaultSize="30"
+                minSize="8"
+                collapsible
+                collapsedSize={25}
+                panelRef={commandWindowPanelRef}
+                onResize={() => setCommandWindowCollapsed(!!commandWindowPanelRef.current?.isCollapsed())}
+              >
+                <CommandWindow
+                  output={output}
+                  collapsed={commandWindowCollapsed}
+                  onToggleCollapse={toggleCommandWindow}
+                />
+              </Panel>
+            </Group>
+          </div>
+        </Panel>
+      </Group>
       {figures.map((figure) => (
         <FloatingFigure
           key={figure.id}

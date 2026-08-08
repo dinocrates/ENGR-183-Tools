@@ -1,13 +1,15 @@
+import { PanelHeader } from './PanelHeader'
+
 interface CommandWindowProps {
   output: string
+  collapsed: boolean
+  onToggleCollapse: () => void
 }
 
-export function CommandWindow({ output }: CommandWindowProps) {
+export function CommandWindow({ output, collapsed, onToggleCollapse }: CommandWindowProps) {
   return (
-    <div className="flex h-56 flex-col border-t border-slate-700 bg-slate-950">
-      <div className="border-b border-slate-700 px-3 py-1 text-xs font-semibold text-slate-400">
-        Command Window
-      </div>
+    <div className="flex h-full flex-col bg-slate-950">
+      <PanelHeader title="Command Window" collapsed={collapsed} onToggleCollapse={onToggleCollapse} />
       <pre className="flex-1 overflow-auto whitespace-pre-wrap p-3 font-mono text-xs text-slate-100">
         {output || ' '}
       </pre>

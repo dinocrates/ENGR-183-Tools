@@ -19,10 +19,10 @@ const { chromium } = require('playwright');
   const figureCount = await page.evaluate(() => document.querySelectorAll('.js-plotly-plot').length);
   console.log('prod: two floating figure windows:', figureCount === 2);
 
-  const commandWindowText = await page.evaluate(() => {
-    const cw = Array.from(document.querySelectorAll('div')).find((d) => d.textContent === 'Command Window');
-    return cw?.parentElement?.textContent ?? '';
-  });
+  // Query the <pre> output directly -- PanelHeader (T3.10's resizable panes)
+  // wraps the "Command Window" label in a <span> alongside a collapse
+  // button, so the header div's own textContent is no longer an exact match.
+  const commandWindowText = await page.evaluate(() => document.querySelector('pre')?.textContent ?? '');
   console.log('prod: plots not inline in command window:', !commandWindowText.includes('scatter'));
   console.log('prod: command window shows text output:', commandWindowText.includes('done one') && commandWindowText.includes('done two'));
 
