@@ -185,7 +185,7 @@ Note the split between `vfs/` and `public/starters/`. The harness and test specs
 ## 7. Milestones
 
 - **M0 — Feasibility spike (GATE). DONE.** Prove the kernel works. See `M0-FINDINGS.md` — recommendation: proceed to M1, no scope cuts.
-- **M1 — Minimum viable playground (in progress).** One unit, harness running, deployed.
+- **M1 — Minimum viable playground. DONE.** One unit, harness running, deployed locally and verified end to end (deploy-to-Pages itself is untested — the workflow exists but hasn't had a real push through it yet).
 - **M2 — Course content.** All units, scaffolding tooling.
 - **M3 — Student experience.** Persistence, export, reset, branding.
 - **M4 — Canvas integration.** Embedding, per-unit deep links.
@@ -276,9 +276,11 @@ Toolbar button executes `engr183.runTests('unitNN')`. Stdout renders as monospac
 Wire the existing Unit 00 starters and specs through the whole stack.
 *Acceptance:* A student opens the URL, edits three files, clicks Run Tests, and reaches 30/30 without ever seeing a notebook, a cell, or the word Jupyter.
 
-**T1.9 — Harness-parity smoke test in CI**
-CI runs `runTests('unit00')` under headless local Octave and asserts the output matches a committed golden file.
+**T1.9 — Harness-parity smoke test in CI — DONE**
+`ENGR-183-Tools/.github/workflows/harness-ci.yml` installs Octave on `ubuntu-latest` and runs `engr183-harness/_verify/check_golden.m`, which runs `runTests('unit00')` for both the unsolved and solved cases and diffs the exact output against committed golden files (`_verify/golden/*.txt`, refreshed via `_verify/regenerate_golden.m` after any deliberate report-format change).
 *Acceptance:* CI fails if harness output changes unexpectedly. This is the guardrail on Goal 3.
+
+Building this caught a real bug, not a hypothetical one: Octave caches a function by the path it first loaded it from, and overwriting the file on disk does **not** invalidate that cache — `rehash` doesn't help, only `clear <name>` does. Without it, a student who runs Tests once, fixes their code, and runs again in the *same* kernel session would silently see the stale first-run result. Fixed in both `check_golden.m`/`regenerate_golden.m` and, more importantly, in `octave-playground/src/kernel/files.ts`'s `buildWriteFilesCode` (verified directly: run unsolved → fix `circleArea.m` → rerun in the same session → correctly shows PASS, not the stale FAIL).
 
 ### M2 — Course content
 

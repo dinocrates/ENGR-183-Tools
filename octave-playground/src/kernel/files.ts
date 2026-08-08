@@ -83,7 +83,14 @@ export class UnitFiles {
  *  (student code routinely contains quotes, which broke naive
  *  fputs(sprintf('...')) approaches during T1.4 testing). base64_decode
  *  was tried first but is broken in this xeus-octave build -- it fails
- *  even round-tripping Octave's own base64_encode output. */
+ *  even round-tripping Octave's own base64_encode output.
+ *
+ *  Also `clear`s each written function by name. Octave caches a function
+ *  by the path it first loaded it from; overwriting the file on disk
+ *  doesn't invalidate that cache (confirmed directly -- even `rehash`
+ *  doesn't help, only `clear <name>` does). Without this, a student who
+ *  runs Tests once, then fixes their code and runs again in the same
+ *  kernel session, would silently see the stale first-run result. */
 export function buildWriteFilesCode(unitId: string, files: Record<string, string>): string {
   const dir = `/engr183/assignments/${unitId}`;
   const lines: string[] = [
@@ -92,8 +99,10 @@ export function buildWriteFilesCode(unitId: string, files: Record<string, string
   ];
   for (const [name, content] of Object.entries(files)) {
     const bytes = Array.from(new TextEncoder().encode(content));
+    const fnName = name.replace(/\.m$/, '');
     lines.push(
       `fid = fopen('${dir}/${name}', 'w'); fwrite(fid, uint8([${bytes.join(',')}]), 'uint8'); fclose(fid);`,
+      `clear ${fnName}`,
     );
   }
   return lines.join('\n');
