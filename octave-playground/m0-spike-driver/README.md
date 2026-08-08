@@ -58,3 +58,39 @@ content into the kernel without Octave string-escaping issues. That approach is
 abandoned — `base64_decode` is broken in this xeus-octave build (fails even round-
 tripping Octave's own `base64_encode` output, confirmed directly against the kernel).
 It now writes raw `uint8` byte arrays via `fwrite` instead.
+
+- `t17-samesession.js` — runs Tests unsolved, fixes one file, runs Tests again in the
+  *same* kernel session (no reload). Regression test for the Octave function-cache bug
+  found while building T1.9 (see DESIGN.md T1.9) — a written file's new content is
+  ignored until the stale cached function is `clear`ed.
+
+## Plotting (checking what the system can actually render)
+
+- `t18-plot-direct.js` — calls `plot(...)` through the real `session.execute()` and logs
+  every message type that comes back. Confirms the kernel emits a `display_data`
+  message that our Command Window currently just discards (only `stream`/`error`/
+  `execute_reply` are handled) — not a kernel limitation, just UI not built yet.
+- `t18-plot-mime.js` — same, but extracts the MIME type key: `application/vnd.plotly.v1+json`
+  only, no PNG fallback. Rendering plots means pulling in Plotly.js, not embedding an image.
+
+## Verifying the real GitHub Pages deploy (not just `npm run preview`)
+
+Getting an actual push through `.github/workflows/pages.yml` to work surfaced three bugs
+every prior script above was structurally blind to, because they all ran against
+`vite preview` at the origin root with headers set directly in `vite.config.ts`. See
+DESIGN.md §6 for the full writeup.
+
+- `t19-baseurl-debug.js` — reads the `jupyter-config-data` script tag's actual content
+  on the live site, to check whether the baseUrl fix took effect.
+- `t19-live-check.js` — full functional check against
+  `https://dinocrates.github.io/ENGR-183-Tools/octave-playground/`: load, solve all
+  three files, Run Tests, check the report.
+- `t20-coi-check.js` — confirms `window.crossOriginIsolated` locally after adding the
+  COI service worker (should stay `true`, same as before — local already had headers).
+- `t20-live-coi2.js` — navigates the live site 2-3 times in sequence, logging
+  `crossOriginIsolated` each time. Shows it's `false` on first visit (before the
+  service worker's self-triggered reload completes) and `true` from the second
+  navigation on.
+- `t20-live-realistic.js` — the realistic end-to-end check: load, wait for the
+  service-worker reload to settle, *then* interact. This is the one that actually
+  passed 30/30 live.

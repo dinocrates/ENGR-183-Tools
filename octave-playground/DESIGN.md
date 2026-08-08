@@ -182,10 +182,18 @@ Note the split between `vfs/` and `public/starters/`. The harness and test specs
 
 **On vendoring the harness:** `vfs/engr183/` is a *copy* of `../engr183-harness/` (`+engr183/` and `tests/`), and `public/starters/` is a copy of `../engr183-harness/assignments/`, both synced by script, never hand-edited. The source of truth is `engr183-harness/` — same monorepo, own top-level folder, so it stays independently clone/download-able for students who never touch the browser (§9.3). If the two drift, students get different rubric results in browser vs. local, which destroys the core guarantee. `sync_harness.py` must fail loudly on local modification.
 
+**Getting the real GitHub Pages deploy working (not just `npm run preview`) surfaced three bugs every prior local test was structurally blind to:**
+
+1. `scripts/build-kernel-assets.sh` was committed without the executable bit (created on Windows) — `ubuntu-latest` got exit 126. Fixed the bit and, as defense in depth, the workflow now invokes it via `bash scripts/...` regardless of the bit.
+2. Kernel asset URLs resolved to the domain root instead of the actual deployed subpath. Root cause: something in the jupyterlite/jupyterlab import graph reads `@jupyterlab/coreutils`'s `PageConfig` at module-init time, before any of our own code runs — and `PageConfig` memoizes on first read, permanently locking in an empty `baseUrl`. Local dev serves from origin root, where a missing baseUrl and the correct one are indistinguishable, so this was invisible until actually deployed under `/ENGR-183-Tools/octave-playground/`. Fixed by injecting the config via an inline script in `index.html`, before the module script tag, so it always wins the race.
+3. With that fixed, the kernel booted but every Run Tests/Run File failed with `unable to find current directory`. Root cause: GitHub Pages can't set custom response headers, so the page never becomes `crossOriginIsolated`, which forces `@jupyterlite/xeus` onto its `comlink.worker.js` transport instead of `coincident.worker.js` (SharedArrayBuffer-based) — every prior test in this project, including all of M0 and M1's local verification, had only ever exercised the `coincident` path (`vite preview` sets COOP/COEP directly). Fixed by vendoring `public/coi-serviceworker.js` (gzuidhof/coi-serviceworker, MIT, unmodified), loaded first in `index.html`: it injects COOP/COEP on the page's own responses via a service worker and reloads once to pick them up.
+
+That fix has one visible side effect worth carrying into M3 polish: a genuinely first-ever visitor sees one automatic page reload a couple seconds in, before the kernel starts for real. Not explained anywhere in the UI yet — a bare reload with no context could look like a glitch to a student.
+
 ## 7. Milestones
 
 - **M0 — Feasibility spike (GATE). DONE.** Prove the kernel works. See `M0-FINDINGS.md` — recommendation: proceed to M1, no scope cuts.
-- **M1 — Minimum viable playground. DONE.** One unit, harness running, deployed locally and verified end to end (deploy-to-Pages itself is untested — the workflow exists but hasn't had a real push through it yet).
+- **M1 — Minimum viable playground. DONE.** One unit, harness running, verified end to end both locally and live on GitHub Pages at `dinocrates.github.io/ENGR-183-Tools/octave-playground/` (30/30, byte-identical report). Getting the real deploy working surfaced three production-only bugs invisible in local testing — see the note below §6.
 - **M2 — Course content.** All units, scaffolding tooling.
 - **M3 — Student experience.** Persistence, export, reset, branding.
 - **M4 — Canvas integration.** Embedding, per-unit deep links.
