@@ -181,3 +181,17 @@ delivers DESIGN.md T4.2's deep-link mechanism as a side effect.
   before this was found (persistence itself was fine; verified directly by
   dumping the `JupyterLite Storage` IndexedDB database's `files` store and seeing
   `scratch/scratch.m` with the saved content, before fixing the check).
+- `t28-prod-plot-scratch.js` — the same plot + Scratch Pad checks as `t26`/`t27`,
+  run against the live production deploy. Caught a real production-only bug:
+  `sync_harness.py`'s `sync_dir()` did a full `rmtree` + `copytree` of
+  `public/starters/` on every sync, which CI runs before every build -- since
+  `public/starters/scratch/scratch.m` has no `engr183-harness` counterpart, it
+  got silently deleted on every deploy (confirmed via `curl -I` on the deployed
+  starter URL: 404). Invisible locally because local testing never re-ran
+  `sync_harness.py`. Fixed in `sync_harness.py` (see its own commit) by having
+  `sync_dir()` preserve named entries instead of wiping the whole destination.
+  Also had to switch the plot-render check from a fixed `waitForTimeout` to
+  `page.waitForSelector('.js-plotly-plot', { timeout: 20000 })`: `plotly.js-
+  dist-min` is a ~1.4MB gzipped chunk fetched over the real network in
+  production (vs. local disk under `npm run preview`), so a short fixed delay
+  that was reliable locally intermittently missed the render in prod.
