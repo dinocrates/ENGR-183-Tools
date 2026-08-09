@@ -131,3 +131,7 @@ To keep your code portable, stick to these habits:
 - Use `%` for comments, not `#`
 - Use `x = x + 1`, not `x += 1`
 - End functions with `end`, not `endfunction`
+
+## Notes on the browser Playground
+
+The browser fallback runs a real Octave engine (not a simulation), and `engr183.runTests(...)` behaves identically there — but one display quirk is worth knowing about. If you type a variable name without a semicolon to inspect it, **structs, matrices, and cells print more compactly in the browser than in desktop Octave** (missing the blank line after `varname =`, and structs skip the `scalar structure containing the fields:` line). Scalars (`a = 2.5`) print identically either way. This is a known limitation of the browser kernel, not a bug in your code, and it does not affect how `runTests` grades you — the rubric report itself is unaffected.
