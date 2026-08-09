@@ -8,3 +8,7 @@ Tools for ENGR-183 (Programming with MATLAB for Engineers and Scientists) at MSJ
 - [`octave-playground/`](octave-playground/DESIGN.md) — in-browser Octave playground (JupyterLite + xeus-octave), fallback and consistency layer for students who can't run a local Octave install. Wraps `engr183-harness/` in a browser runtime rather than reimplementing it. See its `DESIGN.md` for the full design and milestone tickets.
 
 More tools (visualizers, calculators, graphing tools) will be added here as their own folders.
+
+## For instructors
+
+[`RUNBOOK.md`](RUNBOOK.md) — adding a unit, deploying, rolling back, and what to tell a student whose work vanished.

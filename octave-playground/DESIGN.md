@@ -446,9 +446,9 @@ URL parameters that open directly to a given unit.
 Usable at typical phone/tablet browser widths — opened as its own tab (T4.1), not an iframe, but still needs to work on the small screens students actually show up with.
 *Acceptance:* No horizontal scroll; controls reachable; text legible.
 
-**T4.4 — Instructor runbook**
-`RUNBOOK.md`: adding a unit, syncing the harness, rolling back a bad deploy, what to tell a student whose work vanished, and how to link a unit into Canvas (T4.1: an "External URL" module item or plain link with "Load in a new tab" checked — not the iframe-embed LTI/redirect flow Canvas defaults to for some content types).
-*Acceptance:* Stephen can add a unit and link it into Canvas from the runbook alone.
+**T4.4 — Instructor runbook — DONE**
+`RUNBOOK.md` (monorepo root, linked from the root `README.md`): adding a unit (both the function-style shape `new_unit.py` scaffolds and the script-style shape the current Unit 1 actually uses, which the scaffolder doesn't cover — `new_unit.py` is `--functions`-only), the dev/main kernel-sharing gotcha (`pages.yml` builds the WASM kernel only from `main` and copies it into the `dev` deploy, so `Run Tests` on a `dev`-only harness change stays stale until merge — cost real time to rediscover today, worth never re-losing), local kernel-asset rebuilds (WSL-only, and the `npm run build`-must-come-after ordering trap), golden-file regeneration discipline, deploying and rolling back, what to actually tell a student whose work vanished (no upload/import feature exists — a downloaded `.m` file has to be pasted back in by hand), and how to link a unit into Canvas (T4.1's finding, restated as an actionable instruction rather than an investigation record).
+*Acceptance:* Every piece of operational knowledge that cost debugging time during this session (kernel-sharing staleness, kernel-asset build ordering, the isolation trick `unit01_check.m`'s `runStudentScript` depends on) is written down as a checklist/reference, not left to be reconstructed from chat history next time.
 
 ---
 
