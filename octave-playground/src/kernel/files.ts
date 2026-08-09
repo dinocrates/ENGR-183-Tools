@@ -20,6 +20,23 @@ function starterUrl(unitId: string, fileName: string): string {
   return `${import.meta.env.BASE_URL}starters/${unitId}/${fileName}`;
 }
 
+// Student-supplied file names flow into buildWriteFilesCode below, which
+// interpolates them unescaped into a single-quoted Octave string literal
+// (fopen(...)) and into a bare `clear <name>` statement. Restricting names to
+// valid Octave identifiers + `.m` keeps that generation injection-safe for
+// free, on top of being the only names Octave would treat as a real
+// function/script file anyway.
+const FILE_NAME_RE = /^[A-Za-z_]\w*\.m$/;
+
+/** Normalizes a student-entered file name (trims, appends `.m` if missing)
+ *  and validates it. Returns the normalized name, or null if invalid. */
+export function normalizeFileName(raw: string): string | null {
+  let name = raw.trim();
+  if (name.length === 0) return null;
+  if (!name.endsWith('.m')) name += '.m';
+  return FILE_NAME_RE.test(name) ? name : null;
+}
+
 export class UnitFiles {
   private contents: ContentsManager
   private unitId: string
@@ -63,6 +80,23 @@ export class UnitFiles {
       format: 'text',
       content,
     });
+  }
+
+  async delete(fileName: string): Promise<void> {
+    await this.contents.delete(this.path(fileName));
+  }
+
+  /** Lists the unit's directory in the drive and returns the names of any
+   *  files there that aren't in `knownFiles` -- i.e. files a student added
+   *  in a previous session, which otherwise have no record anywhere except
+   *  the drive itself (no manifest file; the directory listing IS the
+   *  source of truth for "what extra files exist"). */
+  async listExtraFiles(knownFiles: string[]): Promise<string[]> {
+    await this.ensureUnitDir();
+    const dir = await this.contents.get(this.unitId, { content: true });
+    const children = Array.isArray(dir.content) ? (dir.content as { name: string; type: string }[]) : [];
+    const known = new Set(knownFiles);
+    return children.filter((c) => c.type === 'file' && !known.has(c.name)).map((c) => c.name);
   }
 
   /** Fetch the original starter content, save it as the file, and return it. */

@@ -42,6 +42,12 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   const [status, setStatus] = useState<KernelStatus>('starting')
   const [contents, setContents] = useState<Record<string, string>>({})
   const [dirtyFiles, setDirtyFiles] = useState<Set<string>>(new Set())
+  // unit.files (from the JSON / scratchUnit const) is the protected/original
+  // list -- fileList additionally holds student-added extras, discovered on
+  // load by listing the unit's drive directory (see UnitFiles.listExtraFiles)
+  // since there's no manifest file, the directory itself is the source of
+  // truth for "what extra files exist."
+  const [fileList, setFileList] = useState<string[]>(unit.files)
   const [activeFile, setActiveFile] = useState<string>(unit.files[0])
   const [output, setOutput] = useState('')
   const [figures, setFigures] = useState<Figure[]>([])
@@ -73,7 +79,14 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
 
       const loaded = await unitFiles.load(unit.files)
       if (cancelled) return
-      setContents(loaded)
+
+      const extraNames = await unitFiles.listExtraFiles(unit.files)
+      if (cancelled) return
+      const extraContents = extraNames.length > 0 ? await unitFiles.load(extraNames) : {}
+      if (cancelled) return
+
+      setContents({ ...loaded, ...extraContents })
+      setFileList([...unit.files, ...extraNames])
 
       const session = new OctaveKernelSession()
       await session.start(contentsManager)
@@ -240,6 +253,43 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     })
   }
 
+  async function handleAddFile(name: string) {
+    await unitFilesRef.current?.save(name, '')
+    setFileList((prev) => [...prev, name])
+    setContents((prev) => ({ ...prev, [name]: '' }))
+    setActiveFile(name)
+  }
+
+  async function doDeleteFile(file: string) {
+    await unitFilesRef.current?.delete(file)
+    setFileList((prev) => prev.filter((f) => f !== file))
+    setContents((prev) => {
+      const next = { ...prev }
+      delete next[file]
+      return next
+    })
+    setDirtyFiles((prev) => {
+      const next = new Set(prev)
+      next.delete(file)
+      return next
+    })
+    if (activeFile === file) {
+      setActiveFile(unit.files[0])
+    }
+  }
+
+  function handleDeleteFileRequest(file: string) {
+    setConfirmDialog({
+      title: `Delete ${file}?`,
+      message: `This permanently deletes ${file}. This can't be undone.`,
+      confirmLabel: 'Delete file',
+      onConfirm: () => {
+        void doDeleteFile(file)
+        setConfirmDialog(null)
+      },
+    })
+  }
+
   async function doResetUnit() {
     for (const file of unit.files) {
       await doResetFile(file)
@@ -315,6 +365,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
         onResetFile={handleResetFile}
         onResetUnit={handleResetUnit}
         onBackToUnits={onBackToUnits}
+        canResetFile={unit.files.includes(activeFile)}
       />
       <Group orientation="horizontal" className="flex-1 overflow-hidden">
         <Panel id="sidebar" defaultSize="18" minSize="12" maxSize="40">
@@ -330,10 +381,13 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
             >
               <FileBrowser
                 unitTitle={unit.title}
-                files={unit.files}
+                files={fileList}
+                protectedFiles={unit.files}
                 activeFile={activeFile}
                 dirtyFiles={dirtyFiles}
                 onSelect={setActiveFile}
+                onAddFile={(name) => void handleAddFile(name)}
+                onDeleteRequest={handleDeleteFileRequest}
                 collapsed={fileBrowserCollapsed}
                 onToggleCollapse={toggleFileBrowser}
               />
@@ -363,7 +417,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
             <Group orientation="vertical" className="flex-1 overflow-hidden">
               <Panel id="editor" defaultSize="70" minSize="15">
                 <Editor
-                  files={unit.files}
+                  files={fileList}
                   activeFile={activeFile}
                   contents={contents}
                   dirtyFiles={dirtyFiles}

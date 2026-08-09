@@ -508,3 +508,18 @@ and "two or more figures doesn't work." Root-caused to the same place:
   "Rendering…" text is visible and no `.js-plotly-plot` exists yet during
   the delay, then confirms the spinner disappears once the real chart
   appears after the delay passes.
+
+## Student-added/removed files (T3.13)
+
+- `t59-add-remove-files.js` -- against `npm run preview` on unit01. Adds a
+  file via the File Browser's "+" button, confirms it appears and becomes
+  the active editor tab; confirms a duplicate name and an invalid name
+  (`../evil`) are both rejected inline without reaching `Playground.tsx`;
+  writes code into the new file and runs it via Run File to confirm its
+  content actually reaches the kernel (not just the browser drive);
+  confirms a protected file (`addTwo.m`) has no delete icon while the added
+  file does; confirms Reset File is disabled while the added file is
+  active (it has no starter to reset to); deletes the file via the
+  confirm-dialog flow and confirms it's gone from the File Browser; adds a
+  second file and confirms it survives a full page reload (directory
+  rediscovery in `UnitFiles.listExtraFiles`, not a manifest file).

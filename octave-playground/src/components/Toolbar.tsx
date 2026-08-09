@@ -9,6 +9,8 @@ interface ToolbarProps {
   onResetFile: () => void
   onResetUnit: () => void
   onBackToUnits?: () => void
+  // False for a student-added file, which has no starter to reset to.
+  canResetFile: boolean
 }
 
 const STATUS_LABEL: Record<KernelStatus, string> = {
@@ -34,6 +36,7 @@ export function Toolbar({
   onResetFile,
   onResetUnit,
   onBackToUnits,
+  canResetFile,
 }: ToolbarProps) {
   const busy = status === 'starting' || status === 'running'
   return (
@@ -80,9 +83,13 @@ export function Toolbar({
       <div className="mx-1 h-5 w-px bg-slate-700" />
       <button
         className="rounded border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:bg-slate-800 disabled:opacity-40"
-        disabled={busy}
+        disabled={busy || !canResetFile}
         onClick={onResetFile}
-        title="Discard changes to the current file, restoring the original starter"
+        title={
+          canResetFile
+            ? 'Discard changes to the current file, restoring the original starter'
+            : "This file has no starter to reset to -- it was added, not part of the unit"
+        }
       >
         Reset File
       </button>
