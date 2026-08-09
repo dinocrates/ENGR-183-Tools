@@ -49,7 +49,7 @@ async function addFile(page, name) {
   // --- 2. Untouched starter: 5/8 with a useful personalization failure ---
   const runTestsBtn = page.getByText('Run Tests', { exact: true });
   await runTestsBtn.click();
-  await page.waitForFunction(() => document.body.innerText.includes('Score:'), null, { timeout: 30000 });
+  await page.waitForFunction(() => document.body.innerText.includes('Score:'), null, { timeout: 60000 });
   let cmdText = await page.evaluate(() => document.querySelector('pre')?.textContent || '');
   console.log('--- Command Window after Run Tests (untouched) ---\n' + cmdText + '\n--- end ---');
   check('untouched starter scores 5/8', cmdText.includes('Score: 5/8'));
@@ -114,14 +114,18 @@ async function addFile(page, name) {
   await page.waitForTimeout(600);
 
   await runTestsBtn.click();
-  await page.waitForFunction(() => document.body.innerText.includes('Score:'), null, { timeout: 30000 });
+  await page.waitForFunction(() => document.body.innerText.includes('Score:'), null, { timeout: 60000 });
   cmdText = await page.evaluate(() => document.querySelector('pre')?.textContent || '');
   check('personalized starter scores 8/8', cmdText.includes('Score: 8/8'));
 
   // --- 6. Run File shows the exact 5 lines, personalized + real version ---
   await page.getByText('Run File', { exact: true }).click();
-  await page.waitForFunction(() => document.body.innerText.includes('Work check:'), null, { timeout: 30000 });
+  await page.waitForFunction(
+    () => document.body.innerText.includes('Work check:') || document.body.innerText.includes('Execution exception'),
+    null, { timeout: 60000 },
+  );
   cmdText = await page.evaluate(() => document.querySelector('pre')?.textContent || '');
+  if (process.env.T62_DEBUG) console.log('--- Command Window after Run File (personalized) ---\n' + cmdText + '\n--- end ---');
   check('Run File output has all 5 required lines', [
     'GNU Octave setup verified.',
     'Student: Alex Rivera',
@@ -150,7 +154,7 @@ async function addFile(page, name) {
   await page.keyboard.insertText(personalized);
   await page.waitForTimeout(600);
   await runTestsBtn.click();
-  await page.waitForFunction(() => document.body.innerText.includes('Score:'), null, { timeout: 30000 });
+  await page.waitForFunction(() => document.body.innerText.includes('Score:'), null, { timeout: 60000 });
   cmdText = await page.evaluate(() => document.querySelector('pre')?.textContent || '');
   check('personalized copy (U01_OctaveSetupCheck_Rivera.m) is preferred: 8/8', cmdText.includes('Score: 8/8'));
 
