@@ -42,6 +42,15 @@ function loadPlotly(): Promise<typeof PlotlyModule> {
   return loadingPlotly
 }
 
+function RenderingSpinner() {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-cyan-600" />
+      <span className="text-xs text-slate-500">Rendering…</span>
+    </div>
+  )
+}
+
 // Dynamically imported: plotly.js is the only way to render what the kernel
 // sends (application/vnd.plotly.v1+json, confirmed the only MIME type it
 // emits -- no PNG fallback, see m0-spike-driver/t18-plot-mime.js), but it's
@@ -50,12 +59,18 @@ function loadPlotly(): Promise<typeof PlotlyModule> {
 export function PlotOutput({ mimeBundle, width, height }: PlotOutputProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)
+  // True while waiting on either the ~1MB plotly.js-dist-min download (first
+  // plot of a session only, cached after) or Plotly.newPlot() itself for a
+  // large figure -- both can genuinely take a while, and a blank white box
+  // with no feedback looks broken rather than "still working."
+  const [rendering, setRendering] = useState(false)
   const figure = mimeBundle[PLOTLY_MIME] as PlotlyFigure | undefined
 
   useEffect(() => {
     const container = containerRef.current
     if (!figure || !container) return
     let cancelled = false
+    setRendering(true)
 
     loadPlotly().then((Plotly) => {
       if (cancelled) return
@@ -95,7 +110,7 @@ export function PlotOutput({ mimeBundle, width, height }: PlotOutputProps) {
       }
       if (width !== undefined) layout.width = width
       if (height !== undefined) layout.height = height
-      Plotly.newPlot(container, figure.data as never, layout, {
+      return Plotly.newPlot(container, figure.data as never, layout, {
         responsive: width === undefined,
         displaylogo: false,
         // Plotly's modebar (zoom/pan/box-select/reset/camera) defaults to
@@ -104,7 +119,14 @@ export function PlotOutput({ mimeBundle, width, height }: PlotOutputProps) {
         // that instead of relying on a hover affordance.
         displayModeBar: true,
       })
-    }).catch((err) => setError(String(err)))
+    }).then(() => {
+      if (!cancelled) setRendering(false)
+    }).catch((err) => {
+      if (!cancelled) {
+        setError(String(err))
+        setRendering(false)
+      }
+    })
 
     return () => {
       cancelled = true
@@ -116,9 +138,15 @@ export function PlotOutput({ mimeBundle, width, height }: PlotOutputProps) {
 
   if (!figure) {
     // An empty bundle is the momentary placeholder xeus-octave sends before
-    // the real figure arrives via update_display_data -- not an error.
+    // the real figure arrives via update_display_data -- show the same
+    // spinner as the "have data, still drawing" case rather than a blank
+    // box, since a student can't tell those two waits apart anyway.
     if (Object.keys(mimeBundle).length === 0) {
-      return null
+      return (
+        <div className="relative h-full w-full">
+          <RenderingSpinner />
+        </div>
+      )
     }
     return (
       <div className="text-xs text-neutral-500">
@@ -131,5 +159,10 @@ export function PlotOutput({ mimeBundle, width, height }: PlotOutputProps) {
     return <div className="text-xs text-red-400">Couldn't render plot: {error}</div>
   }
 
-  return <div ref={containerRef} className="h-full w-full" />
+  return (
+    <div className="relative h-full w-full">
+      <div ref={containerRef} className="h-full w-full" />
+      {rendering && <RenderingSpinner />}
+    </div>
+  )
 }

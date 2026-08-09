@@ -492,3 +492,19 @@ and "two or more figures doesn't work." Root-caused to the same place:
   actually experienced as "figures don't work with 2+": not the plots
   themselves failing, but genuine plots buried under phantom windows spawned
   by ordinary intervening statements.
+- `t56-close-cleanup.js` -- follow-up question, not a bug: does closing a
+  Figure window actually free its resources, or just hide them? Confirms
+  real teardown: `.js-plotly-plot`/SVG counts and total DOM node count both
+  drop to zero/pre-figure levels after clicking close, not just visually
+  hidden. Ties to `PlotOutput.tsx`'s cleanup calling `Plotly.purge()` on
+  unmount.
+
+## Rendering spinner for slow plots (T3.12)
+
+- `t57-rendering-spinner.js` -- real rendering is normally too fast on
+  localhost to reliably catch the spinner window in a screenshot, so this
+  uses Playwright route interception (`page.route('**/plotly.min-*.js', ...)`)
+  to artificially delay that network response by 3s. Confirms the spinner +
+  "Rendering…" text is visible and no `.js-plotly-plot` exists yet during
+  the delay, then confirms the spinner disappears once the real chart
+  appears after the delay passes.
