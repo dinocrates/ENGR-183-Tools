@@ -523,3 +523,15 @@ and "two or more figures doesn't work." Root-caused to the same place:
   confirm-dialog flow and confirms it's gone from the File Browser; adds a
   second file and confirms it survives a full page reload (directory
   rediscovery in `UnitFiles.listExtraFiles`, not a manifest file).
+- `t60-prod-dev-edgecases.js` -- broader edge-case sweep against the deployed
+  dev URL: invalid-name variants (leading digit, embedded space, path
+  traversal, `!`, double extension, empty), blur/Escape-cancel of the add
+  input, case-insensitive duplicate detection against both an extra file and
+  a protected file, Cancel vs. confirm on the delete dialog, deleting a
+  non-active file (active tab must stay untouched), Reset Unit leaving extra
+  files alone, Scratch Pad getting the feature with no cross-unit leakage,
+  and reload persistence of both an add and a delete. Caught a real bug:
+  `normalizeFileName`'s already-has-`.m` check was case-sensitive, so
+  `HELPER.M` got double-suffixed into `HELPER.M.m` instead of being
+  recognized as a duplicate of `helper.m` -- fixed by stripping a
+  case-insensitively-matched extension before re-validating.

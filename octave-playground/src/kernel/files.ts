@@ -22,19 +22,22 @@ function starterUrl(unitId: string, fileName: string): string {
 
 // Student-supplied file names flow into buildWriteFilesCode below, which
 // interpolates them unescaped into a single-quoted Octave string literal
-// (fopen(...)) and into a bare `clear <name>` statement. Restricting names to
-// valid Octave identifiers + `.m` keeps that generation injection-safe for
-// free, on top of being the only names Octave would treat as a real
-// function/script file anyway.
-const FILE_NAME_RE = /^[A-Za-z_]\w*\.m$/;
+// (fopen(...)) and into a bare `clear <name>` statement. Restricting the base
+// name to valid Octave identifier characters keeps that generation
+// injection-safe for free, on top of being the only names Octave would treat
+// as a real function/script file anyway.
+const FILE_BASE_NAME_RE = /^[A-Za-z_]\w*$/;
 
-/** Normalizes a student-entered file name (trims, appends `.m` if missing)
- *  and validates it. Returns the normalized name, or null if invalid. */
+/** Normalizes a student-entered file name (trims, strips a `.m`/`.M`
+ *  extension if present so it can be re-appended in a consistent case rather
+ *  than double-suffixed, e.g. "HELPER.M" -> "HELPER.m" not "HELPER.M.m")
+ *  and validates the base name. Returns the normalized name, or null if
+ *  invalid. */
 export function normalizeFileName(raw: string): string | null {
-  let name = raw.trim();
-  if (name.length === 0) return null;
-  if (!name.endsWith('.m')) name += '.m';
-  return FILE_NAME_RE.test(name) ? name : null;
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) return null;
+  const base = /\.m$/i.test(trimmed) ? trimmed.slice(0, -2) : trimmed;
+  return FILE_BASE_NAME_RE.test(base) ? `${base}.m` : null;
 }
 
 export class UnitFiles {
