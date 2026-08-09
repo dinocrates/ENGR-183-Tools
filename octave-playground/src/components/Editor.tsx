@@ -1,4 +1,5 @@
 import MonacoEditor from '@monaco-editor/react'
+import { OCTAVE_LANGUAGE_ID, registerOctaveLanguage } from './octaveLanguage'
 
 interface EditorProps {
   files: string[]
@@ -31,8 +32,9 @@ export function Editor({ files, activeFile, contents, dirtyFiles, onSelectTab, o
       <div className="flex-1">
         <MonacoEditor
           path={activeFile}
-          language="matlab"
+          language={OCTAVE_LANGUAGE_ID}
           theme="vs-dark"
+          beforeMount={registerOctaveLanguage}
           value={contents[activeFile] ?? ''}
           onChange={(value) => onChange(activeFile, value ?? '')}
           options={{

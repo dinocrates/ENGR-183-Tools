@@ -535,3 +535,20 @@ and "two or more figures doesn't work." Root-caused to the same place:
   `HELPER.M` got double-suffixed into `HELPER.M.m` instead of being
   recognized as a duplicate of `helper.m` -- fixed by stripping a
   case-insensitively-matched extension before re-validating.
+
+## Octave syntax highlighting (T3.14)
+
+- `t61-syntax-highlighting.js` -- against `npm run preview` on the Scratch
+  Pad. Types a script covering a comment, a keyword (`function`/`end`), a
+  number, a single-quoted string, a double-quoted string, and a transpose
+  (`A'`), then reads Monaco's actual rendered token spans
+  (`span[class^="mtk"]`) and their `getComputedStyle(...).color` directly --
+  not a screenshot -- to confirm each category gets a color distinct from
+  plain text, and specifically that `A'` renders as plain/operator text (no
+  string span opened) while a real string always does. Two non-obvious
+  Monaco rendering details this had to work around: adjacent
+  same-token characters merge into one span (not one per identifier), and
+  `.view-line` text content uses U+00A0 for spaces, not a plain ASCII
+  space -- both are just how Monaco renders, discovered by dumping the raw
+  DOM structure when the first version of this script mysteriously
+  couldn't find lines it had just proven existed.
