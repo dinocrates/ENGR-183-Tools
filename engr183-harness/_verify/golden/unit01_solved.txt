@@ -2,14 +2,13 @@
 --------------------------------------------------------------------
 ENGR-183  |  UNIT01  |  rubric check
 --------------------------------------------------------------------
-[ PASS ] addTwo returns the sum of two positive numbers          5/5
-[ PASS ] addTwo works with negative numbers                      5/5
-[ PASS ] addTwo works with decimals                              5/5
-[ PASS ] circleArea computes the area of a unit circle           5/5
-[ PASS ] circleArea scales correctly with radius                 5/5
-[ PASS ] greet builds the expected greeting string               5/5
+[ PASS ] Personalization: Name comment replaced                  1/1
+[ PASS ] Personalization: Date comment replaced                  1/1
+[ PASS ] Personalization: student_name holds your name           1/1
+[ PASS ] Stored values and calculation are correct               3/3
+[ PASS ] Required labeled output prints, in order                2/2
 --------------------------------------------------------------------
-Score: 30/30 points (100%)   Criteria met: 6 of 6
+Score: 8/8 points (100%)   Criteria met: 5 of 5
 
 Everything passes. Nice work - you are ready to submit.
 --------------------------------------------------------------------

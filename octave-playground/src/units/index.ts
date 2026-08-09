@@ -6,6 +6,12 @@ export interface UnitMeta {
   // Ungraded free-play mode: no rubric/tests exist for it, so the Toolbar
   // hides Run Tests and UnitIndex lists it separately from the curriculum.
   isScratch?: boolean
+  // Starter filenames this unit used to ship that a returning student's
+  // browser drive may still have (e.g. from IndexedDB persisting across a
+  // content revision). Excluded from extra-file discovery (T3.13's
+  // UnitFiles.listExtraFiles) so they're hidden rather than resurfacing as
+  // if the student had created them -- never deleted, just not shown.
+  retiredFiles?: string[]
 }
 
 // Picks up every unitNN.json automatically -- dropping in a new one (via

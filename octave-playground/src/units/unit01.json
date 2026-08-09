@@ -1,6 +1,7 @@
 {
   "id": "unit01",
-  "title": "Unit 1 — Getting Started",
-  "description": "Prove that Octave is installed and working, and get used to how your work is checked all semester. The math is deliberately easy.",
-  "files": ["addTwo.m", "circleArea.m", "greet.m"]
+  "title": "Unit 1 — OR-01 GNU Octave Setup and First Script",
+  "description": "Personalize U01_OctaveSetupCheck.m with your name and today's date, then use Run Tests to check your code. Use Run File to produce the five output lines for your Canvas screenshot, then download the file (rename it U01_OctaveSetupCheck_LastName.m) for submission.",
+  "files": ["U01_OctaveSetupCheck.m"],
+  "retiredFiles": ["addTwo.m", "circleArea.m", "greet.m"]
 }

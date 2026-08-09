@@ -4,7 +4,7 @@ Course tools and assignments. Everything here runs in **GNU Octave**, which is f
 
 ---
 
-## Unit 1 — Getting Started
+## Unit 1 — OR-01 GNU Octave Setup and First Script
 
 The goal of this first unit is simple: prove that Octave is installed and working on your machine, and get you used to how you will check your work all semester. The math is deliberately easy. If you find yourself stuck on the math, you have misread the problem.
 
@@ -53,17 +53,17 @@ You should see a confirmation message with your Octave version. **You need to ru
 engr183.runTests('unit01')
 ```
 
-Everything will fail. That is correct and expected — you have not written anything yet. Read the output. Each line is one criterion from the grading rubric, and the arrow underneath tells you what went wrong.
+The three personalization checks will fail (5/8) — that is correct and expected, since the starter still has the placeholder name/date. The math and output checks already pass, because the starter's logic is complete; your job in this unit is personalizing it, not writing new code. Read the output. Each line is one criterion from the grading rubric, and the arrow underneath tells you what went wrong.
 
 ### 5. Do the work
 
-Open the three files in `assignments/unit01/` and replace the `error(...)` line in each with your solution:
+Open `assignments/unit01/U01_OctaveSetupCheck.m`. It already runs and prints correctly — your job is to personalize it, not to write the logic from scratch:
 
-- **`addTwo.m`** — return the sum of two numbers
-- **`circleArea.m`** — return the area of a circle given its radius
-- **`greet.m`** — build a greeting string
+1. Replace the `% Name:` comment placeholder with your first and last name.
+2. Replace the `% Date:` comment placeholder with today's date.
+3. Replace the `student_name = 'Replace with your first and last name';` line's value with your actual name.
 
-Each file has instructions and examples in its comments. Read them.
+Everything else — `course_number`, `force_N`, `distance_m`, `work_J`, `octave_version`, and the five `disp`/`fprintf` lines — is already correct. Leave it alone.
 
 ### 6. Check your work as often as you like
 
@@ -71,15 +71,30 @@ Each file has instructions and examples in its comments. Read them.
 engr183.runTests('unit01')
 ```
 
-Run it after every change. It never submits anything, it never modifies your files, and there is no penalty for running it a thousand times. When all six criteria pass, you are done.
+Run it after every change. It never submits anything, it never modifies your files, and there is no penalty for running it a thousand times.
 
-### 7. Submit
+**This checks 8 points of code readiness, not your full 10-point Canvas grade.** The remaining 2 points are for a readable screenshot and a complete submission — a human, not this script, checks those. An 8/8 here means your code is ready to submit; it is not itself the grade.
+
+### 7. Run the script to produce your screenshot
+
+`engr183.runTests('unit01')` checks your code — it does not run your script for its own sake. Run it yourself to see (and screenshot) the five required output lines:
+
+```matlab
+U01_OctaveSetupCheck
+```
+
+You should see exactly five lines: a confirmation line, your name, the course number, your Octave version, and the work check. That is what goes in your Canvas screenshot.
+
+### 8. Submit
 
 In Canvas, submit:
 
-1. The three `.m` files from `assignments/unit01/`
-2. A copy-paste of your final `engr183.runTests('unit01')` output
-3. The version number you saw in step 1
+1. `U01_OctaveSetupCheck.m`, renamed to `U01_OctaveSetupCheck_LastName.m`
+2. A screenshot of the five output lines from step 7 (readable — split across two screenshots if your display is too small for one)
+
+The checker never uploads, submits, or grades a screenshot for you — it only tells you whether your code is ready. Renaming and attaching the file, and taking the screenshot, are still on you.
+
+**Using the browser Playground instead of desktop Octave?** Its File Browser has an "Add File" button — create `U01_OctaveSetupCheck_LastName.m` there, paste your personalized code into it, and make it the active file before using Run File/download. `engr183.runTests('unit01')` prefers a single personalized `U01_OctaveSetupCheck_*.m` copy over the generic starter automatically, so this gets you the correctly-named file for Canvas without an extra rename step.
 
 ---
 

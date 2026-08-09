@@ -162,7 +162,7 @@ ENGR-183-Tools/
     │   └── styles/                      # MSJC dark blueprint tokens (Tailwind)
     ├── public/
     │   ├── starters/                    # seed files fetched at runtime to seed the drive per unit
-    │   │   └── unit01/  addTwo.m  circleArea.m  greet.m
+    │   │   └── unit01/  U01_OctaveSetupCheck.m
     │   └── xeus/                        # kernel assets, built not committed (T1.3/T1.4)
     ├── vfs/                             # build-time mount into kernel FS
     │   └── engr183/

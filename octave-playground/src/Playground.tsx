@@ -80,7 +80,12 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       const loaded = await unitFiles.load(unit.files)
       if (cancelled) return
 
-      const extraNames = await unitFiles.listExtraFiles(unit.files)
+      // retiredFiles (e.g. unit01's old addTwo.m/circleArea.m/greet.m) may
+      // still be sitting in a returning student's drive from before a
+      // content revision -- excluded here so they're hidden rather than
+      // resurfacing as if the student had created them as extras.
+      const knownFiles = [...unit.files, ...(unit.retiredFiles ?? [])]
+      const extraNames = await unitFiles.listExtraFiles(knownFiles)
       if (cancelled) return
       const extraContents = extraNames.length > 0 ? await unitFiles.load(extraNames) : {}
       if (cancelled) return

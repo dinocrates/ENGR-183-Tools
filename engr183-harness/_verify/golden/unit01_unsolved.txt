@@ -2,21 +2,17 @@
 --------------------------------------------------------------------
 ENGR-183  |  UNIT01  |  rubric check
 --------------------------------------------------------------------
-[ FAIL ] addTwo returns the sum of two positive numbers          0/5
-         -> your code raised an error: addTwo is not implemented yet. Open addTwo.m and write your code.
-[ FAIL ] addTwo works with negative numbers                      0/5
-         -> your code raised an error: addTwo is not implemented yet. Open addTwo.m and write your code.
-[ FAIL ] addTwo works with decimals                              0/5
-         -> your code raised an error: addTwo is not implemented yet. Open addTwo.m and write your code.
-[ FAIL ] circleArea computes the area of a unit circle           0/5
-         -> your code raised an error: circleArea is not implemented yet. Open circleArea.m and write your code.
-[ FAIL ] circleArea scales correctly with radius                 0/5
-         -> your code raised an error: circleArea is not implemented yet. Open circleArea.m and write your code.
-[ FAIL ] greet builds the expected greeting string               0/5
-         -> your code raised an error: greet is not implemented yet. Open greet.m and write your code.
+[ FAIL ] Personalization: Name comment replaced                  0/1
+         -> your code raised an error: Replace the Name comment placeholder with your first and last name.
+[ FAIL ] Personalization: Date comment replaced                  0/1
+         -> your code raised an error: Replace the Date comment placeholder with today's date.
+[ FAIL ] Personalization: student_name holds your name           0/1
+         -> your code raised an error: student_name still contains the starter placeholder.
+[ PASS ] Stored values and calculation are correct               3/3
+[ PASS ] Required labeled output prints, in order                2/2
 --------------------------------------------------------------------
-Score: 0/30 points (0%)   Criteria met: 0 of 6
+Score: 5/8 points (62%)   Criteria met: 2 of 5
 
-6 criteria left. Read the arrows above for hints.
+3 criteria left. Read the arrows above for hints.
 --------------------------------------------------------------------
 
