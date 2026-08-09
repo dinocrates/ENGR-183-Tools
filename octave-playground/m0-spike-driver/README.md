@@ -451,3 +451,7 @@ Settings -> Environments -> github-pages -> Deployment branches and tags.
   a `<span>` alongside a collapse button (the header div's own textContent
   now includes the button glyph too). Fixed by querying the `<pre>` output
   element directly instead of climbing from the header text.
+- `t53-prod-dev-panels.js` / `t53b-prod-main-panels.js` -- the same sidebar-
+  resize/collapse/expand/Run-Tests checks as `t52`, run against the live
+  `octave-playground-dev/` staging deploy and then the live
+  `octave-playground/` production deploy respectively.
