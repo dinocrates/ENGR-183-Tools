@@ -455,3 +455,40 @@ Settings -> Environments -> github-pages -> Deployment branches and tags.
   resize/collapse/expand/Run-Tests checks as `t52`, run against the live
   `octave-playground-dev/` staging deploy and then the live
   `octave-playground/` production deploy respectively.
+
+## Bug fix: phantom Figure windows for non-plot output
+
+Stephen reported an empty Figure window popping up with no plot generated,
+and "two or more figures doesn't work." Root-caused to the same place:
+`execute_result` (fires for any unsuppressed statement, e.g. `x = 5` with no
+`;`) was routed through the same code path as real plots.
+
+- `t54-nofigure-bug.js` -- runs `x = 5\ndisp('done')`, no `plot()` anywhere,
+  and confirms zero Figure windows open (this was the direct repro of the
+  first symptom -- before the fix, this opened an empty "Figure 1" window
+  showing "(unsupported output type: text/plain)").
+- Diagnosing the second symptom took a temporary `console.log` of every raw
+  kernel message type (same technique as `t26c-msgdump.js` etc. earlier) plus
+  a status-polling loop, since an initial premature check (breaking out of
+  its poll as soon as the `disp()` text appeared, before the kernel's
+  execute_reply and React's status update had actually landed) misread a
+  completing-normally run as a permanent hang. Removed the temporary logging
+  before committing -- see `session.ts`'s `execute()`, no debug output left
+  in the shipped code.
+- `t54f-render-check.js` -- two real `plot()` calls, no unsuppressed
+  statements, given a *proper* wait for status to actually reach "Ready"
+  (not just for output text to appear) plus extra time for both figures'
+  async Plotly render: confirms both render correctly. This is what showed
+  the "two figures don't work" report didn't reproduce as an actual failure
+  in isolation -- it was a premature-check artifact in the *investigation*,
+  not a real bug in the two-plots-alone case.
+- `t54g-textoutput-check.js` -- confirms `x = 5` (unsuppressed) now prints
+  in the Command Window text, matching real Octave, with zero Figure windows.
+- `t54h-combined-scenario.js` -- the realistic case: unsuppressed
+  assignments interleaved with two `plot()` calls, matching how a student
+  actually writes exploratory code. Confirms exactly two Figure windows (not
+  more), both rendering correctly, and all the unsuppressed output correctly
+  appearing in the Command Window text -- this is very likely what Stephen
+  actually experienced as "figures don't work with 2+": not the plots
+  themselves failing, but genuine plots buried under phantom windows spawned
+  by ordinary intervening statements.

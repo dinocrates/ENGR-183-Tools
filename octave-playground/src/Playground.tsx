@@ -27,6 +27,8 @@ interface Figure {
   position: { x: number; y: number }
 }
 
+const PLOTLY_MIME = 'application/vnd.plotly.v1+json'
+
 function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   const sessionRef = useRef<OctaveKernelSession | null>(null)
   const unitFilesRef = useRef<UnitFiles | null>(null)
@@ -117,9 +119,26 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   // A plot arrives as an empty display_data placeholder (reserving a
   // displayId) followed by an update_display_data with the real figure;
   // patch the existing window in place rather than opening a second one.
+  //
+  // Not every 'display' chunk is a plot, though: any unsuppressed statement
+  // (e.g. `x = 5` with no trailing `;`, extremely common beginner code) also
+  // sends a display chunk -- an execute_result with text/plain content, no
+  // display_id, no plotly key. Treating that identically to a real plot
+  // popped up an empty "Figure" window for ordinary output that should just
+  // print like it would in a real Octave Command Window. Route non-plot
+  // display chunks to text output instead of the figures list.
   function handleExecuteChunk(chunk: ExecuteChunk) {
     if (chunk.kind === 'stream') {
       setOutput((prev) => prev + chunk.text)
+      return
+    }
+    const isPlot = PLOTLY_MIME in chunk.mimeBundle
+    const isPlotPlaceholder = chunk.displayId !== undefined && Object.keys(chunk.mimeBundle).length === 0
+    if (!isPlot && !isPlotPlaceholder) {
+      const text = chunk.mimeBundle['text/plain']
+      if (typeof text === 'string') {
+        setOutput((prev) => prev + text + '\n')
+      }
       return
     }
     setFigures((prev) => {
