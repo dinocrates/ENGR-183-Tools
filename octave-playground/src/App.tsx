@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { units, scratchUnit, getUnit } from './units'
 import { UnitIndex } from './components/UnitIndex'
 import { PersistenceWarning } from './components/PersistenceWarning'
+import { OnboardingOverlay } from './components/OnboardingOverlay'
 import { ThemeProvider } from './theme'
 import { ThemeToggle } from './components/ThemeToggle'
 import Playground from './Playground'
@@ -12,11 +13,15 @@ function unitIdFromUrl(): string | null {
 }
 
 const PERSISTENCE_ACK_KEY = 'engr183-persistence-ack'
+const ONBOARDING_SEEN_KEY = 'engr183-onboarding-seen'
 
 function App() {
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(unitIdFromUrl)
   const [persistenceAcked, setPersistenceAcked] = useState(
     () => localStorage.getItem(PERSISTENCE_ACK_KEY) === '1',
+  )
+  const [onboardingSeen, setOnboardingSeen] = useState(
+    () => localStorage.getItem(ONBOARDING_SEEN_KEY) === '1',
   )
 
   function selectUnit(unitId: string) {
@@ -56,6 +61,14 @@ function App() {
           onAcknowledge={() => {
             localStorage.setItem(PERSISTENCE_ACK_KEY, '1')
             setPersistenceAcked(true)
+          }}
+        />
+      )}
+      {persistenceAcked && !onboardingSeen && (
+        <OnboardingOverlay
+          onDismiss={() => {
+            localStorage.setItem(ONBOARDING_SEEN_KEY, '1')
+            setOnboardingSeen(true)
           }}
         />
       )}
