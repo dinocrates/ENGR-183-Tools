@@ -1,5 +1,11 @@
+import { useState } from 'react'
+
 interface OnboardingOverlayProps {
-  onDismiss: () => void
+  // remember=true persists the dismissal (localStorage, never shows again);
+  // remember=false only hides it for this tab session -- it'll show again
+  // on the next full page load, for a student who wants the checklist back
+  // without digging through the browser's site-data settings to clear it.
+  onDismiss: (remember: boolean) => void
 }
 
 const STEPS: { icon: string; title: string; body: string }[] = [
@@ -35,6 +41,8 @@ const STEPS: { icon: string; title: string; body: string }[] = [
 // Not dismissable via backdrop/Escape, matching PersistenceWarning -- one
 // short read, one click through.
 export function OnboardingOverlay({ onDismiss }: OnboardingOverlayProps) {
+  const [remember, setRemember] = useState(true)
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-app/85 backdrop-blur-sm">
       <div className="w-full max-w-lg rounded-lg border border-line bg-surface p-6 shadow-2xl shadow-black/50">
@@ -52,10 +60,19 @@ export function OnboardingOverlay({ onDismiss }: OnboardingOverlayProps) {
             </li>
           ))}
         </ul>
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between">
+          <label className="flex items-center gap-1.5 text-xs text-muted">
+            <input
+              type="checkbox"
+              className="h-3.5 w-3.5 accent-accent"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+            />
+            Don't show this again
+          </label>
           <button
             className="rounded bg-accent px-4 py-1.5 text-sm font-medium text-on-accent hover:bg-accent-hover"
-            onClick={onDismiss}
+            onClick={() => onDismiss(remember)}
           >
             Let's go
           </button>

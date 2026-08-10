@@ -23,6 +23,11 @@ function App() {
   const [onboardingSeen, setOnboardingSeen] = useState(
     () => localStorage.getItem(ONBOARDING_SEEN_KEY) === '1',
   )
+  // Separate from onboardingSeen: unchecking "Don't show this again" hides
+  // the overlay for the rest of this tab session without writing the
+  // localStorage flag, so it comes back on the next full page load instead
+  // of being suppressed forever.
+  const [onboardingDismissedThisSession, setOnboardingDismissedThisSession] = useState(false)
 
   function selectUnit(unitId: string) {
     const url = new URL(window.location.href)
@@ -64,11 +69,15 @@ function App() {
           }}
         />
       )}
-      {persistenceAcked && !onboardingSeen && (
+      {persistenceAcked && !onboardingSeen && !onboardingDismissedThisSession && (
         <OnboardingOverlay
-          onDismiss={() => {
-            localStorage.setItem(ONBOARDING_SEEN_KEY, '1')
-            setOnboardingSeen(true)
+          onDismiss={(remember) => {
+            if (remember) {
+              localStorage.setItem(ONBOARDING_SEEN_KEY, '1')
+              setOnboardingSeen(true)
+            } else {
+              setOnboardingDismissedThisSession(true)
+            }
           }}
         />
       )}
