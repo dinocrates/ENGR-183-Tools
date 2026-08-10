@@ -1,5 +1,6 @@
-import MonacoEditor from '@monaco-editor/react'
+import MonacoEditor, { type Monaco } from '@monaco-editor/react'
 import { OCTAVE_LANGUAGE_ID, registerOctaveLanguage } from './octaveLanguage'
+import { registerCustomMonacoThemes } from './monacoThemes'
 import { useTheme } from '../theme'
 
 interface EditorProps {
@@ -15,7 +16,14 @@ const MONACO_THEME = {
   dark: 'vs-dark',
   light: 'vs',
   'high-contrast': 'hc-black',
+  retro: 'nes-retro',
+  matrix: 'matrix',
 } as const
+
+function handleBeforeMount(monaco: Monaco): void {
+  registerOctaveLanguage(monaco)
+  registerCustomMonacoThemes(monaco)
+}
 
 export function Editor({ files, activeFile, contents, dirtyFiles, onSelectTab, onChange }: EditorProps) {
   const { theme } = useTheme()
@@ -43,7 +51,7 @@ export function Editor({ files, activeFile, contents, dirtyFiles, onSelectTab, o
           path={activeFile}
           language={OCTAVE_LANGUAGE_ID}
           theme={MONACO_THEME[theme]}
-          beforeMount={registerOctaveLanguage}
+          beforeMount={handleBeforeMount}
           value={contents[activeFile] ?? ''}
           onChange={(value) => onChange(activeFile, value ?? '')}
           options={{

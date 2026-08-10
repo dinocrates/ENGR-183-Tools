@@ -14,7 +14,7 @@ interface PanelHeaderProps {
 export function PanelHeader({ title, collapsed, onToggleCollapse }: PanelHeaderProps) {
   return (
     <div className="flex flex-shrink-0 items-center justify-between border-b border-line px-3 py-1.5">
-      <span className="text-xs font-semibold text-muted">{title}</span>
+      <span className="font-pixel text-xs font-semibold text-muted">{title}</span>
       <button
         className="rounded px-1.5 text-xs text-muted hover:bg-raised hover:text-secondary"
         onClick={onToggleCollapse}

@@ -53,7 +53,7 @@ export function Toolbar({
       )}
       {onRunTests && (
         <button
-          className="rounded bg-accent px-3 py-1 text-sm font-medium text-on-accent hover:bg-accent-hover disabled:opacity-40"
+          className="font-pixel rounded bg-accent px-3 py-1 text-sm font-medium text-on-accent hover:bg-accent-hover disabled:opacity-40"
           disabled={busy}
           onClick={onRunTests}
         >
@@ -61,7 +61,7 @@ export function Toolbar({
         </button>
       )}
       <button
-        className="rounded bg-accent px-3 py-1 text-sm font-medium text-on-accent hover:bg-accent-hover disabled:opacity-40"
+        className="font-pixel rounded bg-accent px-3 py-1 text-sm font-medium text-on-accent hover:bg-accent-hover disabled:opacity-40"
         disabled={busy}
         onClick={onRunFile}
       >

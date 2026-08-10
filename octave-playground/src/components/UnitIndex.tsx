@@ -9,7 +9,7 @@ interface UnitIndexProps {
 export function UnitIndex({ units, scratchUnit, onSelect }: UnitIndexProps) {
   return (
     <div className="mx-auto flex h-full max-w-2xl flex-col justify-center px-6">
-      <h1 className="mb-1 text-xl font-semibold text-primary">ENGR-183 Octave Playground</h1>
+      <h1 className="font-pixel mb-1 text-xl font-semibold text-primary">ENGR-183 Octave Playground</h1>
       <p className="mb-6 text-sm text-muted">Pick a unit to open it.</p>
       <ul className="flex flex-col gap-2">
         {units.map((unit) => (

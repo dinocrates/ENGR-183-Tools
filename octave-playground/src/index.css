@@ -1,7 +1,11 @@
 @import "tailwindcss";
+/* Self-hosted like every other third-party asset in this app (Monaco,
+   Plotly) rather than a runtime CDN fetch. Only used by the retro theme's
+   font-pixel utility below -- a no-op import cost everywhere else. */
+@import "@fontsource/press-start-2p";
 
 /* Semantic color tokens -- dark values are the defaults (matches the
-   original single-theme app), light/high-contrast values override under
+   original single-theme app), other themes override under
    :root[data-theme="..."] below. Tailwind v4 auto-generates utility
    classes (bg-{name}, text-{name}, border-{name}, ...) from any
    --color-{name} custom property declared here, so token names are
@@ -10,10 +14,9 @@
    generate the class bg-bg-app, not bg-app -- caught before it shipped.)
    Overriding a property elsewhere in the cascade updates every utility
    built from it, no per-component branching needed. See DESIGN.md's
-   light/dark and high-contrast theme tickets for the full token-to-shade
-   mapping (including WCAG contrast ratios for the high-contrast values)
-   and what's deliberately NOT tokenized (Plotly figure canvases, status
-   dots, shadows). */
+   theme tickets for the full token-to-shade mapping (including WCAG
+   contrast ratios for the high-contrast values) and what's deliberately
+   NOT tokenized (Plotly figure canvases, status dots, shadows). */
 @theme {
   --color-app: #020617;
   --color-surface: #0f172a;
@@ -37,6 +40,13 @@
      1.41:1, unusable; black-on-yellow is 14.88:1). Verified via the WCAG
      relative-luminance formula, not eyeballed -- see DESIGN.md. */
   --color-on-accent: #ffffff;
+  /* Font-family tokens use Tailwind v4's --font-* namespace, which
+     generates a font-{name} utility the same way --color-* generates
+     bg-{name}/text-{name}/etc. Defaults to the same stack as body's own
+     font so font-pixel is a no-op everywhere except under the retro
+     theme below, where it becomes the real pixel font -- no conditional
+     logic needed in any component that uses the class. */
+  --font-pixel: system-ui, 'Segoe UI', Roboto, sans-serif;
 }
 
 :root {
@@ -97,6 +107,58 @@
   --color-danger-hover: #ff9494;
   --color-danger-fg: #ff6b6b;
   --color-on-accent: #000000;
+}
+
+/* Fun theme, not an accessibility mode -- no WCAG rigor here, just the
+   same screenshot-review legibility check every theme gets before
+   shipping. Green-on-black "digital rain" identity; danger deliberately
+   breaks from green to red (the films' own red-pill association) rather
+   than trying to stay monochrome for error states. */
+:root[data-theme="matrix"] {
+  color-scheme: dark;
+  --color-app: #000000;
+  --color-surface: #001a00;
+  --color-raised: #0d2b0d;
+  --color-line: #00ff41;
+  --color-line-subtle: #0a5c1e;
+  --color-primary: #00ff41;
+  --color-secondary: #33cc55;
+  --color-muted: #1f8f3a;
+  --color-faint: #145c26;
+  --color-accent: #00ff41;
+  --color-accent-hover: #33ff66;
+  --color-accent-fg: #00ff41;
+  --color-danger: #ff2222;
+  --color-danger-hover: #ff5555;
+  --color-danger-fg: #ff4444;
+  --color-on-accent: #000000;
+}
+
+/* Fun theme, NES-inspired: dark navy (not pure black -- closer to how
+   CRT phosphor actually rendered "black") with saturated primary accents.
+   Pairs with font-pixel (Press Start 2P, applied to a deliberately small
+   set of short chrome text -- see DESIGN.md for exactly where and why
+   not everywhere: it's a genuine bitmap font, wrong for body text both
+   visually and layout-wise). */
+:root[data-theme="retro"] {
+  color-scheme: dark;
+  --color-app: #0d0d2b;
+  --color-surface: #1a1a3d;
+  --color-raised: #2b2b52;
+  --color-line: #ffffff;
+  --color-line-subtle: #6b6bb3;
+  --color-primary: #ffffff;
+  --color-secondary: #d4d4ff;
+  --color-muted: #9494cc;
+  --color-faint: #6b6b99;
+  --color-accent: #3498ff;
+  --color-accent-hover: #5ab0ff;
+  --color-accent-fg: #5ab0ff;
+  --color-danger: #e63958;
+  --color-danger-hover: #ff5c78;
+  --color-danger-fg: #ff5c78;
+  --color-on-accent: #ffffff;
+  --font-pixel: 'Press Start 2P', system-ui, sans-serif;
 }
 
 html,

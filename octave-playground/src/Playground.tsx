@@ -358,7 +358,11 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       <div className="flex items-center gap-2 border-b border-line-subtle bg-app px-3 py-1">
         <span className="h-2 w-2 rounded-full bg-cyan-400" />
         <span className="text-xs font-medium text-muted">
-          ENGR-183 Octave Playground <span className="text-faint">—</span> {unit.title}
+          {/* font-pixel only on the fixed prefix, not {unit.title} -- unit
+              titles are long and variable-length, a poor fit for a wide
+              bitmap font at this small a size. */}
+          <span className="font-pixel">ENGR-183 Octave Playground</span>{' '}
+          <span className="text-faint">—</span> {unit.title}
         </span>
       </div>
       <Toolbar

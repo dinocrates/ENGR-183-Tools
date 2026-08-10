@@ -1,6 +1,9 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
 
-export type Theme = 'dark' | 'light' | 'high-contrast'
+export type Theme = 'dark' | 'light' | 'high-contrast' | 'retro' | 'matrix'
+
+// Every theme except 'dark' (the no-attribute default -- see setTheme below).
+const NON_DEFAULT_THEMES: Theme[] = ['light', 'high-contrast', 'retro', 'matrix']
 
 const STORAGE_KEY = 'engr183-theme'
 
@@ -17,8 +20,8 @@ const ThemeContext = createContext<ThemeContextValue | null>(null)
 // Reading it back here -- rather than re-reading localStorage -- keeps
 // that FOUC-prevention logic in exactly one place.
 function initialTheme(): Theme {
-  const attr = document.documentElement.dataset.theme
-  return attr === 'light' || attr === 'high-contrast' ? attr : 'dark'
+  const attr = document.documentElement.dataset.theme as Theme | undefined
+  return attr && NON_DEFAULT_THEMES.includes(attr) ? attr : 'dark'
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

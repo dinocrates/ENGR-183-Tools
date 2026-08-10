@@ -12,9 +12,11 @@ interface ThemeToggleProps {
 }
 
 const THEME_LABELS: Record<Theme, string> = {
-  dark: 'Dark',
-  light: 'Light',
-  'high-contrast': 'High Contrast',
+  dark: '🌙 Dark',
+  light: '☀️ Light',
+  'high-contrast': '⚡ High Contrast',
+  retro: '🕹️ 8-Bit Retro',
+  matrix: '💊 Matrix',
 }
 
 // A native <select>, not a click-to-cycle button: cycling through 3 states
