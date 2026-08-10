@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { units, scratchUnit, getUnit } from './units'
 import { UnitIndex } from './components/UnitIndex'
 import { PersistenceWarning } from './components/PersistenceWarning'
+import { ThemeProvider } from './theme'
+import { ThemeToggle } from './components/ThemeToggle'
 import Playground from './Playground'
 
 function unitIdFromUrl(): string | null {
@@ -34,7 +36,8 @@ function App() {
   const unit = selectedUnitId ? getUnit(selectedUnitId) : undefined
 
   return (
-    <>
+    <ThemeProvider>
+      <ThemeToggle />
       {unit ? (
         // key={unit.id}: force a full remount (fresh kernel, fresh state)
         // when switching units rather than trying to reuse Playground's
@@ -51,7 +54,7 @@ function App() {
           }}
         />
       )}
-    </>
+    </ThemeProvider>
   )
 }
 

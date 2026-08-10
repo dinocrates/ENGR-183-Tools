@@ -355,10 +355,10 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   return (
     <div className="relative flex h-full flex-col">
       {!kernelReady && <StartupOverlay error={startupError} />}
-      <div className="flex items-center gap-2 border-b border-slate-800 bg-slate-950 px-3 py-1">
+      <div className="flex items-center gap-2 border-b border-line-subtle bg-app px-3 py-1">
         <span className="h-2 w-2 rounded-full bg-cyan-400" />
-        <span className="text-xs font-medium text-slate-400">
-          ENGR-183 Octave Playground <span className="text-slate-600">—</span> {unit.title}
+        <span className="text-xs font-medium text-muted">
+          ENGR-183 Octave Playground <span className="text-faint">—</span> {unit.title}
         </span>
       </div>
       <Toolbar
@@ -374,7 +374,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       />
       <Group orientation="horizontal" className="flex-1 overflow-hidden">
         <Panel id="sidebar" defaultSize="18" minSize="12" maxSize="40">
-          <Group orientation="vertical" className="h-full border-r border-slate-700">
+          <Group orientation="vertical" className="h-full border-r border-line">
             <Panel
               id="file-browser"
               defaultSize="50"
@@ -397,7 +397,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
                 onToggleCollapse={toggleFileBrowser}
               />
             </Panel>
-            <Separator className="h-1 cursor-row-resize bg-slate-800 transition-colors hover:bg-cyan-600" />
+            <Separator className="h-1 cursor-row-resize bg-raised transition-colors hover:bg-accent" />
             <Panel
               id="workspace"
               defaultSize="50"
@@ -415,7 +415,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
             </Panel>
           </Group>
         </Panel>
-        <Separator className="w-1 cursor-col-resize bg-slate-800 transition-colors hover:bg-cyan-600" />
+        <Separator className="w-1 cursor-col-resize bg-raised transition-colors hover:bg-accent" />
         <Panel id="main-content" defaultSize="82">
           <div className="flex h-full flex-col overflow-hidden">
             <ProblemStatement title={unit.title} description={unit.description} />
@@ -430,7 +430,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
                   onChange={handleChange}
                 />
               </Panel>
-              <Separator className="h-1 cursor-row-resize bg-slate-800 transition-colors hover:bg-cyan-600" />
+              <Separator className="h-1 cursor-row-resize bg-raised transition-colors hover:bg-accent" />
               <Panel
                 id="command-window"
                 defaultSize="30"

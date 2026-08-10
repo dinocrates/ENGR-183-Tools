@@ -43,6 +43,20 @@
       })();
     </script>
     <script>
+      // Sets the theme attribute before the stylesheet paints, so a
+      // returning student who picked "light" never sees a flash of the
+      // dark default first. Must run synchronously in <head>, before any
+      // CSS is applied -- src/theme.tsx's ThemeProvider reads this
+      // already-set attribute back on mount rather than re-reading
+      // localStorage itself, so there's exactly one place this logic lives.
+      (function () {
+        var theme = localStorage.getItem('engr183-theme');
+        if (theme === 'light') {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
+    <script>
       // Must run before any module script (below) is evaluated: @jupyterlab's
       // PageConfig memoizes its config on first read, and something in the
       // jupyterlite/jupyterlab import graph reads it at module-init time --

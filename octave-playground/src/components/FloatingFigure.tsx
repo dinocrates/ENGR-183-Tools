@@ -95,18 +95,18 @@ export function FloatingFigure({
 
   return (
     <div
-      className="absolute flex flex-col overflow-hidden rounded-md border border-slate-700 bg-slate-900 shadow-2xl shadow-black/50"
+      className="absolute flex flex-col overflow-hidden rounded-md border border-line bg-surface shadow-2xl shadow-black/50"
       style={{ left: position.x, top: position.y, width: displayWidth, zIndex }}
       onMouseDown={() => onFocus(id)}
     >
       <div
-        className="flex cursor-move items-center justify-between border-b border-slate-700 bg-slate-800 px-3 py-1.5 select-none"
+        className="flex cursor-move items-center justify-between border-b border-line bg-raised px-3 py-1.5 select-none"
         onMouseDown={handleDragStart}
       >
-        <span className="text-xs font-semibold text-slate-200">{label}</span>
+        <span className="text-xs font-semibold text-secondary">{label}</span>
         <div className="flex items-center gap-1">
           <button
-            className="rounded px-1.5 text-xs text-slate-400 hover:bg-slate-700 hover:text-slate-100"
+            className="rounded px-1.5 text-xs text-muted hover:bg-line hover:text-primary"
             onClick={(e) => {
               e.stopPropagation()
               setMinimized((m) => !m)
@@ -117,7 +117,7 @@ export function FloatingFigure({
             {minimized ? '▢' : '─'}
           </button>
           <button
-            className="rounded px-1.5 text-xs text-slate-400 hover:bg-slate-700 hover:text-slate-100"
+            className="rounded px-1.5 text-xs text-muted hover:bg-line hover:text-primary"
             onClick={(e) => {
               e.stopPropagation()
               onClose(id)
@@ -136,7 +136,7 @@ export function FloatingFigure({
         <div className="relative bg-white" style={{ height: displayHeight }}>
           <PlotOutput mimeBundle={mimeBundle} width={size.width} height={size.height} />
           <div
-            className="absolute bottom-0 right-0 h-4 w-4 cursor-nwse-resize text-slate-400"
+            className="absolute bottom-0 right-0 h-4 w-4 cursor-nwse-resize text-muted"
             onMouseDown={handleResizeStart}
             title="Resize"
           >

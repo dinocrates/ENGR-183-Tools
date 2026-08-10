@@ -10,24 +10,24 @@ interface PersistenceWarningProps {
 // and clicking through it.
 export function PersistenceWarning({ onAcknowledge }: PersistenceWarningProps) {
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/85 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-lg border border-slate-700 bg-slate-900 p-6 shadow-2xl shadow-black/50">
-        <div className="mb-2 text-sm font-semibold text-slate-100">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-app/85 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-lg border border-line bg-surface p-6 shadow-2xl shadow-black/50">
+        <div className="mb-2 text-sm font-semibold text-primary">
           Before you start: your work lives in this browser
         </div>
-        <p className="mb-2 text-xs leading-relaxed text-slate-400">
+        <p className="mb-2 text-xs leading-relaxed text-muted">
           Files you edit here are saved in this browser's local storage, not on a
           server. Clearing your browser data, or switching to a different browser
           or computer, will lose anything you haven't downloaded.
         </p>
-        <p className="mb-5 text-xs leading-relaxed text-slate-400">
-          Use <span className="text-slate-200">Download File</span> or{' '}
-          <span className="text-slate-200">Download All (.zip)</span> in the
+        <p className="mb-5 text-xs leading-relaxed text-muted">
+          Use <span className="text-secondary">Download File</span> or{' '}
+          <span className="text-secondary">Download All (.zip)</span> in the
           toolbar to save your own copy — the same files you'll submit to Canvas.
         </p>
         <div className="flex justify-end">
           <button
-            className="rounded bg-cyan-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-cyan-500"
+            className="rounded bg-accent px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-hover"
             onClick={onAcknowledge}
           >
             Got it

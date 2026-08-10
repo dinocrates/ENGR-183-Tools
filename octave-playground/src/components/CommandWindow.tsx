@@ -8,9 +8,9 @@ interface CommandWindowProps {
 
 export function CommandWindow({ output, collapsed, onToggleCollapse }: CommandWindowProps) {
   return (
-    <div className="flex h-full flex-col bg-slate-950">
+    <div className="flex h-full flex-col bg-app">
       <PanelHeader title="Command Window" collapsed={collapsed} onToggleCollapse={onToggleCollapse} />
-      <pre className="flex-1 overflow-auto whitespace-pre-wrap p-3 font-mono text-xs text-slate-100">
+      <pre className="flex-1 overflow-auto whitespace-pre-wrap p-3 font-mono text-xs text-primary">
         {output || ' '}
       </pre>
     </div>

@@ -45,8 +45,8 @@ function loadPlotly(): Promise<typeof PlotlyModule> {
 function RenderingSpinner() {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-cyan-600" />
-      <span className="text-xs text-slate-500">Rendering…</span>
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-line border-t-accent" />
+      <span className="text-xs text-muted">Rendering…</span>
     </div>
   )
 }
@@ -149,14 +149,14 @@ export function PlotOutput({ mimeBundle, width, height }: PlotOutputProps) {
       )
     }
     return (
-      <div className="text-xs text-neutral-500">
+      <div className="text-xs text-muted">
         (unsupported output type: {Object.keys(mimeBundle).join(', ')})
       </div>
     )
   }
 
   if (error) {
-    return <div className="text-xs text-red-400">Couldn't render plot: {error}</div>
+    return <div className="text-xs text-danger-fg">Couldn't render plot: {error}</div>
   }
 
   return (

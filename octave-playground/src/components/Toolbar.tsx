@@ -40,10 +40,10 @@ export function Toolbar({
 }: ToolbarProps) {
   const busy = status === 'starting' || status === 'running'
   return (
-    <div className="flex items-center gap-2 border-b border-slate-700 bg-slate-900 px-3 py-2">
+    <div className="flex items-center gap-2 border-b border-line bg-surface px-3 py-2">
       {onBackToUnits && (
         <button
-          className="rounded px-2 py-1 text-sm text-slate-400 hover:bg-slate-800 hover:text-slate-100"
+          className="rounded px-2 py-1 text-sm text-muted hover:bg-raised hover:text-primary"
           onClick={onBackToUnits}
         >
           ← All units
@@ -51,7 +51,7 @@ export function Toolbar({
       )}
       {onRunTests && (
         <button
-          className="rounded bg-cyan-600 px-3 py-1 text-sm font-medium text-white hover:bg-cyan-500 disabled:opacity-40"
+          className="rounded bg-accent px-3 py-1 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-40"
           disabled={busy}
           onClick={onRunTests}
         >
@@ -59,30 +59,30 @@ export function Toolbar({
         </button>
       )}
       <button
-        className="rounded bg-cyan-600 px-3 py-1 text-sm font-medium text-white hover:bg-cyan-500 disabled:opacity-40"
+        className="rounded bg-accent px-3 py-1 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-40"
         disabled={busy}
         onClick={onRunFile}
       >
         Run File
       </button>
-      <div className="mx-1 h-5 w-px bg-slate-700" />
+      <div className="mx-1 h-5 w-px bg-line" />
       <button
-        className="rounded border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:bg-slate-800"
+        className="rounded border border-line px-3 py-1 text-sm text-secondary hover:bg-raised"
         onClick={onDownloadFile}
         title="Download the current file"
       >
         Download File
       </button>
       <button
-        className="rounded border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:bg-slate-800"
+        className="rounded border border-line px-3 py-1 text-sm text-secondary hover:bg-raised"
         onClick={onDownloadZip}
         title="Download all files as a zip, for Canvas submission"
       >
         Download All (.zip)
       </button>
-      <div className="mx-1 h-5 w-px bg-slate-700" />
+      <div className="mx-1 h-5 w-px bg-line" />
       <button
-        className="rounded border border-slate-700 px-3 py-1 text-sm text-slate-300 hover:bg-slate-800 disabled:opacity-40"
+        className="rounded border border-line px-3 py-1 text-sm text-secondary hover:bg-raised disabled:opacity-40"
         disabled={busy || !canResetFile}
         onClick={onResetFile}
         title={
@@ -94,16 +94,16 @@ export function Toolbar({
         Reset File
       </button>
       <button
-        className="rounded px-2 py-1 text-xs text-slate-500 hover:bg-slate-800 hover:text-slate-300 disabled:opacity-40"
+        className="rounded px-2 py-1 text-xs text-muted hover:bg-raised hover:text-secondary disabled:opacity-40"
         disabled={busy}
         onClick={onResetUnit}
         title="Discard changes to every file in this unit, restoring the original starters"
       >
         Reset unit
       </button>
-      <span className="ml-auto flex items-center gap-1.5 text-xs text-slate-400">
+      <span className="ml-auto flex items-center gap-1.5 text-xs text-muted">
         <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[status]}`} />
-        <span className={status === 'error' ? 'text-red-400' : undefined}>
+        <span className={status === 'error' ? 'text-danger-fg' : undefined}>
           {STATUS_LABEL[status]}
         </span>
       </span>

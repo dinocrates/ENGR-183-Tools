@@ -1,7 +1,61 @@
 @import "tailwindcss";
 
+/* Semantic color tokens -- dark values are the defaults (matches the
+   original single-theme app), light values override under
+   :root[data-theme="light"] below. Tailwind v4 auto-generates utility
+   classes (bg-{name}, text-{name}, border-{name}, ...) from any
+   --color-{name} custom property declared here, so token names are
+   deliberately the BARE semantic role with no bg-/text- prefix of their
+   own -- Tailwind already adds that per utility. (--color-bg-app would
+   generate the class bg-bg-app, not bg-app -- caught before it shipped.)
+   Overriding a property elsewhere in the cascade updates every utility
+   built from it, no per-component branching needed. See DESIGN.md's
+   light/dark theme ticket for the full token-to-Tailwind-shade mapping
+   and what's deliberately NOT tokenized (Plotly figure canvases, status
+   dots, shadows).
+   High-contrast mode (a genuine accessibility mode, not just a third
+   palette) is a deliberate follow-up, not built here -- but a third
+   data-theme value slots into this same structure when it lands. */
+@theme {
+  --color-app: #020617;
+  --color-surface: #0f172a;
+  --color-raised: #1e293b;
+  --color-line: #334155;
+  --color-line-subtle: #1e293b;
+  --color-primary: #f1f5f9;
+  --color-secondary: #cbd5e1;
+  --color-muted: #94a3b8;
+  --color-faint: #475569;
+  --color-accent: #0891b2;
+  --color-accent-hover: #06b6d4;
+  --color-accent-fg: #22d3ee;
+  --color-danger: #dc2626;
+  --color-danger-hover: #ef4444;
+  --color-danger-fg: #f87171;
+}
+
 :root {
   color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-app: #f8fafc;
+  --color-surface: #ffffff;
+  --color-raised: #f1f5f9;
+  --color-line: #cbd5e1;
+  --color-line-subtle: #e2e8f0;
+  --color-primary: #0f172a;
+  --color-secondary: #334155;
+  --color-muted: #64748b;
+  --color-faint: #94a3b8;
+  /* accent/danger button fills (bg-accent, bg-danger, and their hover
+     states) are legible on both white and dark surfaces as-is, so only
+     the *-fg variants -- used as text/underline color, not a button
+     fill -- need a darker shade here: cyan-400/red-400 fail contrast
+     against a white background. */
+  --color-accent-fg: #0e7490;
+  --color-danger-fg: #dc2626;
 }
 
 html,
@@ -13,8 +67,8 @@ body,
 
 body {
   font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-  background: #020617; /* slate-950 */
-  color: #f1f5f9; /* slate-100 */
+  background: var(--color-app);
+  color: var(--color-primary);
 }
 
 code,

@@ -1,5 +1,6 @@
 import MonacoEditor from '@monaco-editor/react'
 import { OCTAVE_LANGUAGE_ID, registerOctaveLanguage } from './octaveLanguage'
+import { useTheme } from '../theme'
 
 interface EditorProps {
   files: string[]
@@ -11,21 +12,23 @@ interface EditorProps {
 }
 
 export function Editor({ files, activeFile, contents, dirtyFiles, onSelectTab, onChange }: EditorProps) {
+  const { theme } = useTheme()
+
   return (
     <div className="flex h-full flex-1 flex-col overflow-hidden">
-      <div className="flex border-b border-slate-700 bg-slate-900">
+      <div className="flex border-b border-line bg-surface">
         {files.map((file) => (
           <button
             key={file}
-            className={`border-r border-slate-700 border-t-2 px-3 py-1.5 text-sm ${
+            className={`border-r border-line border-t-2 px-3 py-1.5 text-sm ${
               file === activeFile
-                ? 'border-t-cyan-400 bg-slate-950 text-slate-100'
-                : 'border-t-transparent text-slate-400 hover:bg-slate-800'
+                ? 'border-t-accent-fg bg-app text-primary'
+                : 'border-t-transparent text-muted hover:bg-raised'
             }`}
             onClick={() => onSelectTab(file)}
           >
             {file}
-            {dirtyFiles.has(file) && <span className="ml-1.5 text-cyan-400">●</span>}
+            {dirtyFiles.has(file) && <span className="ml-1.5 text-accent-fg">●</span>}
           </button>
         ))}
       </div>
@@ -33,7 +36,7 @@ export function Editor({ files, activeFile, contents, dirtyFiles, onSelectTab, o
         <MonacoEditor
           path={activeFile}
           language={OCTAVE_LANGUAGE_ID}
-          theme="vs-dark"
+          theme={theme === 'light' ? 'vs' : 'vs-dark'}
           beforeMount={registerOctaveLanguage}
           value={contents[activeFile] ?? ''}
           onChange={(value) => onChange(activeFile, value ?? '')}

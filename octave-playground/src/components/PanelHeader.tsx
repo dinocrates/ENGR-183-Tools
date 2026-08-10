@@ -13,10 +13,10 @@ interface PanelHeaderProps {
 // collapsed via drag rather than the button.
 export function PanelHeader({ title, collapsed, onToggleCollapse }: PanelHeaderProps) {
   return (
-    <div className="flex flex-shrink-0 items-center justify-between border-b border-slate-700 px-3 py-1.5">
-      <span className="text-xs font-semibold text-slate-400">{title}</span>
+    <div className="flex flex-shrink-0 items-center justify-between border-b border-line px-3 py-1.5">
+      <span className="text-xs font-semibold text-muted">{title}</span>
       <button
-        className="rounded px-1.5 text-xs text-slate-500 hover:bg-slate-800 hover:text-slate-300"
+        className="rounded px-1.5 text-xs text-muted hover:bg-raised hover:text-secondary"
         onClick={onToggleCollapse}
         title={collapsed ? `Expand ${title}` : `Collapse ${title}`}
       >

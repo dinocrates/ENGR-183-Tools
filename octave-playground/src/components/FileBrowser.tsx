@@ -52,12 +52,12 @@ export function FileBrowser({
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-slate-900">
+    <div className="flex h-full flex-col overflow-hidden bg-surface">
       <PanelHeader title="File Browser" collapsed={collapsed} onToggleCollapse={onToggleCollapse} />
       <div className="flex items-center justify-between px-3 py-2">
-        <span className="text-xs text-slate-500">{unitTitle}</span>
+        <span className="text-xs text-muted">{unitTitle}</span>
         <button
-          className="rounded px-1.5 text-xs text-slate-500 hover:bg-slate-800 hover:text-slate-300"
+          className="rounded px-1.5 text-xs text-muted hover:bg-raised hover:text-secondary"
           onClick={() => (adding ? cancelAdd() : setAdding(true))}
           title="Add a new file"
         >
@@ -70,17 +70,17 @@ export function FileBrowser({
             <button
               className={`flex flex-1 items-center gap-1.5 border-l-2 px-2.5 py-1 text-left text-sm ${
                 file === activeFile
-                  ? 'border-cyan-400 bg-slate-800 text-slate-100'
-                  : 'border-transparent text-slate-300 hover:bg-slate-800/60'
+                  ? 'border-accent-fg bg-raised text-primary'
+                  : 'border-transparent text-secondary hover:bg-raised/60'
               }`}
               onClick={() => onSelect(file)}
             >
               <span className="flex-1 truncate">{file}</span>
-              {dirtyFiles.has(file) && <span className="text-cyan-400">●</span>}
+              {dirtyFiles.has(file) && <span className="text-accent-fg">●</span>}
             </button>
             {!protectedFiles.includes(file) && (
               <button
-                className="mr-1.5 hidden rounded px-1 text-xs text-slate-500 hover:bg-slate-800 hover:text-red-400 group-hover:block"
+                className="mr-1.5 hidden rounded px-1 text-xs text-muted hover:bg-raised hover:text-danger-fg group-hover:block"
                 onClick={() => onDeleteRequest(file)}
                 title={`Delete ${file}`}
               >
@@ -91,10 +91,10 @@ export function FileBrowser({
         ))}
       </ul>
       {adding && (
-        <div className="border-t border-slate-800 px-2.5 py-2">
+        <div className="border-t border-line-subtle px-2.5 py-2">
           <input
             autoFocus
-            className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-sm text-slate-100 outline-none focus:border-cyan-500"
+            className="w-full rounded border border-line bg-app px-2 py-1 text-sm text-primary outline-none focus:border-accent-hover"
             placeholder="newFile.m"
             value={draftName}
             onChange={(e) => {
@@ -109,7 +109,7 @@ export function FileBrowser({
               if (draftName.trim().length === 0) cancelAdd()
             }}
           />
-          {error && <div className="mt-1 text-xs text-red-400">{error}</div>}
+          {error && <div className="mt-1 text-xs text-danger-fg">{error}</div>}
         </div>
       )}
     </div>
