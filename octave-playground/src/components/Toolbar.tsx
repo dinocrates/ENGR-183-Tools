@@ -1,3 +1,5 @@
+import { ThemeToggle } from './ThemeToggle'
+
 export type KernelStatus = 'starting' | 'ready' | 'running' | 'error'
 
 interface ToolbarProps {
@@ -107,6 +109,7 @@ export function Toolbar({
           {STATUS_LABEL[status]}
         </span>
       </span>
+      <ThemeToggle variant="inline" />
     </div>
   )
 }

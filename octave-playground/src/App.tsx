@@ -37,14 +37,19 @@ function App() {
 
   return (
     <ThemeProvider>
-      <ThemeToggle />
       {unit ? (
         // key={unit.id}: force a full remount (fresh kernel, fresh state)
         // when switching units rather than trying to reuse Playground's
-        // internal state across an entirely different unit.
+        // internal state across an entirely different unit. Its own
+        // Toolbar renders the theme toggle inline -- see ThemeToggle.tsx.
         <Playground key={unit.id} unit={unit} onBackToUnits={backToUnits} />
       ) : (
-        <UnitIndex units={units} scratchUnit={scratchUnit} onSelect={selectUnit} />
+        <>
+          {/* UnitIndex has no header of its own, so the toggle floats at
+              the corner here instead of rendering inline like Toolbar's. */}
+          <ThemeToggle />
+          <UnitIndex units={units} scratchUnit={scratchUnit} onSelect={selectUnit} />
+        </>
       )}
       {!persistenceAcked && (
         <PersistenceWarning
