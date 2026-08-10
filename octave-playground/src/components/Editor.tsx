@@ -11,6 +11,12 @@ interface EditorProps {
   onChange: (file: string, content: string) => void
 }
 
+const MONACO_THEME = {
+  dark: 'vs-dark',
+  light: 'vs',
+  'high-contrast': 'hc-black',
+} as const
+
 export function Editor({ files, activeFile, contents, dirtyFiles, onSelectTab, onChange }: EditorProps) {
   const { theme } = useTheme()
 
@@ -36,7 +42,7 @@ export function Editor({ files, activeFile, contents, dirtyFiles, onSelectTab, o
         <MonacoEditor
           path={activeFile}
           language={OCTAVE_LANGUAGE_ID}
-          theme={theme === 'light' ? 'vs' : 'vs-dark'}
+          theme={MONACO_THEME[theme]}
           beforeMount={registerOctaveLanguage}
           value={contents[activeFile] ?? ''}
           onChange={(value) => onChange(activeFile, value ?? '')}

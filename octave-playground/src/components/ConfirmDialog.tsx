@@ -23,7 +23,7 @@ export function ConfirmDialog({ title, message, confirmLabel, onConfirm, onCance
             Cancel
           </button>
           <button
-            className="rounded bg-danger px-3 py-1.5 text-sm font-medium text-white hover:bg-danger-hover"
+            className="rounded bg-danger px-3 py-1.5 text-sm font-medium text-on-accent hover:bg-danger-hover"
             onClick={onConfirm}
           >
             {confirmLabel}

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
 
-export type Theme = 'dark' | 'light'
+export type Theme = 'dark' | 'light' | 'high-contrast'
 
 const STORAGE_KEY = 'engr183-theme'
 
@@ -17,7 +17,8 @@ const ThemeContext = createContext<ThemeContextValue | null>(null)
 // Reading it back here -- rather than re-reading localStorage -- keeps
 // that FOUC-prevention logic in exactly one place.
 function initialTheme(): Theme {
-  return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'
+  const attr = document.documentElement.dataset.theme
+  return attr === 'light' || attr === 'high-contrast' ? attr : 'dark'
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

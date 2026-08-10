@@ -11,7 +11,7 @@ export function StartupOverlay({ error }: StartupOverlayProps) {
             <div className="mb-2 text-sm font-semibold text-danger-fg">Octave didn't start</div>
             <p className="mb-4 text-xs text-muted">{error}</p>
             <button
-              className="rounded bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-hover"
+              className="rounded bg-accent px-3 py-1.5 text-sm font-medium text-on-accent hover:bg-accent-hover"
               onClick={() => window.location.reload()}
             >
               Reload page

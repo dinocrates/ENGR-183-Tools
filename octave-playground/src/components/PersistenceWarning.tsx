@@ -27,7 +27,7 @@ export function PersistenceWarning({ onAcknowledge }: PersistenceWarningProps) {
         </p>
         <div className="flex justify-end">
           <button
-            className="rounded bg-accent px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-hover"
+            className="rounded bg-accent px-4 py-1.5 text-sm font-medium text-on-accent hover:bg-accent-hover"
             onClick={onAcknowledge}
           >
             Got it

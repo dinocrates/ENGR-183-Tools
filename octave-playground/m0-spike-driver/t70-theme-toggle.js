@@ -6,6 +6,11 @@ function check(label, ok) {
   if (ok) pass++; else fail++;
 }
 
+async function selectTheme(page, label) {
+  await page.getByLabel('Theme').selectOption({ label });
+  await page.waitForTimeout(300);
+}
+
 (async () => {
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
@@ -20,67 +25,72 @@ function check(label, ok) {
   check('defaults to dark (no data-theme attribute set)', initialTheme === null);
 
   const bodyBgDark = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  console.log('body bg (dark):', bodyBgDark);
   check('dark body background is the dark app color', bodyBgDark === 'rgb(2, 6, 23)');
 
-  // --- Toggle to light ---
-  await page.getByTitle('Switch to light theme').click();
-  await page.waitForTimeout(300);
-  const afterToggleTheme = await page.evaluate(() => document.documentElement.dataset.theme);
-  check('toggling sets data-theme="light"', afterToggleTheme === 'light');
-
+  // --- Select light ---
+  await selectTheme(page, 'Light');
+  const afterLightTheme = await page.evaluate(() => document.documentElement.dataset.theme);
+  check('selecting Light sets data-theme="light"', afterLightTheme === 'light');
   const bodyBgLight = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  console.log('body bg (light):', bodyBgLight);
-  check('light body background actually changed (CSS variable override took effect)', bodyBgLight !== bodyBgDark);
   check('light body background is the light app color', bodyBgLight === 'rgb(248, 250, 252)');
+  const storedLight = await page.evaluate(() => localStorage.getItem('engr183-theme'));
+  check('Light choice persisted to localStorage', storedLight === 'light');
 
-  const storedTheme = await page.evaluate(() => localStorage.getItem('engr183-theme'));
-  check('theme choice persisted to localStorage', storedTheme === 'light');
+  // --- Select High Contrast ---
+  await selectTheme(page, 'High Contrast');
+  const afterHcTheme = await page.evaluate(() => document.documentElement.dataset.theme);
+  check('selecting High Contrast sets data-theme="high-contrast"', afterHcTheme === 'high-contrast');
+  const bodyBgHc = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  check('high-contrast body background is pure black', bodyBgHc === 'rgb(0, 0, 0)');
+  const bodyColorHc = await page.evaluate(() => getComputedStyle(document.body).color);
+  check('high-contrast body text is pure white', bodyColorHc === 'rgb(255, 255, 255)');
+  const storedHc = await page.evaluate(() => localStorage.getItem('engr183-theme'));
+  check('High Contrast choice persisted to localStorage', storedHc === 'high-contrast');
 
-  // --- Reload: light theme should survive via the inline FOUC-prevention script ---
+  // --- Reload: high-contrast should survive via the inline FOUC-prevention script ---
   await page.reload({ waitUntil: 'load', timeout: 30000 });
   await page.waitForTimeout(300);
   const themeAfterReload = await page.evaluate(() => document.documentElement.dataset.theme);
-  check('light theme survives a reload (inline script + localStorage)', themeAfterReload === 'light');
-  const bodyBgAfterReload = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  check('light body background still correct immediately after reload (no FOUC flash to check visually, but confirms the value)', bodyBgAfterReload === 'rgb(248, 250, 252)');
+  check('high-contrast theme survives a reload (inline script + localStorage)', themeAfterReload === 'high-contrast');
 
-  // --- Representative element computed styles change between themes ---
-  await page.getByTitle('Switch to dark theme').click();
-  await page.waitForTimeout(300);
-  const cardBorderDark = await page.evaluate(() => {
+  // --- Representative element computed styles actually change ---
+  const cardBorderHc = await page.evaluate(() => {
     const el = document.querySelector('li button, .flex.flex-col.gap-2 button');
     return el ? getComputedStyle(el).borderColor : null;
   });
-  await page.getByTitle('Switch to light theme').click();
-  await page.waitForTimeout(300);
-  const cardBorderLight = await page.evaluate(() => {
-    const el = document.querySelector('li button, .flex.flex-col.gap-2 button');
-    return el ? getComputedStyle(el).borderColor : null;
-  });
-  console.log('unit card border dark/light:', cardBorderDark, cardBorderLight);
-  check('unit index card border color changes between themes', cardBorderDark !== null && cardBorderDark !== cardBorderLight);
+  check('unit index card border is bright white in high-contrast (border carries structure)', cardBorderHc === 'rgb(255, 255, 255)');
 
-  // --- Open a unit, check Monaco's theme class swaps ---
+  // --- Back to dark, confirm round-trip ---
+  await selectTheme(page, 'Dark');
+  const backToDark = await page.evaluate(() => document.documentElement.dataset.theme ?? null);
+  check('selecting Dark clears data-theme (back to default)', backToDark === null);
+
+  // --- Open a unit, check Monaco's theme class swaps across all 3 ---
   await page.goto(base + '?unit=scratch', { waitUntil: 'load', timeout: 30000 });
   await page.waitForFunction(() => document.body.innerText.includes('Ready'), null, { timeout: 90000 });
   await page.waitForTimeout(500);
 
-  const monacoThemeLight = await page.evaluate(() => {
-    const el = document.querySelector('.monaco-editor');
-    return el ? Array.from(el.classList).find((c) => c === 'vs' || c === 'vs-dark') : null;
-  });
-  console.log('Monaco theme class while app theme = light:', monacoThemeLight);
-  check('Monaco uses the light "vs" theme when app theme is light', monacoThemeLight === 'vs');
+  async function monacoThemeClass() {
+    return page.evaluate(() => {
+      const el = document.querySelector('.monaco-editor');
+      return el ? Array.from(el.classList).find((c) => c === 'vs' || c === 'vs-dark' || c === 'hc-black') : null;
+    });
+  }
 
-  await page.getByTitle('Switch to dark theme').click();
+  check('Monaco uses "vs-dark" when app theme is dark', (await monacoThemeClass()) === 'vs-dark');
+  await selectTheme(page, 'Light');
   await page.waitForTimeout(500);
-  const monacoThemeDark = await page.evaluate(() => {
-    const el = document.querySelector('.monaco-editor');
-    return el ? Array.from(el.classList).find((c) => c === 'vs' || c === 'vs-dark') : null;
+  check('Monaco uses "vs" when app theme is light', (await monacoThemeClass()) === 'vs');
+  await selectTheme(page, 'High Contrast');
+  await page.waitForTimeout(500);
+  check('Monaco uses "hc-black" when app theme is high-contrast', (await monacoThemeClass()) === 'hc-black');
+
+  // --- Accent button label is black-on-yellow in high-contrast, not the old white ---
+  const runFileColor = await page.evaluate(() => {
+    const btn = Array.from(document.querySelectorAll('button')).find((b) => b.textContent === 'Run File');
+    return btn ? getComputedStyle(btn).color : null;
   });
-  console.log('Monaco theme class while app theme = dark:', monacoThemeDark);
-  check('Monaco swaps to "vs-dark" when app theme toggles back to dark', monacoThemeDark === 'vs-dark');
+  check('Run File button label is black (not white) in high-contrast', runFileColor === 'rgb(0, 0, 0)');
 
   console.log(`\n${pass} passed, ${fail} failed`);
   await browser.close();

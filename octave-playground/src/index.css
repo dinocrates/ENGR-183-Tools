@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 /* Semantic color tokens -- dark values are the defaults (matches the
-   original single-theme app), light values override under
-   :root[data-theme="light"] below. Tailwind v4 auto-generates utility
+   original single-theme app), light/high-contrast values override under
+   :root[data-theme="..."] below. Tailwind v4 auto-generates utility
    classes (bg-{name}, text-{name}, border-{name}, ...) from any
    --color-{name} custom property declared here, so token names are
    deliberately the BARE semantic role with no bg-/text- prefix of their
@@ -10,12 +10,10 @@
    generate the class bg-bg-app, not bg-app -- caught before it shipped.)
    Overriding a property elsewhere in the cascade updates every utility
    built from it, no per-component branching needed. See DESIGN.md's
-   light/dark theme ticket for the full token-to-Tailwind-shade mapping
+   light/dark and high-contrast theme tickets for the full token-to-shade
+   mapping (including WCAG contrast ratios for the high-contrast values)
    and what's deliberately NOT tokenized (Plotly figure canvases, status
-   dots, shadows).
-   High-contrast mode (a genuine accessibility mode, not just a third
-   palette) is a deliberate follow-up, not built here -- but a third
-   data-theme value slots into this same structure when it lands. */
+   dots, shadows). */
 @theme {
   --color-app: #020617;
   --color-surface: #0f172a;
@@ -32,6 +30,13 @@
   --color-danger: #dc2626;
   --color-danger-hover: #ef4444;
   --color-danger-fg: #f87171;
+  /* Label color for text sitting on a filled bg-accent/bg-danger button.
+     White reads fine on both dark mode's cyan-600/red-600 and light
+     mode's identical fills -- but high-contrast's much brighter
+     yellow/red fills need black labels instead (white-on-yellow there is
+     1.41:1, unusable; black-on-yellow is 14.88:1). Verified via the WCAG
+     relative-luminance formula, not eyeballed -- see DESIGN.md. */
+  --color-on-accent: #ffffff;
 }
 
 :root {
@@ -56,6 +61,42 @@
      against a white background. */
   --color-accent-fg: #0e7490;
   --color-danger-fg: #dc2626;
+}
+
+/* Genuine accessibility mode, not just a third palette: every value here
+   was verified against the actual WCAG 2.1 contrast formula during
+   planning (7:1 AAA target for text, 3:1 for non-text UI per 1.4.11), not
+   chosen by eye. Pure black for BOTH --color-app and --color-surface
+   (unlike dark mode's two distinct near-black tiers) is deliberate --
+   real high-contrast design (Windows High Contrast Black is the
+   reference convention here) avoids relying on subtle luminance steps
+   between regions at all, since faint differences are exactly what this
+   mode exists to eliminate. Structure comes from the now-bright
+   --color-line borders instead. --color-raised stays meaningfully
+   distinct (#262626) since it's used for actual interactive-state
+   feedback (hover), not passive layout structure. */
+:root[data-theme="high-contrast"] {
+  color-scheme: dark;
+  --color-app: #000000;
+  --color-surface: #000000;
+  --color-raised: #262626;
+  --color-line: #ffffff;
+  --color-line-subtle: #999999;
+  --color-primary: #ffffff;
+  --color-secondary: #e0e0e0;
+  --color-muted: #b3b3b3;
+  /* Dark mode's faint tier (#475569) only reaches 6.25:1 against pure
+     black -- fails the 7:1 AAA text target, hence a different, lighter
+     value here rather than reusing that tier's usual ratio-to-black-mode
+     relationship. */
+  --color-faint: #a0a0a0;
+  --color-accent: #ffd60a;
+  --color-accent-hover: #ffe066;
+  --color-accent-fg: #ffd60a;
+  --color-danger: #ff6b6b;
+  --color-danger-hover: #ff9494;
+  --color-danger-fg: #ff6b6b;
+  --color-on-accent: #000000;
 }
 
 html,

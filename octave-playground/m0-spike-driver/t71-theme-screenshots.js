@@ -9,11 +9,12 @@ const SCRATCH = 'C:/Users/saham/AppData/Local/Temp/claude/c--Users-saham-OneDriv
 
   await page.addInitScript(() => localStorage.setItem('engr183-persistence-ack', '1'));
 
-  for (const theme of ['dark', 'light']) {
+  for (const theme of ['dark', 'light', 'high-contrast']) {
+    const label = theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'High Contrast';
     await page.goto(base, { waitUntil: 'load', timeout: 30000 });
     await page.waitForTimeout(300);
-    if (theme === 'light') {
-      await page.getByTitle('Switch to light theme').click();
+    if (theme !== 'dark') {
+      await page.getByLabel('Theme').selectOption({ label });
       await page.waitForTimeout(300);
     }
 

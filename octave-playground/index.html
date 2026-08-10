@@ -51,8 +51,8 @@
       // localStorage itself, so there's exactly one place this logic lives.
       (function () {
         var theme = localStorage.getItem('engr183-theme');
-        if (theme === 'light') {
-          document.documentElement.dataset.theme = 'light';
+        if (theme === 'light' || theme === 'high-contrast') {
+          document.documentElement.dataset.theme = theme;
         }
       })();
     </script>
