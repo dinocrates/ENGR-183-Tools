@@ -29,6 +29,36 @@ interface Figure {
 
 const PLOTLY_MIME = 'application/vnd.plotly.v1+json'
 
+// Crude keyword-balance check for the REPL prompt -- not a real parser, just
+// enough to catch the common case (typing a bare `for i = 1:3` and pressing
+// Enter) and redirect to Run File with a friendly message instead of
+// surfacing Octave's raw "parse error: unexpected end of input". Full
+// multi-line continuation support (matching desktop Octave's continuation
+// prompt) is Phase 2.
+const BLOCK_OPENERS = new Set(['for', 'parfor', 'while', 'if', 'switch', 'function', 'do', 'try'])
+const BLOCK_CLOSERS = new Set([
+  'end',
+  'endfor',
+  'endparfor',
+  'endwhile',
+  'endif',
+  'endswitch',
+  'endfunction',
+  'until',
+  'end_try_catch',
+])
+
+function looksUnclosed(command: string): boolean {
+  const words = command.match(/\b[a-zA-Z_]\w*\b/g) ?? []
+  let depth = 0
+  for (const word of words) {
+    const lower = word.toLowerCase()
+    if (BLOCK_OPENERS.has(lower)) depth++
+    else if (BLOCK_CLOSERS.has(lower)) depth--
+  }
+  return depth > 0
+}
+
 function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   const sessionRef = useRef<OctaveKernelSession | null>(null)
   const unitFilesRef = useRef<UnitFiles | null>(null)
@@ -210,8 +240,6 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   async function runCode(code: string) {
     if (!sessionRef.current) return
     setStatus('running')
-    setOutput('')
-    setFigures([])
     try {
       await sessionRef.current.execute(code, handleExecuteChunk)
       setDirtyFiles(new Set())
@@ -237,6 +265,45 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   function handleRunFile() {
     const writeCode = buildWriteFilesCode(unit.id, contents)
     void runCode([writeCode, `run('/engr183/assignments/${unit.id}/${activeFile}')`].join('\n'))
+  }
+
+  // Output/figures are now persistent (real Octave only clears via clc) --
+  // this is the one explicit way to wipe them, wired to the Command
+  // Window's Clear button and to a typed `clc` at the REPL prompt.
+  function clearOutput() {
+    setOutput('')
+    setFigures([])
+  }
+
+  async function handleReplSubmit(command: string) {
+    const trimmed = command.trim()
+    if (trimmed === '') return
+    // status guard: execute() only supports one in-flight call at a time
+    // (session.ts) -- the Command Window's input is already disabled while
+    // busy, this is defense-in-depth against a stale prop / fast double-Enter.
+    if (status !== 'ready') return
+
+    if (trimmed === 'clc' || trimmed === 'clc;') {
+      clearOutput()
+      return
+    }
+
+    if (looksUnclosed(trimmed)) {
+      setOutput(
+        (prev) =>
+          prev +
+          `>> ${command}\n` +
+          "Multi-line blocks aren't supported in the console yet -- try Run File for that.\n\n",
+      )
+      return
+    }
+
+    setOutput((prev) => prev + `>> ${command}\n`)
+    const writeCode = buildWriteFilesCode(unit.id, contents)
+    // cd into the unit's assignment dir first, matching what Run File's
+    // run(...) does implicitly -- so a REPL command can call a helper
+    // function the student just wrote in another file in this unit.
+    await runCode([writeCode, `cd('/engr183/assignments/${unit.id}');`, command].join('\n'))
   }
 
   function handleDownloadFile() {
@@ -448,6 +515,9 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
                   output={output}
                   collapsed={commandWindowCollapsed}
                   onToggleCollapse={toggleCommandWindow}
+                  onSubmit={(command) => void handleReplSubmit(command)}
+                  disabled={status !== 'ready'}
+                  onClear={clearOutput}
                 />
               </Panel>
             </Group>

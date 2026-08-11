@@ -7,7 +7,11 @@ const { chromium } = require('playwright');
   page.on('console', (m) => logs.push(m.text()));
   page.on('pageerror', (e) => logs.push('[pageerror] ' + e.message));
 
-  await page.goto('http://localhost:5183/?unit=unit01', { waitUntil: 'load', timeout: 45000 });
+  await page.addInitScript(() => {
+    localStorage.setItem('engr183-persistence-ack', '1');
+    localStorage.setItem('engr183-onboarding-seen', '1');
+  });
+  await page.goto('http://localhost:4173/?unit=unit01', { waitUntil: 'load', timeout: 45000 });
   await page.waitForFunction(() => document.body.innerText.includes('Ready'), null, { timeout: 45000 });
 
   // Replace the active file's content via Monaco. keyboard.type() fires real
