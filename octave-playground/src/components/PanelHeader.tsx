@@ -1,7 +1,12 @@
+import type { ReactNode } from 'react'
+
 interface PanelHeaderProps {
   title: string
   collapsed: boolean
   onToggleCollapse: () => void
+  // Optional extra controls (e.g. CommandWindow's font-size stepper),
+  // rendered between the title and the collapse button.
+  extra?: ReactNode
 }
 
 // Shared header for File Browser/Workspace/Command Window: title + a
@@ -11,17 +16,20 @@ interface PanelHeaderProps {
 // collapsedSize, this header is what stays visible (the rest of the panel's
 // content shrinks/clips away) -- it's the only way back to expanded once
 // collapsed via drag rather than the button.
-export function PanelHeader({ title, collapsed, onToggleCollapse }: PanelHeaderProps) {
+export function PanelHeader({ title, collapsed, onToggleCollapse, extra }: PanelHeaderProps) {
   return (
-    <div className="flex flex-shrink-0 items-center justify-between border-b border-line px-3 py-1.5">
+    <div className="flex flex-shrink-0 items-center gap-2 border-b border-line px-3 py-1.5">
       <span className="font-pixel text-xs font-semibold text-muted">{title}</span>
-      <button
-        className="rounded px-1.5 text-xs text-muted hover:bg-raised hover:text-secondary"
-        onClick={onToggleCollapse}
-        title={collapsed ? `Expand ${title}` : `Collapse ${title}`}
-      >
-        {collapsed ? '▢' : '─'}
-      </button>
+      <div className="ml-auto flex items-center gap-2">
+        {extra}
+        <button
+          className="rounded px-1.5 text-xs text-muted hover:bg-raised hover:text-secondary"
+          onClick={onToggleCollapse}
+          title={collapsed ? `Expand ${title}` : `Collapse ${title}`}
+        >
+          {collapsed ? '▢' : '─'}
+        </button>
+      </div>
     </div>
   )
 }

@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import MonacoEditor, { type Monaco } from '@monaco-editor/react'
 import { OCTAVE_LANGUAGE_ID, registerOctaveLanguage } from './octaveLanguage'
 import { registerCustomMonacoThemes } from './monacoThemes'
+import { FontSizeControls } from './FontSizeControls'
 import { useTheme } from '../theme'
 
 interface EditorProps {
@@ -25,12 +27,24 @@ function handleBeforeMount(monaco: Monaco): void {
   registerCustomMonacoThemes(monaco)
 }
 
+const FONT_SIZE_KEY = 'engr183-editor-font-size'
+const DEFAULT_FONT_SIZE = 13
+
 export function Editor({ files, activeFile, contents, dirtyFiles, onSelectTab, onChange }: EditorProps) {
   const { theme } = useTheme()
+  const [fontSize, setFontSize] = useState(() => {
+    const stored = Number(localStorage.getItem(FONT_SIZE_KEY))
+    return stored > 0 ? stored : DEFAULT_FONT_SIZE
+  })
+
+  function updateFontSize(next: number) {
+    setFontSize(next)
+    localStorage.setItem(FONT_SIZE_KEY, String(next))
+  }
 
   return (
     <div className="flex h-full flex-1 flex-col overflow-hidden">
-      <div className="flex border-b border-line bg-surface">
+      <div className="flex items-center border-b border-line bg-surface">
         {files.map((file) => (
           <button
             key={file}
@@ -45,6 +59,9 @@ export function Editor({ files, activeFile, contents, dirtyFiles, onSelectTab, o
             {dirtyFiles.has(file) && <span className="ml-1.5 text-accent-fg">●</span>}
           </button>
         ))}
+        <div className="ml-auto flex items-center pr-2">
+          <FontSizeControls size={fontSize} onChange={updateFontSize} />
+        </div>
       </div>
       <div className="flex-1">
         <MonacoEditor
@@ -56,7 +73,7 @@ export function Editor({ files, activeFile, contents, dirtyFiles, onSelectTab, o
           onChange={(value) => onChange(activeFile, value ?? '')}
           options={{
             minimap: { enabled: false },
-            fontSize: 13,
+            fontSize,
             automaticLayout: true,
           }}
         />
