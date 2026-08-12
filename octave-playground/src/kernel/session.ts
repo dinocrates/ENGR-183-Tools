@@ -128,11 +128,40 @@ export class OctaveKernelSession {
     });
 
     return new Promise<void>((resolve, reject) => {
+      // Belt-and-suspenders against a genuine kernel bug found via
+      // m0-spike-driver/t104: re-calling figure(N) on an already-open
+      // figure intermittently (~1 in 4-5 tries, confirmed via raw message
+      // dumps) makes xeus-octave never send update_display_data or
+      // execute_reply at all -- Octave's own interpreter finishes the
+      // script correctly (any trailing disp() output still arrives), but
+      // this specific execute_request just never gets acknowledged. Without
+      // this timeout that hangs the UI forever (status stuck 'running',
+      // Command Window input stuck disabled) -- a page reload was the only
+      // recovery. This can't be fixed from here: the dropped message is a
+      // third-party kernel-side bug (xeus-octave's prebuilt WASM binary,
+      // not this repo's own source), not a request/response bug in this
+      // file. 60s is generous enough not to interrupt legitimate slow
+      // student loops (a 200k-iteration for-loop measured well under half
+      // that -- see t78-repl.js's calibration comment) while still
+      // eventually recovering instead of hanging indefinitely.
+      let settled = false;
+      const timeoutId = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        reject(
+          new Error(
+            'Kernel did not respond in time -- it may be stuck (a known intermittent issue after ' +
+              're-activating a figure with figure(N)). Try running again; reload the page if it keeps happening.',
+          ),
+        );
+      }, 60000);
+
       // Reassigning sendMessage per-call keeps this simple; only one
       // execute() runs at a time in M1's UI (Toolbar disables Run while busy).
       (kernel as unknown as { sendMessage: IKernel.SendMessage }).sendMessage = (
         msg: KernelMessage.IMessage,
       ) => {
+        if (settled) return; // a stray message arriving after we've already given up
         if (msg.header.msg_type === 'stream') {
           const content = (msg as KernelMessage.IStreamMsg).content;
           onOutput?.({
@@ -170,6 +199,8 @@ export class OctaveKernelSession {
             mimeBundle: content.data as Record<string, unknown>,
           });
         } else if (msg.header.msg_type === 'execute_reply') {
+          settled = true;
+          clearTimeout(timeoutId);
           const content = (msg as KernelMessage.IExecuteReplyMsg).content;
           if (content.status === 'error') {
             reject(new Error(`${content.ename}: ${content.evalue}`));
@@ -179,7 +210,12 @@ export class OctaveKernelSession {
         }
       };
 
-      kernel.handleMessage(requestMsg).catch(reject);
+      kernel.handleMessage(requestMsg).catch((err) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeoutId);
+        reject(err as Error);
+      });
     });
   }
 
