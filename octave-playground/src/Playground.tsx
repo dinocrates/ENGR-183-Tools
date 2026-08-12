@@ -26,6 +26,13 @@ interface Figure {
   label: string
   mimeBundle: Record<string, unknown>
   position: { x: number; y: number }
+  // Set once execute() settles (any path) if this figure never got past its
+  // empty placeholder -- a real, intermittent kernel bug (DESIGN.md T3.21)
+  // where a plot's real data can silently never arrive even though
+  // everything else about the run succeeds. execute_reply is always the
+  // *last* message for a command, so once execute() has settled, an empty
+  // figure is provably never going to complete -- no point spinning forever.
+  failed?: boolean
 }
 
 const PLOTLY_MIME = 'application/vnd.plotly.v1+json'
@@ -171,7 +178,20 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       const id = chunk.displayId ?? `figure-${figureCount.current}`
       zCounter.current += 1
       setZIndices((z) => ({ ...z, [id]: zCounter.current }))
-      const cascade = (prev.length % 5) * 28
+      // wrapNudge shifts the whole 5-step cascade cycle a little further out
+      // each time it wraps around -- without it (plain `(prev.length % 5) *
+      // 28`), figure 6 lands at the *exact same* position as figure 1 (both
+      // get cascade 0), and since figure 6 has a higher z-index, it sits
+      // completely on top of figure 1 at identical size -- figure 1 isn't
+      // just partly obscured, it's 100% hidden, close button included,
+      // making it unclosable by clicking (confirmed via torture testing,
+      // DESIGN.md T3.23: Playwright's own actionability check reported the
+      // close button's "subtree intercepts pointer events" for the entire
+      // retry window). 14px is enough to break the exact overlap while still
+      // reading as "the same cascade, one step further" for the common case
+      // of a handful of figures well under the wrap point.
+      const wrapNudge = Math.floor(prev.length / 5) * 14
+      const cascade = (prev.length % 5) * 28 + wrapNudge
       // Start past the app title bar + Toolbar (~74px) and the File Browser
       // column (224px) -- spawning at (24, 24) put every figure directly on
       // top of Run Tests/Run File, silently blocking the button underneath
@@ -219,6 +239,14 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     } catch (err) {
       setOutput((prev) => prev + '\n' + String(err))
       setStatus('error')
+    } finally {
+      // execute_reply is always the *last* message for a command -- once
+      // execute() has settled (by any path), a figure still showing its
+      // empty placeholder is provably never going to receive its real data.
+      // Mark it failed instead of leaving it spinning forever.
+      setFigures((prev) =>
+        prev.map((f) => (Object.keys(f.mimeBundle).length === 0 ? { ...f, failed: true } : f)),
+      )
     }
   }
 
@@ -272,7 +300,9 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     // status guard: execute() only supports one in-flight call at a time
     // (session.ts) -- the Command Window's input is already disabled while
     // busy, this is defense-in-depth against a stale prop / fast double-Enter.
-    if (status !== 'ready') return
+    // Uses replBusy (defined below, before the JSX return), NOT
+    // status !== 'ready' -- see its comment for why.
+    if (replBusy) return
 
     if (trimmed === 'clc' || trimmed === 'clc;') {
       clearOutput()
@@ -413,6 +443,20 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     else panel.collapse()
   }
 
+  // Matches Toolbar's own `busy` (status === 'starting' || 'running') --
+  // deliberately NOT `status !== 'ready'`. 'error' is a legitimate at-rest
+  // status (a Run Tests/Run File/REPL command that errored still leaves the
+  // kernel free to accept the next one; Toolbar's Run buttons already stay
+  // enabled through it). The Command Window used to disable on
+  // `status !== 'ready'`, which meant the *first* REPL error of a session
+  // (even a routine typo or undefined-variable mistake -- not the figure(N)
+  // kernel bug) permanently disabled it, since nothing ever set status back
+  // to 'ready' afterward -- found via torture testing (DESIGN.md T3.23),
+  // where a two-command REPL sequence (a syntax error, then any second
+  // command) reproduced a real, permanent lockout, not the environmental
+  // flakiness it first looked like.
+  const replBusy = status === 'starting' || status === 'running'
+
   return (
     <div className="relative flex h-full flex-col">
       {!kernelReady && <StartupOverlay error={startupError} />}
@@ -511,7 +555,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
                   collapsed={commandWindowCollapsed}
                   onToggleCollapse={toggleCommandWindow}
                   onSubmit={(command) => void handleReplSubmit(command)}
-                  disabled={status !== 'ready'}
+                  disabled={replBusy}
                   onClear={clearOutput}
                 />
               </Panel>
@@ -525,6 +569,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
           id={figure.id}
           label={figure.label}
           mimeBundle={figure.mimeBundle}
+          failed={figure.failed}
           initialPosition={figure.position}
           zIndex={zIndices[figure.id] ?? 1}
           onClose={closeFigure}

@@ -10,6 +10,12 @@ interface PlotlyFigure {
 
 interface PlotOutputProps {
   mimeBundle: Record<string, unknown>
+  // True once the run that would have populated this figure has settled
+  // with no data ever arriving -- see Playground.tsx's runCode(). Distinct
+  // from mid-render "still loading": that state resolves on its own, this
+  // one provably never will (execute_reply is always the last message for
+  // a command), so it gets a real error state instead of an infinite spinner.
+  failed?: boolean
   // Fixed pixel size, when the caller's container size is itself fixed (as
   // FloatingFigure's is). Falls back to autosize/responsive if omitted, for
   // a container whose size can genuinely change after mount.
@@ -51,12 +57,30 @@ function RenderingSpinner() {
   )
 }
 
+// For the failed=true case: a real, intermittent kernel bug (DESIGN.md
+// T3.21) where a figure's data can silently never arrive even though the
+// run that should have populated it otherwise succeeded. Deliberately
+// styled like an error, not a variant of the loading spinner -- this
+// figure is provably never going to complete, so it shouldn't look like
+// it's still working.
+function FailedPlot() {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white p-4 text-center">
+      <span className="text-2xl">⚠️</span>
+      <span className="max-w-xs text-xs text-slate-600">
+        This plot didn't finish rendering — a known, occasional issue after re-activating a figure with{' '}
+        <code className="text-slate-800">figure(N)</code>. Close this window and run again.
+      </span>
+    </div>
+  )
+}
+
 // Dynamically imported: plotly.js is the only way to render what the kernel
 // sends (application/vnd.plotly.v1+json, confirmed the only MIME type it
 // emits -- no PNG fallback, see m0-spike-driver/t18-plot-mime.js), but it's
 // ~1MB and most units never plot, so it shouldn't cost anything on units
 // that don't need it.
-export function PlotOutput({ mimeBundle, width, height }: PlotOutputProps) {
+export function PlotOutput({ mimeBundle, failed, width, height }: PlotOutputProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)
   // True while waiting on either the ~1MB plotly.js-dist-min download (first
@@ -64,6 +88,22 @@ export function PlotOutput({ mimeBundle, width, height }: PlotOutputProps) {
   // large figure -- both can genuinely take a while, and a blank white box
   // with no feedback looks broken rather than "still working."
   const [rendering, setRendering] = useState(false)
+  // Distinct from the ordinary "still loading" spinner: found via torture
+  // testing that a plot can occasionally take much longer than usual to
+  // render after the figure(N) reactivation kernel bug (DESIGN.md T3.21/
+  // T3.23) -- confirmed via a direct repro that this isn't a malformed- or
+  // missing-data case (the payload dumped completely well-formed) and, in
+  // every observed instance, the render did eventually complete on its own
+  // given enough time (one case took over 15s). So this timeout is
+  // deliberately generous -- 45s -- to stay well clear of a legitimately
+  // slow-but-working render; it exists only to eventually surface *some*
+  // feedback if a render genuinely never finishes, not to fire on the
+  // normal case observed so far. The "data never arrives at all" case is
+  // separate (handled in the !figure branch below, via the failed prop
+  // from Playground.tsx) -- this one is specifically "data arrived, the
+  // render itself is just taking unusually long," where neither .then()
+  // nor .catch() gives any signal to react to.
+  const [renderStuck, setRenderStuck] = useState(false)
   const figure = mimeBundle[PLOTLY_MIME] as PlotlyFigure | undefined
 
   useEffect(() => {
@@ -71,6 +111,10 @@ export function PlotOutput({ mimeBundle, width, height }: PlotOutputProps) {
     if (!figure || !container) return
     let cancelled = false
     setRendering(true)
+    setRenderStuck(false)
+    const stuckTimer = setTimeout(() => {
+      if (!cancelled) setRenderStuck(true)
+    }, 45000)
 
     loadPlotly().then((Plotly) => {
       if (cancelled) return
@@ -120,8 +164,10 @@ export function PlotOutput({ mimeBundle, width, height }: PlotOutputProps) {
         displayModeBar: true,
       })
     }).then(() => {
+      clearTimeout(stuckTimer)
       if (!cancelled) setRendering(false)
     }).catch((err) => {
+      clearTimeout(stuckTimer)
       if (!cancelled) {
         setError(String(err))
         setRendering(false)
@@ -130,6 +176,7 @@ export function PlotOutput({ mimeBundle, width, height }: PlotOutputProps) {
 
     return () => {
       cancelled = true
+      clearTimeout(stuckTimer)
       if (cachedPlotly && (container as unknown as { data?: unknown }).data) {
         cachedPlotly.purge(container)
       }
@@ -137,6 +184,13 @@ export function PlotOutput({ mimeBundle, width, height }: PlotOutputProps) {
   }, [figure, width, height])
 
   if (!figure) {
+    if (failed) {
+      return (
+        <div className="relative h-full w-full">
+          <FailedPlot />
+        </div>
+      )
+    }
     // An empty bundle is the momentary placeholder xeus-octave sends before
     // the real figure arrives via update_display_data -- show the same
     // spinner as the "have data, still drawing" case rather than a blank
@@ -162,7 +216,7 @@ export function PlotOutput({ mimeBundle, width, height }: PlotOutputProps) {
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
-      {rendering && <RenderingSpinner />}
+      {rendering && (renderStuck ? <FailedPlot /> : <RenderingSpinner />)}
     </div>
   )
 }

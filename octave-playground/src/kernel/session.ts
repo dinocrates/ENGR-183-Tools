@@ -200,6 +200,23 @@ export class OctaveKernelSession {
         msg: KernelMessage.IMessage,
       ) => {
         if (settled) return; // a stray message arriving after we've already given up
+        // Found via torture testing (DESIGN.md T3.23), confirmed with a raw
+        // message dump: this request's own trailing messages (routinely an
+        // idle 'status', but under heavier REPL load also real stream/reply
+        // content -- reproduced as a stray disp() output from an earlier,
+        // already-finished command landing in a later, unrelated command's
+        // transcript) can arrive *after* sendMessage has already been
+        // reassigned to the next execute() call, since reassignment happens
+        // the instant the next command is submitted, not when this one's
+        // last straggling message actually lands. Every message carries a
+        // parent_header pointing back at the request that caused it
+        // (standard Jupyter messaging) -- checking it against *this*
+        // closure's own requestMsg is a real fix, not a mitigation: it
+        // belongs entirely to this file, not the vendored kernel, since nothing
+        // here previously verified a message was actually replying to the
+        // request this specific closure was built for.
+        const parentId = (msg.parent_header as { msg_id?: string } | undefined)?.msg_id;
+        if (parentId !== undefined && parentId !== requestMsg.header.msg_id) return;
         if (msg.header.msg_type === 'stream') {
           const content = (msg as KernelMessage.IStreamMsg).content;
           onOutput?.({

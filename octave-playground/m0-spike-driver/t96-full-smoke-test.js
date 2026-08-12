@@ -108,8 +108,17 @@ console.log(`Smoke testing: ${BASE}\n`);
   await input.fill("plot(1:10, (1:10).^2); title('smoke test plot');");
   await input.press('Enter');
   await page.waitForFunction(() => document.body.innerText.includes('Figure'), null, { timeout: 20000 });
-  await page.waitForTimeout(1500);
-  const hasCanvas = await page.evaluate(() => !!document.querySelector('.js-plotly-plot'));
+  // Poll, don't sleep-then-check-once: this is the first plot() of the whole
+  // session, so it's also the first time the ~1MB plotly.js-dist-min chunk
+  // has to load (PlotOutput.tsx's own comment) -- a fixed 1500ms delay is
+  // marginal for that cold load under any real system load and flaked here
+  // (confirmed via an isolated repro with generous polling that passed
+  // cleanly every time), not because the plot failed to render, just because
+  // it hadn't finished rendering yet at the moment of the one-shot check.
+  const hasCanvas = await page
+    .waitForSelector('.js-plotly-plot', { timeout: 20000 })
+    .then(() => true)
+    .catch(() => false);
   check('a REPL-triggered plot() opens a Figure window and renders', hasCanvas);
   const closeBtn = page.locator('[title="Close"], button:has-text("✕")').first();
   await closeBtn.click().catch(() => {});

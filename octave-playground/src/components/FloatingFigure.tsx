@@ -5,6 +5,10 @@ interface FloatingFigureProps {
   id: string
   label: string
   mimeBundle: Record<string, unknown>
+  // Set once the run that would have populated this figure has settled with
+  // no data ever arriving -- a real, intermittent kernel bug (DESIGN.md
+  // T3.21), not a rendering-in-progress state. See PlotOutput.tsx.
+  failed?: boolean
   initialPosition: { x: number; y: number }
   zIndex: number
   onClose: (id: string) => void
@@ -23,6 +27,7 @@ export function FloatingFigure({
   id,
   label,
   mimeBundle,
+  failed,
   initialPosition,
   zIndex,
   onClose,
@@ -134,7 +139,7 @@ export function FloatingFigure({
         // -- no padding here so the plot's own white background goes edge to
         // edge, like an actual Figure window's canvas.
         <div className="relative bg-white" style={{ height: displayHeight }}>
-          <PlotOutput mimeBundle={mimeBundle} width={size.width} height={size.height} />
+          <PlotOutput mimeBundle={mimeBundle} failed={failed} width={size.width} height={size.height} />
           <div
             className="absolute bottom-0 right-0 h-4 w-4 cursor-nwse-resize text-muted"
             onMouseDown={handleResizeStart}
