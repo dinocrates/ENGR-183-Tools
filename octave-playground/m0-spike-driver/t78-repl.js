@@ -100,23 +100,25 @@ function check(label, ok) {
   text = await outputText();
   check('Clear button empties the console', text.trim() === '');
 
-  // Unclosed block: friendly redirect, not a raw parser error
-  await input.fill('for i = 1:3');
-  await input.press('Enter');
-  await page.waitForTimeout(300);
-  text = await outputText();
-  check(
-    'unclosed block shows the friendly redirect instead of executing',
-    text.includes("Multi-line blocks aren't supported") && !text.toLowerCase().includes('parse error'),
-  );
-
+  // Multi-line continuation (Phase 2) has its own dedicated coverage in
+  // t80-repl-multiline.js -- this file stays scoped to single-line usage.
   // A balanced one-liner block (for i=1:2, disp(i), end) still runs normally
-  await clearButton.click();
+  // as a single line, never entering continuation mode.
+  const beforeBalanced = await outputText();
   await input.fill('for i = 1:2, disp(i), end');
   await input.press('Enter');
-  await page.waitForFunction(() => document.body.innerText.includes('1') && document.body.innerText.includes('2'), null, { timeout: 15000 });
-  text = await outputText();
-  check('a balanced single-line block executes normally (not misdetected as unclosed)', !text.includes("Multi-line blocks aren't supported"));
+  await page.waitForFunction(
+    ({ before, sel }) => {
+      const pre = Array.from(document.querySelectorAll('pre')).find((p) => p.closest(sel));
+      return !!pre && pre.innerText.length > before.length;
+    },
+    { before: beforeBalanced, sel: '.flex.h-full.flex-col.bg-app' },
+    { timeout: 15000 },
+  );
+  check(
+    'a balanced single-line block executes immediately, without entering continuation mode',
+    (await input.getAttribute('placeholder')) === 'Type an Octave command…',
+  );
 
   // Font size zoom affects the REPL input too
   const consoleHeader = page.locator('div.flex.flex-shrink-0.items-center.gap-2.border-b.border-line', { hasText: 'Command Window' });

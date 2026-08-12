@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { PanelHeader } from './PanelHeader'
 import { FontSizeControls } from './FontSizeControls'
+import { isBlockComplete, formatReplEcho } from '../kernel/replBlocks'
 
 interface CommandWindowProps {
   output: string
@@ -27,9 +28,13 @@ export function CommandWindow({
     return stored > 0 ? stored : DEFAULT_FONT_SIZE
   })
   const [inputValue, setInputValue] = useState('')
-  // Typed commands, oldest first. historyIndex is null while composing a
-  // new (not-yet-submitted) command; Up/Down walk backward/forward through
-  // history the same way a real terminal does.
+  // Lines already entered for a multi-line block that isn't complete yet
+  // (e.g. typed `for i = 1:3`, still waiting for the matching `end`).
+  // Transient/local only -- never written into Playground's persistent
+  // `output`, so Escape can drop it cleanly with nothing to undo.
+  const [bufferLines, setBufferLines] = useState<string[]>([])
+  // Submitted commands, oldest first -- a multi-line block is stored as one
+  // entry (joined with \n), not one entry per line.
   const [history, setHistory] = useState<string[]>([])
   const [historyIndex, setHistoryIndex] = useState<number | null>(null)
   const outputRef = useRef<HTMLPreElement>(null)
@@ -44,33 +49,61 @@ export function CommandWindow({
     localStorage.setItem(FONT_SIZE_KEY, String(next))
   }
 
+  // Recall always replaces whatever's currently being composed, live
+  // continuation or not -- simpler than a separate "disable history mid-
+  // continuation" rule, and close enough to ordinary shell history
+  // behavior (recall replaces the current line). A multi-line entry splits
+  // back into lines: all but the last go into the pending preview, the
+  // last lands in the input ready to edit or re-submit with Enter.
+  function recallHistoryEntry(index: number) {
+    setHistoryIndex(index)
+    const lines = history[index].split('\n')
+    setBufferLines(lines.slice(0, -1))
+    setInputValue(lines[lines.length - 1])
+  }
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter') {
-      const command = inputValue
-      if (command.trim() === '') return
-      onSubmit(command)
-      setHistory((prev) => [...prev, command])
-      setHistoryIndex(null)
-      setInputValue('')
+      const line = inputValue
+      if (line.trim() === '' && bufferLines.length === 0) return
+      const candidateLines = [...bufferLines, line]
+      const candidate = candidateLines.join('\n')
+      if (isBlockComplete(candidate)) {
+        onSubmit(candidate)
+        setHistory((prev) => [...prev, candidate])
+        setHistoryIndex(null)
+        setBufferLines([])
+        setInputValue('')
+      } else {
+        setBufferLines(candidateLines)
+        setInputValue('')
+      }
+    } else if (e.key === 'Escape') {
+      if (bufferLines.length > 0) {
+        e.preventDefault()
+        setBufferLines([])
+        setInputValue('')
+      }
     } else if (e.key === 'ArrowUp') {
       if (history.length === 0) return
       e.preventDefault()
       const next = historyIndex === null ? history.length - 1 : Math.max(0, historyIndex - 1)
-      setHistoryIndex(next)
-      setInputValue(history[next])
+      recallHistoryEntry(next)
     } else if (e.key === 'ArrowDown') {
       if (historyIndex === null) return
       e.preventDefault()
       const next = historyIndex + 1
       if (next >= history.length) {
         setHistoryIndex(null)
+        setBufferLines([])
         setInputValue('')
       } else {
-        setHistoryIndex(next)
-        setInputValue(history[next])
+        recallHistoryEntry(next)
       }
     }
   }
+
+  const continuing = bufferLines.length > 0
 
   return (
     <div className="flex h-full flex-col bg-app">
@@ -98,9 +131,17 @@ export function CommandWindow({
       >
         {output || ' '}
       </pre>
+      {continuing && (
+        <div
+          className="flex-shrink-0 whitespace-pre-wrap border-t border-line-subtle bg-raised/40 px-3 py-1.5 font-mono text-muted"
+          style={{ fontSize }}
+        >
+          {formatReplEcho(bufferLines.join('\n'))}
+        </div>
+      )}
       <div className="flex flex-shrink-0 items-center gap-1.5 border-t border-line px-3 py-1.5">
         <span className="font-mono text-muted" style={{ fontSize }}>
-          {'>>'}
+          {continuing ? '..' : '>>'}
         </span>
         <input
           className="w-full rounded border border-line bg-app px-2 py-1 font-mono text-primary outline-none focus:border-accent-hover disabled:opacity-40"
@@ -109,7 +150,9 @@ export function CommandWindow({
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={disabled}
-          placeholder={disabled ? 'Kernel busy…' : 'Type an Octave command…'}
+          placeholder={
+            disabled ? 'Kernel busy…' : continuing ? 'Continue the block, or Esc to cancel…' : 'Type an Octave command…'
+          }
           spellCheck={false}
           autoComplete="off"
         />
