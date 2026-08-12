@@ -37,26 +37,54 @@ function check(label, ok) {
   check('typed command is echoed with >> prefix', text.includes('>> disp(6 * 7)'));
   check('typed command result appears', text.includes('42'));
 
-  // Kernel busy: input disables mid-command. The round trip can be fast
-  // (in-process WASM, no network), so racing a single fixed-delay check
-  // against it is flaky -- wait for the "Kernel busy…" placeholder to
-  // actually attach instead, which polls continuously and reliably catches
-  // even a brief disabled window.
-  await input.fill('x = 99');
-  const enterPromise = input.press('Enter');
+  // Kernel busy: input disables mid-command. An ordinary one-liner's round
+  // trip can be too fast to reliably sample with a single fixed-delay check
+  // -- use a CPU-bound loop for a generous busy window (calibrated
+  // empirically: Octave for-loops run at roughly 26k-45k iterations/sec
+  // under this WASM interpreter, so 5e4 gives a window comfortably over
+  // 500ms), and detect it by continuously polling for the disabled
+  // attribute (page.waitForFunction) rather than a single point-in-time
+  // sample, so this doesn't depend on winning a timing race. (Tried
+  // pause(1) first: it hangs indefinitely in this kernel, almost certainly
+  // because session.ts's execute_request sets allow_stdin: false and
+  // pause's internals depend on stdin even for the numeric-duration form --
+  // do not use pause() in this app's REPL tests.)
+  await input.fill('x = 0; for k = 1:5e4, x = x + 1; end; disp(x)');
+  await input.press('Enter');
   const sawBusy = await page
-    .waitForSelector('input[placeholder="Kernel busy…"]', { timeout: 2000 })
+    .waitForFunction(() => {
+      const el = document.querySelector('input[placeholder="Kernel busy…"]');
+      return !!el && el.disabled;
+    }, null, { timeout: 5000 })
     .then(() => true)
     .catch(() => false);
-  await enterPromise;
-  await page.waitForFunction(() => document.body.innerText.includes('x = 99'), null, { timeout: 15000 });
+  await page.waitForFunction(() => document.body.innerText.includes('50000'), null, { timeout: 20000 });
   check('input disables while a REPL command is executing', sawBusy);
+  await page.waitForFunction(() => !document.querySelector('input[placeholder="Kernel busy…"]'), null, { timeout: 15000 });
   check('input re-enables after the command finishes', await input.isEnabled());
+  // Give the heavy loop's own refreshWorkspace() call (triggered by runCode
+  // right after it) a moment to fully settle before the next execute() call
+  // below reassigns the kernel's message handler -- a stray late stdout
+  // chunk from a heavy computation landing just as the next execute() call
+  // takes over the handler is a real, pre-existing race in session.ts's
+  // per-call sendMessage reassignment (confirmed via m0-spike-driver
+  // debugging; affects Run Tests/Run File too, not specific to the REPL --
+  // out of scope to fix here). Using a separate lightweight command below
+  // for the Workspace-panel assertion sidesteps it rather than fighting it.
+  await page.waitForTimeout(1000);
 
-  // Workspace panel reflects a REPL-defined variable
-  await page.waitForTimeout(300);
-  const workspaceText = await page.evaluate(() => document.body.innerText);
-  check('Workspace panel updates after a REPL command (not just Run Tests/Run File)', workspaceText.includes('x') && workspaceText.includes('99'));
+  // Workspace panel reflects a REPL-defined variable (Name/Size/Class only,
+  // no value column -- check the panel itself, not just page-wide text,
+  // since the console's own echo would otherwise make this trivially true).
+  await input.fill('y = 99');
+  await input.press('Enter');
+  await page.waitForFunction(() => document.body.innerText.includes('y = 99'), null, { timeout: 15000 });
+  await page.waitForTimeout(500);
+  const workspaceText = await page.evaluate(() => {
+    const table = document.querySelector('table');
+    return table ? table.innerText : '';
+  });
+  check('Workspace panel updates after a REPL command (not just Run Tests/Run File)', workspaceText.includes('y'));
 
   // Persistent output: running Run File does NOT wipe prior REPL history
   await page.click('.monaco-editor');
