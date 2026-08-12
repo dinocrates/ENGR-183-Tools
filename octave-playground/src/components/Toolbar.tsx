@@ -6,6 +6,7 @@ interface ToolbarProps {
   status: KernelStatus
   onRunTests?: () => void
   onRunFile: () => void
+  onStop: () => void
   onDownloadFile: () => void
   onDownloadZip: () => void
   onResetFile: () => void
@@ -33,6 +34,7 @@ export function Toolbar({
   status,
   onRunTests,
   onRunFile,
+  onStop,
   onDownloadFile,
   onDownloadZip,
   onResetFile,
@@ -67,6 +69,15 @@ export function Toolbar({
       >
         Run File
       </button>
+      {busy && (
+        <button
+          className="font-pixel rounded bg-danger px-3 py-1 text-sm font-medium text-on-accent hover:bg-danger-hover"
+          onClick={onStop}
+          title="Stop the kernel and start a fresh one -- for code you think is stuck. Clears variables, but your files are safe."
+        >
+          Stop
+        </button>
+      )}
       <div className="mx-1 h-5 w-px bg-line" />
       <button
         className="rounded border border-line px-3 py-1 text-sm text-secondary hover:bg-raised"

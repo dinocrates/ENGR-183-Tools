@@ -238,6 +238,26 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     void runCode([writeCode, `run('/engr183/assignments/${unit.id}/${activeFile}')`].join('\n'))
   }
 
+  // For a student who thinks their code is stuck (an accidental infinite
+  // loop, or the figure-reactivation kernel bug -- DESIGN.md T3.21). There's
+  // no cooperative interrupt available (see session.ts's stop()), so this
+  // kills the kernel and starts a fresh one -- 'starting' reuses the same
+  // busy-gating Toolbar/Command Window already have, without bringing back
+  // the full-screen StartupOverlay (that's gated on kernelReady, which
+  // isn't touched here -- a routine restart should feel lighter than first
+  // boot). Variables are cleared; file edits are untouched, since those
+  // live in the browser file bridge, not the kernel.
+  async function handleStop() {
+    setStatus('starting')
+    setWorkspaceVars([])
+    setOutput(
+      (prev) =>
+        prev + '\n⏹ Stopped -- restarting the kernel. Variables were cleared, but your files are safe.\n',
+    )
+    await sessionRef.current?.stop()
+    setStatus('ready')
+  }
+
   // Output/figures are now persistent (real Octave only clears via clc) --
   // this is the one explicit way to wipe them, wired to the Command
   // Window's Clear button and to a typed `clc` at the REPL prompt.
@@ -410,6 +430,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
         status={status}
         onRunTests={unit.isScratch ? undefined : handleRunTests}
         onRunFile={handleRunFile}
+        onStop={() => void handleStop()}
         onDownloadFile={handleDownloadFile}
         onDownloadZip={handleDownloadZip}
         onResetFile={handleResetFile}

@@ -47,6 +47,11 @@ export class OctaveKernelSession {
   private kernelSpecs = new KernelSpecs();
   private sessionId = crypto.randomUUID();
   private contentsManager: ContentsManager | null = null;
+  // Set for the duration of the current in-flight execute() call, cleared
+  // once it settles by any path (reply, error, timeout, or this). Lets
+  // stop() reject that call immediately instead of the caller having to
+  // wait out execute()'s own 60s safety-net timeout -- see stop() below.
+  private currentAbort: (() => void) | null = null;
 
   /** contentsManager is shared with files.ts's UnitFiles -- both the kernel
    *  (mountDrive: true, below) and the browser-side file bridge need to see
@@ -105,6 +110,23 @@ export class OctaveKernelSession {
     await this.start(this.contentsManager);
   }
 
+  /** For a student who believes their code is stuck (an accidental infinite
+   *  loop, or the figure-reactivation kernel bug documented in DESIGN.md
+   *  T3.21). There's no cooperative interrupt in this architecture --
+   *  IKernel (the interface the Octave kernel implements) exposes nothing
+   *  but handleMessage()/dispose(), no pause or cancel -- so "stop" can only
+   *  mean "kill the kernel and start a fresh one," which is exactly what
+   *  restart() already does. currentAbort() rejects the in-flight
+   *  execute() call immediately, rather than leaving the caller to wait out
+   *  its own 60s timeout, since a user clicking Stop wants instant
+   *  feedback. This clears all in-kernel state (Octave variables); file
+   *  edits are untouched, since those live in the separate browser file
+   *  bridge, not the kernel. */
+  async stop(): Promise<void> {
+    this.currentAbort?.();
+    await this.restart();
+  }
+
   /** Execute code, streaming stdout/stderr text and rich display data (e.g.
    *  plots) as they arrive, in the order the kernel emits them. */
   async execute(code: string, onOutput?: ExecuteListener): Promise<void> {
@@ -147,7 +169,7 @@ export class OctaveKernelSession {
       let settled = false;
       const timeoutId = setTimeout(() => {
         if (settled) return;
-        settled = true;
+        finish();
         reject(
           new Error(
             'Kernel did not respond in time -- it may be stuck (a known intermittent issue after ' +
@@ -155,6 +177,22 @@ export class OctaveKernelSession {
           ),
         );
       }, 60000);
+
+      const finish = () => {
+        settled = true;
+        clearTimeout(timeoutId);
+        if (this.currentAbort === abort) this.currentAbort = null;
+      };
+
+      // Lets stop() interrupt this call immediately -- see stop()'s own
+      // comment for why "abort" here can only mean "give up waiting," not a
+      // true cooperative cancel.
+      const abort = () => {
+        if (settled) return;
+        finish();
+        reject(new Error('Stopped by user.'));
+      };
+      this.currentAbort = abort;
 
       // Reassigning sendMessage per-call keeps this simple; only one
       // execute() runs at a time in M1's UI (Toolbar disables Run while busy).
@@ -199,8 +237,7 @@ export class OctaveKernelSession {
             mimeBundle: content.data as Record<string, unknown>,
           });
         } else if (msg.header.msg_type === 'execute_reply') {
-          settled = true;
-          clearTimeout(timeoutId);
+          finish();
           const content = (msg as KernelMessage.IExecuteReplyMsg).content;
           if (content.status === 'error') {
             reject(new Error(`${content.ename}: ${content.evalue}`));
@@ -212,8 +249,7 @@ export class OctaveKernelSession {
 
       kernel.handleMessage(requestMsg).catch((err) => {
         if (settled) return;
-        settled = true;
-        clearTimeout(timeoutId);
+        finish();
         reject(err as Error);
       });
     });
