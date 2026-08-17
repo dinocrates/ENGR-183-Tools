@@ -1,8 +1,23 @@
+// UnitIndex groups the landing page by this, not by title-prefix parsing
+// (OR-/APA-/GP-) -- explicit and typo-checked, rather than fragile string
+// sniffing.
+export type UnitCategory = 'guided-practice' | 'individual-assignment'
+
 export interface UnitMeta {
   id: string
   title: string
   description: string
   files: string[]
+  // Which landing-page section this belongs in. Required for every real
+  // curriculum unit; the Scratch Pad (defined below, not part of `units`)
+  // doesn't need one since it's never in either section.
+  category: UnitCategory
+  // The "Unit N" this exercise belongs to, e.g. 2 for both unit02 (APA-02)
+  // and u02-gp02-tensile (GP-02) -- UnitIndex sorts each category's list by
+  // this rather than by `id` (whose string ordering doesn't reliably match
+  // unit number once ids stop following the plain 'unitNN' pattern, e.g.
+  // 'u02-gp02-tensile' sorts before 'unit01' alphabetically).
+  unitNumber: number
   // Ungraded free-play mode: no rubric/tests exist for it, so the Toolbar
   // hides Run Tests and UnitIndex lists it separately from the curriculum.
   isScratch?: boolean
@@ -50,6 +65,11 @@ export const scratchUnit: UnitMeta = {
   description: 'Write and run any Octave code here. Nothing on this page is graded.',
   files: ['scratch.m'],
   isScratch: true,
+  // Never actually read: UnitIndex renders scratchUnit through its own
+  // dedicated block, not the category-grouped sections, so these two
+  // fields are just here to satisfy UnitMeta's required shape.
+  category: 'individual-assignment',
+  unitNumber: 0,
 }
 
 export function getUnit(id: string): UnitMeta | undefined {

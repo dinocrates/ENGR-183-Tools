@@ -2,5 +2,7 @@
   "id": "unit02",
   "title": "Unit 2 — APA-02 Solar-Panel I-V Data Analysis",
   "description": "Complete every numbered TODO in U02_APA02_SolarIV.m using whole-array operations only (no loops, if statements, plotting, or file-import commands), then use Run Tests to check your code. Download the file (rename it U02_APA02_SolarIV_LastName.m) for submission.",
-  "files": ["U02_APA02_SolarIV.m"]
+  "files": ["U02_APA02_SolarIV.m"],
+  "category": "individual-assignment",
+  "unitNumber": 2
 }

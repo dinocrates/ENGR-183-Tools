@@ -3,5 +3,7 @@
   "title": "Unit 1 — OR-01 GNU Octave Setup and First Script",
   "description": "Personalize U01_OctaveSetupCheck.m with your name and today's date, then use Run Tests to check your code. Use Run File to produce the five output lines for your Canvas screenshot, then download the file (rename it U01_OctaveSetupCheck_LastName.m) for submission.",
   "files": ["U01_OctaveSetupCheck.m"],
-  "retiredFiles": ["addTwo.m", "circleArea.m", "greet.m"]
+  "retiredFiles": ["addTwo.m", "circleArea.m", "greet.m"],
+  "category": "individual-assignment",
+  "unitNumber": 1
 }
