@@ -139,6 +139,20 @@ In Canvas, submit `U02_APA02_SolarIV.m`, renamed to `U02_APA02_SolarIV_LastName.
 
 ---
 
+## Unit 2 — GP-02: Tensile-Test Data Analysis (guided practice)
+
+This one is a guided-practice exercise, not a Canvas-graded deliverable: follow the instructor's video (Canvas has the video, transcript, and full instructions) while editing `assignments/u02-gp02-tensile/U02_GP02_TensileTest.m`, running it as you go. There's no separate written walkthrough here — the video is the walkthrough.
+
+Check your work anytime, as many times as you like:
+
+```matlab
+engr183.runTests('u02-gp02-tensile')
+```
+
+The 7 criteria correspond to the video's 7 checkpoints (Inspect, Transform, Retrieve, Locate UTS, Select, Organize, Report) — same rubric-report shape as every other unit, just framed as progress checkpoints instead of a points breakdown. Two short reflection comments the video asks for are graded manually on Canvas, not by this checker.
+
+---
+
 ## How checking works, all semester
 
 Every unit follows this same shape:

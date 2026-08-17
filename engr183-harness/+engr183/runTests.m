@@ -50,7 +50,14 @@ function varargout = runTests(unit, varargin)
   addpath(workDir);
   addpath(testDir);
 
-  specFn = sprintf('%s_tests', unit);
+  % Unit ids may contain hyphens (e.g. 'u02-gp02-tensile') since they only
+  % need to be valid directory/URL path segments everywhere else -- but an
+  % Octave function name can't contain one. Sanitizing only here, for the
+  % spec-function lookup, keeps assignments/<unit>/ and
+  % engr183.runTests('<unit>')'s own argument hyphenated (unchanged for
+  % every existing hyphen-free unit id) while still resolving to a legal
+  % '<unit>_tests' function name on disk.
+  specFn = sprintf('%s_tests', strrep(unit, '-', '_'));
   if exist(specFn, 'file') ~= 2
     error('engr183:runTests:noSpecs', ...
           'No test file named %s.m was found in %s', specFn, testDir);

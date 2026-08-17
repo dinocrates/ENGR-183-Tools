@@ -12,17 +12,33 @@ export interface UnitMeta {
   // UnitFiles.listExtraFiles) so they're hidden rather than resurfacing as
   // if the student had created them -- never deleted, just not shown.
   retiredFiles?: string[]
+  // Optional short note shown under the description in ProblemStatement
+  // (e.g. attributing a dataset's source). Absent for every unit that
+  // doesn't need one -- no visual change when omitted.
+  note?: string
+  // Optional external link (e.g. to the dataset's original source) shown
+  // alongside `note` in ProblemStatement. Absent for every unit that
+  // doesn't need one -- no visual change when omitted.
+  sourceUrl?: string
 }
 
 // Picks up every unitNN.json automatically -- dropping in a new one (via
 // scripts/new_unit.py + sync_harness.py) needs no app code changes, per
-// DESIGN.md Goal 6. scratch.json intentionally doesn't match this glob: it's
-// not curriculum content, so it's kept out of `units` entirely and wired in
-// separately below.
-const modules = import.meta.glob('./unit*.json', { eager: true }) as Record<
-  string,
-  UnitMeta
->
+// DESIGN.md Goal 6. scratch.json intentionally doesn't match either glob:
+// it's not curriculum content, so it's kept out of `units` entirely and
+// wired in separately below.
+//
+// A second pattern picks up guided-practice exercises (e.g.
+// 'u02-gp02-tensile.json'), which don't fit the unitNN naming convention
+// since their id also has to survive as a URL query param and an
+// assignments/ folder name distinct from that unit's other exercise(s) --
+// see engr183-harness/tests/u02_gp02_tensile_check.m's header comment for
+// why the id itself keeps its hyphens even though the underlying Octave
+// function name can't.
+const modules = {
+  ...(import.meta.glob('./unit*.json', { eager: true }) as Record<string, UnitMeta>),
+  ...(import.meta.glob('./u0*-gp*.json', { eager: true }) as Record<string, UnitMeta>),
+}
 
 export const units: UnitMeta[] = Object.values(modules).sort((a, b) =>
   a.id.localeCompare(b.id),

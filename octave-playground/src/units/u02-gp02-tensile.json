@@ -1,0 +1,8 @@
+{
+  "id": "u02-gp02-tensile",
+  "title": "Unit 2 — GP-02: Tensile-Test Data Analysis",
+  "description": "Analyze 39 measured tensile-test points using vectors and array operations. Follow the GP-02 video, complete each TODO, and run the checkpoint tests as you work.",
+  "files": ["U02_GP02_TensileTest.m"],
+  "note": "These are selected, unaltered measurements from Ansys's published tensile-test example. The original maximum-load row and final row are retained.",
+  "sourceUrl": "https://developer.ansys.com/docs/granta-mi-scripting-toolkit-5-0/samples/data-analytics/04_Process_datasets_and_import.md"
+}

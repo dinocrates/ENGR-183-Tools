@@ -528,7 +528,12 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
         <Separator className="w-1 cursor-col-resize bg-raised transition-colors hover:bg-accent" />
         <Panel id="main-content" defaultSize="82">
           <div className="flex h-full flex-col overflow-hidden">
-            <ProblemStatement title={unit.title} description={unit.description} />
+            <ProblemStatement
+              title={unit.title}
+              description={unit.description}
+              note={unit.note}
+              sourceUrl={unit.sourceUrl}
+            />
             <Group orientation="vertical" className="flex-1 overflow-hidden">
               <Panel id="editor" defaultSize="70" minSize="15">
                 <Editor
