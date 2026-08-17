@@ -8,3 +8,12 @@ octave-playground/m0-spike-driver/driver-bundle.js
 
 # Claude Code session-local artifacts (lock files etc.)
 .claude/
+
+# Instructor-only reference solutions -- never publish to students (repo is
+# public). Unlike unit01's _verify/solved fixture (a trivial personalization
+# exercise safe to commit), later units' solved fixtures are real answer
+# keys and must stay local-only. Add each such unit's path here as it's
+# added; `_verify/run.m`/`regenerate_golden.m` still work locally against
+# the git-ignored copy, they just never reach GitHub.
+instructor-solutions/
+engr183-harness/_verify/solved/unit02/

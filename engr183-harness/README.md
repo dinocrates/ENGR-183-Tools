@@ -98,6 +98,47 @@ The checker never uploads, submits, or grades a screenshot for you — it only t
 
 ---
 
+## Unit 2 — APA-02 Solar-Panel I-V Data Analysis
+
+This unit practices whole-array thinking: every calculation operates on the full `voltage_V`/`current_A` vectors at once. **No loops, `if` statements, plotting, or file-import commands are allowed** — if you find yourself reaching for one, you are overcomplicating it.
+
+The data is 37 real operating points from a Sandia National Laboratories reference solar-panel I-V trace.
+
+### 1. Get the starter
+
+Open `assignments/unit02/U02_APA02_SolarIV.m`. It already defines `voltage_V` and `current_A` — leave those two vectors alone. Your job is the 10 numbered TODOs below them.
+
+### 2. Do the work
+
+Work through TODOs 1–10 in order; each one builds on the variables the previous ones created:
+
+1. `measurement_count` — confirm `voltage_V` and `current_A` have the same length.
+2. `power_W` — power at every operating point.
+3. `max_power_W`, `mpp_index` — the maximum power point, via `max` with two outputs.
+4. `voltage_at_mpp_V`, `current_at_mpp_A` — indexed out using `mpp_index`.
+5. `open_circuit_voltage_V`, `short_circuit_current_A` — approximated as `max(voltage_V)` / `max(current_A)` for this introductory pass.
+6. `fill_factor` — `max_power_W / (open_circuit_voltage_V * short_circuit_current_A)`.
+7. `normalized_voltage`, `normalized_current` — each vector divided by its own max.
+8. `high_power_mask`, `high_power_voltage_V` — points at or above 90% of `max_power_W`.
+9. `results` — a 37-by-5 matrix: `[voltage_V, current_A, power_W, normalized_voltage, normalized_current]`.
+10. `fprintf` lines reporting max power, the MPP index, voltage/current at MPP, the open-circuit/short-circuit approximations, the fill factor, and the count of high-power points.
+
+Also personalize the `% Name:` and `% Date:` comments at the top, same as every unit.
+
+### 3. Check your work
+
+```matlab
+engr183.runTests('unit02')
+```
+
+8 automated points, same rubric-report shape as every other unit. The remaining 2 of this assignment's 10 Canvas points are manually graded for labels, units, comments, and a complete submission.
+
+### 4. Submit
+
+In Canvas, submit `U02_APA02_SolarIV.m`, renamed to `U02_APA02_SolarIV_LastName.m`, plus whatever else that week's Canvas page asks for (check there for the current requirements — a screenshot, written answers, etc.).
+
+---
+
 ## How checking works, all semester
 
 Every unit follows this same shape:
