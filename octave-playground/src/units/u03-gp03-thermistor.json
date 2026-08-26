@@ -1,0 +1,13 @@
+{
+  "id": "u03-gp03-thermistor",
+  "title": "Unit 3 — GP-03: Thermistor Sensor Functions",
+  "description": "Build two documented, vectorized function files; pass a measured voltage vector through both; verify known cases; and download a three-file project.",
+  "files": [
+    "U03_GP03_Thermistor_Starter.m",
+    "thermistor_resistance.m",
+    "thermistor_temperature.m"
+  ],
+  "note": "Follow the instructor's code-along video and run the checker as often as you like -- it never submits anything to Canvas. Download All (.zip) for the three-file Canvas submission.",
+  "category": "guided-practice",
+  "unitNumber": 3
+}

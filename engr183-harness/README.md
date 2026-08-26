@@ -153,6 +153,48 @@ The 7 criteria correspond to the video's 7 checkpoints (Inspect, Transform, Retr
 
 ---
 
+## Unit 3 — GP-03: Thermistor Sensor Functions (guided practice)
+
+Follow the instructor's code-along video (Canvas has the video, transcript, and full instructions) while completing three separate files in `assignments/u03-gp03-thermistor/`: the main script (`U03_GP03_Thermistor_Starter.m`) and two required function files, `thermistor_resistance.m` and `thermistor_temperature.m`. Keep all three files in the same folder (or the same Playground project).
+
+Check your work anytime, as many times as you like:
+
+```matlab
+engr183.runTests('u03-gp03-thermistor')
+```
+
+9 of this Canvas assignment's 10 points are automated; the remaining point grades the two written reflection comments (TODO 9) manually.
+
+Submit `GP03_Thermistor_LastName.zip` in Canvas, containing all three completed `.m` files (the main script renamed, the two function filenames unchanged) at the zip's top level. **Using the browser Playground?** Download All (.zip) in the toolbar produces exactly this.
+
+---
+
+## Unit 3 — APA-03: Processor Cooling-Stack Analyzer
+
+This unit models a simplified steady-state processor cooling stack (ambient air → heat-sink base → IHS surface → processor junction) as three chained thermal resistances. **No loops, `if` statements, plotting, or file-import commands are allowed.**
+
+### 1. Get the starter
+
+Open `assignments/u03-apa03-processor-cooling/`. It has five files: the main script (`U03_APA03_ProcessorCooling_Starter.m`), three function files you must complete (`tim_resistance.m`, `processor_temperatures.m`, `thermal_margin.m`), and a supplied public checker (`U03_APA03_ProcessorCooling_PublicCheck.m`) you should not edit.
+
+### 2. Do the work
+
+Write the three function files first — each has its own TODOs for the purpose statement, documentation, and equation. Then run the public checker (`U03_APA03_ProcessorCooling_PublicCheck.m`) to sanity-check them against known cases before moving on to the seven TODOs in the main script.
+
+### 3. Check your work
+
+```matlab
+engr183.runTests('u03-apa03-processor-cooling')
+```
+
+16 of this Canvas assignment's 20 points are automated; the remaining points grade the three written interpretation responses (TODO 7) and overall label/unit/formatting quality manually. A passing public checker is not the same thing as passing the main-script/output checks — both are graded separately.
+
+### 4. Submit
+
+In Canvas, submit `APA03_ProcessorCooling_LastName.zip`, containing the personalized main script and the three function files (unchanged filenames) at the zip's top level. **Do not include `U03_APA03_ProcessorCooling_PublicCheck.m`.** Using the browser Playground's Download All (.zip) already leaves it out automatically.
+
+---
+
 ## How checking works, all semester
 
 Every unit follows this same shape:

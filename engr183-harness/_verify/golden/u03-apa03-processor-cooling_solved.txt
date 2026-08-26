@@ -1,0 +1,23 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U03-APA03-PROCESSOR-COOLING  |  rubric check
+--------------------------------------------------------------------
+[ PASS ] Required files: 3 function files and the main...        1/1
+[ PASS ] Supplied public-check file exists and is runn...        1/1
+[ PASS ] Main script resolves without ambiguity                  1/1
+[ PASS ] tim_resistance declares exactly 3 inputs and ...        1/1
+[ PASS ] processor_temperatures declares exactly 5 inp...        1/1
+[ PASS ] thermal_margin declares exactly 2 inputs and ...        1/1
+[ PASS ] tim_resistance: unit conversions and vector s...        1/1
+[ PASS ] processor_temperatures: node order, shapes, a...        2/2
+[ PASS ] thermal_margin: sign, shape, and nondefault l...        1/1
+[ PASS ] Function help documentation is complete for a...        1/1
+[ PASS ] Public check passes on a completed implementa...        1/1
+[ PASS ] Main script: calls all three functions and as...        3/3
+[ PASS ] Main script: prints the four required output ...        1/1
+--------------------------------------------------------------------
+Score: 16/16 points (100%)   Criteria met: 13 of 13
+
+Everything passes. Nice work - you are ready to submit.
+--------------------------------------------------------------------
+

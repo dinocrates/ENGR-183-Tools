@@ -1,0 +1,16 @@
+{
+  "id": "u03-apa03-processor-cooling",
+  "title": "Unit 3 — APA-03 Processor Cooling-Stack Analyzer",
+  "description": "Build three documented functions for TIM resistance, processor node temperatures, and thermal margin; analyze five power levels; run the public check; and download the complete project.",
+  "files": [
+    "U03_APA03_ProcessorCooling_Starter.m",
+    "tim_resistance.m",
+    "processor_temperatures.m",
+    "thermal_margin.m",
+    "U03_APA03_ProcessorCooling_PublicCheck.m"
+  ],
+  "note": "Running the public check or Run Tests never submits anything to Canvas. Download All (.zip) automatically leaves out U03_APA03_ProcessorCooling_PublicCheck.m -- Canvas only wants your main script and the three function files.",
+  "category": "individual-assignment",
+  "unitNumber": 3,
+  "submissionExclude": ["U03_APA03_ProcessorCooling_PublicCheck.m"]
+}

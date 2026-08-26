@@ -1,0 +1,19 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U03-GP03-THERMISTOR  |  rubric check
+--------------------------------------------------------------------
+[ PASS ] Required files: both function files and the m...        1/1
+[ PASS ] Main script resolves without ambiguity                  1/1
+[ PASS ] thermistor_resistance declares exactly 3 inpu...        1/1
+[ PASS ] thermistor_temperature declares exactly 4 inp...        1/1
+[ PASS ] thermistor_resistance: divider equation and v...        1/1
+[ PASS ] thermistor_temperature: beta model and vector...        1/1
+[ PASS ] Function help documentation is complete for b...        1/1
+[ PASS ] Main script: calls both functions and assembl...        1/1
+[ PASS ] Main script: prints the five required output ...        1/1
+--------------------------------------------------------------------
+Score: 9/9 points (100%)   Criteria met: 9 of 9
+
+Everything passes. Nice work - you are ready to submit.
+--------------------------------------------------------------------
+

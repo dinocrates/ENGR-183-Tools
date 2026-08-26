@@ -18,13 +18,22 @@ export function downloadFile(filename: string, content: string): void {
 }
 
 /** Zips files flat (no folders) -- matches the local Octave mental model:
- *  one unit's .m files sitting together in a single working directory. */
+ *  one unit's .m files sitting together in a single working directory.
+ *
+ *  `exclude` (UnitMeta.submissionExclude) drops specific tabs from the
+ *  zip's contents -- e.g. APA-03's supplied public-check script, which is
+ *  part of the five-tab working project but must not appear in the
+ *  four-file Canvas submission. Everything else about "download every
+ *  tab" is unchanged for every unit that doesn't set it. */
 export async function downloadZip(
   unitId: string,
   files: Record<string, string>,
+  exclude: string[] = [],
 ): Promise<void> {
   const zip = new JSZip()
+  const excluded = new Set(exclude)
   for (const [name, content] of Object.entries(files)) {
+    if (excluded.has(name)) continue
     zip.file(name, content)
   }
   const blob = await zip.generateAsync({ type: 'blob' })

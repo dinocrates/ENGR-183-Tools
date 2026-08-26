@@ -1,0 +1,30 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U03-APA03-PROCESSOR-COOLING  |  rubric check
+--------------------------------------------------------------------
+[ PASS ] Required files: 3 function files and the main...        1/1
+[ PASS ] Supplied public-check file exists and is runn...        1/1
+[ PASS ] Main script resolves without ambiguity                  1/1
+[ PASS ] tim_resistance declares exactly 3 inputs and ...        1/1
+[ PASS ] processor_temperatures declares exactly 5 inp...        1/1
+[ PASS ] thermal_margin declares exactly 2 inputs and ...        1/1
+[ FAIL ] tim_resistance: unit conversions and vector s...        0/1
+         -> your code raised an error: tim_resistance.m: expected 0.10 mm, 5 W/(m*K), and 1000 mm^2 to return 0.02 C/W. Check both millimeter-to-meter and square-millimeter-to-square-meter conversions.
+[ FAIL ] processor_temperatures: node order, shapes, a...        0/2
+         -> your code raised an error: processor_temperatures.m: the public-check row-vector case must return three 1-by-2 outputs.
+[ FAIL ] thermal_margin: sign, shape, and nondefault l...        0/1
+         -> your code raised an error: thermal_margin.m: expected [49 33] for a 90 C limit and junction temperatures [41 57]. Subtract junction temperature from the maximum allowed temperature.
+[ FAIL ] Function help documentation is complete for a...        0/1
+         -> your code raised an error: tim_resistance.m: the help block still contains TODO text. Replace every TODO placeholder with real documentation.
+[ FAIL ] Public check passes on a completed implementa...        0/1
+         -> your code raised an error: The public check did not pass: Check 1 failed: tim_resistance scalar case is incorrect. Complete tim_resistance.m, processor_temperatures.m, and thermal_margin.m, then rerun the public check.
+[ FAIL ] Main script: calls all three functions and as...        0/3
+         -> your code raised an error: APA-03 main script: your script must create a variable named tim_resistance_C_per_W.
+[ FAIL ] Main script: prints the four required output ...        0/1
+         -> your code raised an error: APA-03 main script: required output is missing or does not match. Missing (or misformatted) line(s): TIM resistance: 0.01481 C/W Highest junction temperature: 111.11 C Minimum thermal margin: -11.11 C Power levels within limit: 4 of 5 Check your fprintf format strings against the precision shown on the APA page (%.5f, %.2f, %d) and the exact wording of each label.
+--------------------------------------------------------------------
+Score: 6/16 points (38%)   Criteria met: 6 of 13
+
+7 criteria left. Read the arrows above for hints.
+--------------------------------------------------------------------
+

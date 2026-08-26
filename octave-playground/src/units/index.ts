@@ -35,6 +35,12 @@ export interface UnitMeta {
   // alongside `note` in ProblemStatement. Absent for every unit that
   // doesn't need one -- no visual change when omitted.
   sourceUrl?: string
+  // Filenames excluded from Download All (.zip)'s output -- e.g. APA-03's
+  // supplied public-check tab, which is part of the five-tab working
+  // project but must not appear in the four-file Canvas submission ZIP.
+  // Absent (or omitted) for every unit whose zip should still contain
+  // every tab, which is most of them -- no behavior change when omitted.
+  submissionExclude?: string[]
 }
 
 // Picks up every unitNN.json automatically -- dropping in a new one (via
@@ -43,16 +49,19 @@ export interface UnitMeta {
 // it's not curriculum content, so it's kept out of `units` entirely and
 // wired in separately below.
 //
-// A second pattern picks up guided-practice exercises (e.g.
-// 'u02-gp02-tensile.json'), which don't fit the unitNN naming convention
-// since their id also has to survive as a URL query param and an
-// assignments/ folder name distinct from that unit's other exercise(s) --
-// see engr183-harness/tests/u02_gp02_tensile_check.m's header comment for
-// why the id itself keeps its hyphens even though the underlying Octave
+// A second and third pattern pick up guided-practice and individual-
+// assignment exercises that have their own route key (e.g.
+// 'u02-gp02-tensile.json', 'u03-apa03-processor-cooling.json'), which
+// don't fit the unitNN naming convention since their id also has to
+// survive as a URL query param and an assignments/ folder name distinct
+// from that unit's other exercise(s) -- see
+// engr183-harness/tests/u02_gp02_tensile_check.m's header comment for why
+// the id itself keeps its hyphens even though the underlying Octave
 // function name can't.
 const modules = {
   ...(import.meta.glob('./unit*.json', { eager: true }) as Record<string, UnitMeta>),
   ...(import.meta.glob('./u0*-gp*.json', { eager: true }) as Record<string, UnitMeta>),
+  ...(import.meta.glob('./u0*-apa*.json', { eager: true }) as Record<string, UnitMeta>),
 }
 
 export const units: UnitMeta[] = Object.values(modules).sort((a, b) =>

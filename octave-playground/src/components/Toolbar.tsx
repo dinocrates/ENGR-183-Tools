@@ -14,6 +14,11 @@ interface ToolbarProps {
   onBackToUnits?: () => void
   // False for a student-added file, which has no starter to reset to.
   canResetFile: boolean
+  // Set when unit.submissionExclude drops one or more tabs from the zip
+  // (e.g. APA-03's public-check script) -- swaps in a submission-specific
+  // tooltip so it's clear the zip isn't literally "every tab" for those
+  // units. Omitted (or empty) leaves the plain "all files" tooltip.
+  zipExcludes?: string[]
 }
 
 const STATUS_LABEL: Record<KernelStatus, string> = {
@@ -41,8 +46,13 @@ export function Toolbar({
   onResetUnit,
   onBackToUnits,
   canResetFile,
+  zipExcludes,
 }: ToolbarProps) {
   const busy = status === 'starting' || status === 'running'
+  const zipTooltip =
+    zipExcludes && zipExcludes.length > 0
+      ? `Download a submission-ready zip (excludes ${zipExcludes.join(', ')}), for Canvas submission`
+      : 'Download all files as a zip, for Canvas submission'
   return (
     <div className="flex items-center gap-2 border-b border-line bg-surface px-3 py-2">
       {onBackToUnits && (
@@ -89,7 +99,7 @@ export function Toolbar({
       <button
         className="rounded border border-line px-3 py-1 text-sm text-secondary hover:bg-raised"
         onClick={onDownloadZip}
-        title="Download all files as a zip, for Canvas submission"
+        title={zipTooltip}
       >
         Download All (.zip)
       </button>

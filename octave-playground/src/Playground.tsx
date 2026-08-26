@@ -335,7 +335,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   }
 
   function handleDownloadZip() {
-    void downloadZip(unit.id, contents)
+    void downloadZip(unit.id, contents, unit.submissionExclude ?? [])
   }
 
   async function doResetFile(file: string) {
@@ -481,6 +481,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
         onResetUnit={handleResetUnit}
         onBackToUnits={onBackToUnits}
         canResetFile={unit.files.includes(activeFile)}
+        zipExcludes={unit.submissionExclude}
       />
       <Group orientation="horizontal" className="flex-1 overflow-hidden">
         <Panel id="sidebar" defaultSize="18" minSize="12" maxSize="40">

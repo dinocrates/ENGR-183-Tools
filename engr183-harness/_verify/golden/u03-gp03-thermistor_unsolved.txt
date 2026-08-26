@@ -1,0 +1,24 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U03-GP03-THERMISTOR  |  rubric check
+--------------------------------------------------------------------
+[ PASS ] Required files: both function files and the m...        1/1
+[ PASS ] Main script resolves without ambiguity                  1/1
+[ PASS ] thermistor_resistance declares exactly 3 inpu...        1/1
+[ PASS ] thermistor_temperature declares exactly 4 inp...        1/1
+[ FAIL ] thermistor_resistance: divider equation and v...        0/1
+         -> your code raised an error: thermistor_resistance.m: expected 2.5 V to return 10000 ohm. Check the divider denominator and the input order.
+[ FAIL ] thermistor_temperature: beta model and vector...        0/1
+         -> your code raised an error: thermistor_temperature.m: the nominal 10000-ohm case must return 25 C. Check the Celsius-to-Kelvin conversion and the outer reciprocal.
+[ FAIL ] Function help documentation is complete for b...        0/1
+         -> your code raised an error: thermistor_resistance.m: the help block still contains TODO text. Replace every TODO placeholder with real documentation.
+[ FAIL ] Main script: calls both functions and assembl...        0/1
+         -> your code raised an error: GP-03 main script: your script must create a variable named measurement_count.
+[ FAIL ] Main script: prints the five required output ...        0/1
+         -> your code raised an error: GP-03 main script: required output is missing or does not match. Missing (or misformatted) line(s): Measurements processed: 5 Hottest temperature: 51.96 C Voltage at hottest measurement: 1.25 V Resistance at hottest measurement: 3333.33 ohm Nominal-case temperature: 25.00 C Check your fprintf format strings against the precision shown on the GP page (%d, %.2f) and the exact wording of each label.
+--------------------------------------------------------------------
+Score: 4/9 points (44%)   Criteria met: 4 of 9
+
+5 criteria left. Read the arrows above for hints.
+--------------------------------------------------------------------
+
