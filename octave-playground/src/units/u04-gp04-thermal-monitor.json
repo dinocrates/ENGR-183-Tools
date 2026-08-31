@@ -1,0 +1,13 @@
+{
+  "id": "u04-gp04-thermal-monitor",
+  "title": "Unit 4 — GP-04: Processor Thermal Safety Monitor",
+  "description": "Follow the guided code-along to write classify_temperature.m and analyze_thermal_log.m using if/elseif/else decisions and a counted for loop, then check your work with Run Tests.",
+  "files": [
+    "U04_GP04_ThermalMonitor_Starter.m",
+    "classify_temperature.m",
+    "analyze_thermal_log.m"
+  ],
+  "note": "Run Tests calls your functions directly and never submits anything to Canvas.",
+  "category": "guided-practice",
+  "unitNumber": 4
+}

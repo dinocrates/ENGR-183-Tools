@@ -1,0 +1,15 @@
+{
+  "id": "u04-apa04-parachute-sizing",
+  "title": "Unit 4 — APA-04: Validated Model-Rocket Parachute Sizing Tool",
+  "description": "Build two validated functions -- parachute_speed.m and a bounded while-loop search in size_parachute.m -- then run the public check and Run Tests before downloading your project.",
+  "files": [
+    "U04_APA04_ParachuteSizing_Starter.m",
+    "parachute_speed.m",
+    "size_parachute.m",
+    "U04_APA04_ParachuteSizing_PublicCheck.m"
+  ],
+  "note": "Running the public check or Run Tests never submits anything to Canvas. Download All (.zip) automatically leaves out U04_APA04_ParachuteSizing_PublicCheck.m.",
+  "category": "individual-assignment",
+  "unitNumber": 4,
+  "submissionExclude": ["U04_APA04_ParachuteSizing_PublicCheck.m"]
+}

@@ -195,6 +195,46 @@ In Canvas, submit `APA03_ProcessorCooling_LastName.zip`, containing the personal
 
 ---
 
+## Unit 4 — GP-04: Processor Thermal Safety Monitor (guided practice)
+
+Follow the guided code-along while completing three files in `assignments/u04-gp04-thermal-monitor/`: the main script (`U04_GP04_ThermalMonitor_Starter.m`) and two required function files, `classify_temperature.m` and `analyze_thermal_log.m`. This unit introduces `if`/`elseif`/`else` decisions, exact threshold boundaries, `error`-based validation, and a counted `for` loop.
+
+Check your work anytime, as many times as you like:
+
+```matlab
+engr183.runTests('u04-gp04-thermal-monitor')
+```
+
+Run Tests calls `classify_temperature` and `analyze_thermal_log` directly — it does not parse the main script's printed output, so exact `fprintf` spacing is never graded.
+
+---
+
+## Unit 4 — APA-04: Validated Model-Rocket Parachute Sizing Tool
+
+This unit validates an engineering model's inputs, searches candidate parachute diameters with a bounded `while` loop, and reports an infeasible design honestly rather than hiding it.
+
+### 1. Get the starter
+
+Open `assignments/u04-apa04-parachute-sizing/`. It has four files: the main script (`U04_APA04_ParachuteSizing_Starter.m`), two function files you must complete (`parachute_speed.m`, `size_parachute.m`), and a supplied public checker (`U04_APA04_ParachuteSizing_PublicCheck.m`) you should not edit.
+
+### 2. Do the work
+
+Write `parachute_speed.m` first, then run the public checker to sanity-check it and `size_parachute.m` against known cases before finishing the main script's two required searches.
+
+### 3. Check your work
+
+```matlab
+engr183.runTests('u04-apa04-parachute-sizing')
+```
+
+Run Tests includes every public-check behavior plus broader cases specifically designed to fail a hard-coded 0.80 m answer, a `>`-instead-of-`>=` boundary mistake, or a search that never tests the maximum diameter as a final non-aligned candidate.
+
+### 4. Submit
+
+In Canvas, submit the completed main script and the two function files. **Do not include `U04_APA04_ParachuteSizing_PublicCheck.m`.** Using the browser Playground's Download All (.zip) already leaves it out automatically.
+
+---
+
 ## How checking works, all semester
 
 Every unit follows this same shape:

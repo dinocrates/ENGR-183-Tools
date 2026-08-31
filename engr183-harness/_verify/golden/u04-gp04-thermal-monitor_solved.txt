@@ -1,0 +1,16 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U04-GP04-THERMAL-MONITOR  |  rubric check
+--------------------------------------------------------------------
+[ PASS ] Required files: both function files and the m...        1/1
+[ PASS ] classify_temperature: boundary classification...        2/2
+[ PASS ] classify_temperature: invalid inputs raise an...        2/2
+[ PASS ] analyze_thermal_log: the supplied seven-sampl...        2/2
+[ PASS ] analyze_thermal_log: shape is preserved and s...        2/2
+[ PASS ] analyze_thermal_log: invalid inputs raise an ...        2/2
+--------------------------------------------------------------------
+Score: 11/11 points (100%)   Criteria met: 6 of 6
+
+Everything passes. Nice work - you are ready to submit.
+--------------------------------------------------------------------
+

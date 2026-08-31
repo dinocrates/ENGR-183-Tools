@@ -1,0 +1,17 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U04-APA04-PARACHUTE-SIZING  |  rubric check
+--------------------------------------------------------------------
+[ PASS ] Required files: both function files, the main...        1/1
+[ PASS ] parachute_speed: model calculations are corre...        2/2
+[ PASS ] parachute_speed: invalid inputs raise an error          2/2
+[ PASS ] size_parachute: published and boundary search...        4/4
+[ PASS ] size_parachute: general (nonpublished) cases ...        2/2
+[ PASS ] size_parachute: invalid inputs raise an error           3/3
+[ PASS ] The supplied public-check file passes for a c...        1/1
+--------------------------------------------------------------------
+Score: 15/15 points (100%)   Criteria met: 7 of 7
+
+Everything passes. Nice work - you are ready to submit.
+--------------------------------------------------------------------
+

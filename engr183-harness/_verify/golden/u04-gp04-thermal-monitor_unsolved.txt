@@ -1,0 +1,21 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U04-GP04-THERMAL-MONITOR  |  rubric check
+--------------------------------------------------------------------
+[ PASS ] Required files: both function files and the m...        1/1
+[ FAIL ] classify_temperature: boundary classification...        0/2
+         -> your code raised an error: a safe sample below the warning threshold should return status code 0 (got NaN).
+[ FAIL ] classify_temperature: invalid inputs raise an...        0/2
+         -> your code raised an error: a nonscalar temp_C should raise an error, but classify_temperature.m returned normally instead.
+[ FAIL ] analyze_thermal_log: the supplied seven-sampl...        0/2
+         -> your code raised an error: status_codes for the supplied 7-sample log is incorrect (got []).
+[ FAIL ] analyze_thermal_log: shape is preserved and s...        0/2
+         -> your code raised an error: status_codes is wrong for a column-vector log (got []).
+[ FAIL ] analyze_thermal_log: invalid inputs raise an ...        0/2
+         -> your code raised an error: an empty core_temps_C should raise an error, but analyze_thermal_log.m returned normally instead.
+--------------------------------------------------------------------
+Score: 1/11 points (9%)   Criteria met: 1 of 6
+
+5 criteria left. Read the arrows above for hints.
+--------------------------------------------------------------------
+

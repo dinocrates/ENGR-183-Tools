@@ -1,0 +1,23 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U04-APA04-PARACHUTE-SIZING  |  rubric check
+--------------------------------------------------------------------
+[ PASS ] Required files: both function files, the main...        1/1
+[ FAIL ] parachute_speed: model calculations are corre...        0/2
+         -> your code raised an error: parachute_speed.m: parachute_speed(0.75, 0.50) must return 9.031637791711 m/s. Check the area and speed formulas.
+[ FAIL ] parachute_speed: invalid inputs raise an error          0/2
+         -> your code raised an error: a nonnumeric mass_kg should raise an error, but parachute_speed.m returned normally instead.
+[ FAIL ] size_parachute: published and boundary search...        0/4
+         -> your code raised an error: size_parachute.m: diameter_m is wrong for the published normal case (expected 0.800000 m, got 0.300000000000 m). Do not hard-code the published 0.80 m answer -- the search must be general.
+[ FAIL ] size_parachute: general (nonpublished) cases ...        0/2
+         -> your code raised an error: size_parachute.m: diameter_m is wrong for a general nonpublished feasible case (expected 0.900000 m, got 0.300000000000 m). Do not hard-code the published 0.80 m answer -- the search must be general.
+[ FAIL ] size_parachute: invalid inputs raise an error           0/3
+         -> your code raised an error: a nonnumeric mass_kg should raise an error, but size_parachute.m returned normally instead.
+[ FAIL ] The supplied public-check file passes for a c...        0/1
+         -> your code raised an error: The public check did not pass: assert (abs (actual_speed - 9.031637791711) < 1e-9) failed Complete parachute_speed.m and size_parachute.m, then rerun the public check.
+--------------------------------------------------------------------
+Score: 1/15 points (7%)   Criteria met: 1 of 7
+
+6 criteria left. Read the arrows above for hints.
+--------------------------------------------------------------------
+
