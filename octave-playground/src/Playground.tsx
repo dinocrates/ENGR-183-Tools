@@ -360,7 +360,9 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       (prev) =>
         prev +
         `\n— debugging ${activeFile}` +
-        (totalBp === 0 ? ' (no breakpoints set — will run to the end)\n' : `, ${totalBp} breakpoint(s)\n`),
+        (totalBp === 0
+          ? ' — no breakpoints, so this just runs to the end. Click a line in the editor gutter (just left of the line numbers) to set one, then Debug again.\n'
+          : `, ${totalBp} breakpoint(s)\n`),
     )
     try {
       await dbg.run(code)

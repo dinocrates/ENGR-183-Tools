@@ -58,10 +58,13 @@ export function Editor({
   const editorRef = useRef<MonacoEditorNS.IStandaloneCodeEditor | null>(null)
   const monacoRef = useRef<Monaco | null>(null)
   const decorationsRef = useRef<MonacoEditorNS.IEditorDecorationsCollection | null>(null)
+  const hoverDecoRef = useRef<MonacoEditorNS.IEditorDecorationsCollection | null>(null)
   // Keep the latest toggle handler / active file reachable from the
   // (once-registered) mouse-down listener without re-registering it.
   const toggleRef = useRef<((line: number) => void) | null>(null)
   toggleRef.current = onToggleBreakpoint ? (line) => onToggleBreakpoint(activeFile, line) : null
+  const bpRef = useRef<number[]>(breakpoints)
+  bpRef.current = breakpoints
 
   function updateFontSize(next: number) {
     setFontSize(next)
@@ -72,14 +75,38 @@ export function Editor({
     editorRef.current = editor
     monacoRef.current = monaco
     decorationsRef.current = editor.createDecorationsCollection()
+    hoverDecoRef.current = editor.createDecorationsCollection()
+
+    const GUTTER = new Set([
+      monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN,
+      monaco.editor.MouseTargetType.GUTTER_LINE_NUMBERS,
+      monaco.editor.MouseTargetType.GUTTER_LINE_DECORATIONS,
+    ])
     editor.onMouseDown((e) => {
-      if (
-        e.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN &&
-        e.target.position
-      ) {
-        toggleRef.current?.(e.target.position.lineNumber)
+      if (GUTTER.has(e.target.type) && e.target.position && toggleRef.current) {
+        toggleRef.current(e.target.position.lineNumber)
       }
     })
+    // VS Code-style hover hint: a faint dot follows the pointer down the
+    // gutter so it's discoverable that clicking there sets a breakpoint.
+    editor.onMouseMove((e) => {
+      const line =
+        GUTTER.has(e.target.type) && e.target.position ? e.target.position.lineNumber : null
+      hoverDecoRef.current?.set(
+        line == null || bpRef.current.includes(line)
+          ? []
+          : [
+              {
+                range: new monaco.Range(line, 1, line, 1),
+                options: {
+                  glyphMarginClassName: 'engr183-bp-hover',
+                  glyphMarginHoverMessage: { value: 'Click to set a breakpoint' },
+                },
+              },
+            ],
+      )
+    })
+    editor.onMouseLeave(() => hoverDecoRef.current?.set([]))
   }
 
   // Re-paint breakpoint dots + the paused-line highlight whenever any input
