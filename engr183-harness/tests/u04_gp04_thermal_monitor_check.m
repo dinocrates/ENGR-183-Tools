@@ -136,7 +136,8 @@ function actual = callOrFail(fnName, args)
   try
     actual = feval(fnName, args{:});
   catch err
-    error('%s.m raised an error on a valid input: %s', fnName, engr183.flatten(err.message));
+    error('%s.m raised an error on a valid input: %s%s', fnName, ...
+          engr183.flatten(err.message), engr183.errorLocation(err));
   end
 end
 
@@ -145,7 +146,8 @@ function [a, b, c] = callOrFail3(fnName, args)
   try
     [a, b, c] = feval(fnName, args{:});
   catch err
-    error('%s.m raised an error on a valid input: %s', fnName, engr183.flatten(err.message));
+    error('%s.m raised an error on a valid input: %s%s', fnName, ...
+          engr183.flatten(err.message), engr183.errorLocation(err));
   end
 end
 

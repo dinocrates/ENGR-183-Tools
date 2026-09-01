@@ -258,7 +258,7 @@ function run = runStudentScript(scriptPath)
   catch err
     capturedOutput = '';
     scriptErrored = true;
-    scriptErrMessage = err.message;
+    scriptErrMessage = [err.message engr183.errorLocation(err)];
   end
 
   varNames = {'voltage_V', 'current_A', 'measurement_count', 'power_W', ...

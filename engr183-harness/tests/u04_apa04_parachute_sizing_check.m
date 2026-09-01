@@ -161,7 +161,8 @@ function actual = callOrFail(fnName, args)
   try
     actual = feval(fnName, args{:});
   catch err
-    error('%s.m raised an error on a valid input: %s', fnName, engr183.flatten(err.message));
+    error('%s.m raised an error on a valid input: %s%s', fnName, ...
+          engr183.flatten(err.message), engr183.errorLocation(err));
   end
 end
 
@@ -170,7 +171,8 @@ function [a, b, c, d] = callOrFail4(fnName, args)
   try
     [a, b, c, d] = feval(fnName, args{:});
   catch err
-    error('%s.m raised an error on a valid input: %s', fnName, engr183.flatten(err.message));
+    error('%s.m raised an error on a valid input: %s%s', fnName, ...
+          engr183.flatten(err.message), engr183.errorLocation(err));
   end
 end
 
@@ -303,7 +305,7 @@ function run = runIsolatedScript(scriptPath)
   catch err
     capturedOutput = '';
     scriptErrored = true;
-    scriptErrMessage = err.message;
+    scriptErrMessage = [err.message engr183.errorLocation(err)];
   end
   run = struct('ok', ~scriptErrored, 'errMessage', scriptErrMessage, ...
                'capturedOutput', capturedOutput);

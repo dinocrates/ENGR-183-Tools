@@ -250,7 +250,7 @@ function run = runStudentScript(scriptPath)
   catch err
     capturedOutput = '';
     scriptErrored = true;
-    scriptErrMessage = err.message;
+    scriptErrMessage = [err.message engr183.errorLocation(err)];
   end
 
   run = struct('ok', ~scriptErrored, 'errMessage', scriptErrMessage, ...

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Group, Panel, Separator, type PanelImperativeHandle } from 'react-resizable-panels'
-import { OctaveKernelSession, type ExecuteChunk } from './kernel/session'
+import { OctaveKernelSession, type ExecuteChunk, type ReportedExecuteError } from './kernel/session'
 import { createContentsManager, UnitFiles, buildWriteFilesCode } from './kernel/files'
 import { downloadFile, downloadZip } from './kernel/download'
 import { FileBrowser } from './components/FileBrowser'
@@ -237,7 +237,14 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       setStatus('ready')
       await refreshWorkspace()
     } catch (err) {
-      setOutput((prev) => prev + '\n' + String(err))
+      // A kernel execution error has already been streamed into `output` in
+      // position (with its full "error: called from ..." trace) by
+      // session.ts's iopub `error` handler -- don't print it again. Other
+      // rejections (the figure(N) timeout, Stop) aren't flagged and still
+      // surface here.
+      if (!(err as ReportedExecuteError)?.alreadyReported) {
+        setOutput((prev) => prev + '\n' + String(err))
+      }
       setStatus('error')
     } finally {
       // execute_reply is always the *last* message for a command -- once

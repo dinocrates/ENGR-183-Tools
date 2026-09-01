@@ -96,8 +96,9 @@ function varargout = runTests(unit, varargin)
           noisy(end+1) = k; %#ok<AGROW>
         end
       catch err
-        message = sprintf('your code raised an error: %s', ...
-                          engr183.flatten(err.message));
+        message = sprintf('your code raised an error: %s%s', ...
+                          engr183.flatten(err.message), ...
+                          engr183.errorLocation(err));
       end
     end
 

@@ -365,7 +365,8 @@ function actual = callOrFail(fnName, args)
   try
     actual = feval(fnName, args{:});
   catch err
-    error('%s.m raised an error: %s', fnName, engr183.flatten(err.message));
+    error('%s.m raised an error: %s%s', fnName, engr183.flatten(err.message), ...
+          engr183.errorLocation(err));
   end
 end
 
@@ -374,7 +375,8 @@ function [a, b, c] = callOrFail3(fnName, args)
   try
     [a, b, c] = feval(fnName, args{:});
   catch err
-    error('%s.m raised an error: %s', fnName, engr183.flatten(err.message));
+    error('%s.m raised an error: %s%s', fnName, engr183.flatten(err.message), ...
+          engr183.errorLocation(err));
   end
 end
 
@@ -446,7 +448,7 @@ function run = runIsolatedScript(scriptPath)
   catch err
     capturedOutput = '';
     scriptErrored = true;
-    scriptErrMessage = err.message;
+    scriptErrMessage = [err.message engr183.errorLocation(err)];
   end
   run = struct('ok', ~scriptErrored, 'errMessage', scriptErrMessage, ...
                'capturedOutput', capturedOutput);
@@ -466,7 +468,7 @@ function run = runStudentMainScript(scriptPath)
   catch err
     capturedOutput = '';
     scriptErrored = true;
-    scriptErrMessage = err.message;
+    scriptErrMessage = [err.message engr183.errorLocation(err)];
   end
 
   varNames = {'power_W', 'ambient_C', 'maximum_junction_C', ...

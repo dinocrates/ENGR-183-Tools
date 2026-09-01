@@ -41,6 +41,11 @@ export type ExecuteChunk =
 
 export type ExecuteListener = (chunk: ExecuteChunk) => void;
 
+import { formatKernelError, type ReportedExecuteError } from './formatError';
+// Re-exported so callers can keep importing error helpers from './session'.
+export { formatKernelError } from './formatError';
+export type { ReportedExecuteError } from './formatError';
+
 /** Thin wrapper around one running Octave kernel. */
 export class OctaveKernelSession {
   private kernel: IKernel | null = null;
@@ -167,6 +172,10 @@ export class OctaveKernelSession {
       // that -- see t78-repl.js's calibration comment) while still
       // eventually recovering instead of hanging indefinitely.
       let settled = false;
+      // Set once an iopub `error` message has been streamed to onOutput, so
+      // the execute_reply's own reject can tell runCode()'s catch not to
+      // print the same error text a second time.
+      let sawError = false;
       const timeoutId = setTimeout(() => {
         if (settled) return;
         finish();
@@ -226,10 +235,11 @@ export class OctaveKernelSession {
           });
         } else if (msg.header.msg_type === 'error') {
           const content = (msg as KernelMessage.IErrorMsg).content;
+          sawError = true;
           onOutput?.({
             kind: 'stream',
             channel: 'stderr',
-            text: `${content.ename}: ${content.evalue}`,
+            text: formatKernelError(content) + '\n',
           });
         } else if (
           msg.header.msg_type === 'display_data' ||
@@ -257,7 +267,14 @@ export class OctaveKernelSession {
           finish();
           const content = (msg as KernelMessage.IExecuteReplyMsg).content;
           if (content.status === 'error') {
-            reject(new Error(`${content.ename}: ${content.evalue}`));
+            const err: ReportedExecuteError = new Error(formatKernelError(content));
+            // The iopub `error` message (handled above) has almost always
+            // already streamed this same text into the output in the right
+            // position; flag it so runCode()'s catch doesn't append a
+            // duplicate. If it somehow didn't arrive, this stays false and
+            // the catch prints the error as before.
+            err.alreadyReported = sawError;
+            reject(err);
           } else {
             resolve();
           }

@@ -434,7 +434,7 @@ function run = runStudentScript(scriptPath)
   catch err
     capturedOutput = '';
     scriptErrored = true;
-    scriptErrMessage = err.message;
+    scriptErrMessage = [err.message engr183.errorLocation(err)];
   end
 
   varNames = {'force_N', 'extension_mm', 'gauge_width_mm', 'gauge_thickness_mm', ...
