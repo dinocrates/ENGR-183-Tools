@@ -63,6 +63,16 @@ export class OctaveKernelSession {
   // stop() reject that call immediately instead of the caller having to
   // wait out execute()'s own 60s safety-net timeout -- see stop() below.
   private currentAbort: (() => void) | null = null;
+  // msg_ids of the input_reply messages we've sent. After an input_reply is
+  // handled, the kernel stamps *its* header as the parent of subsequent
+  // output (not the original execute_request), so execute()'s parent-id
+  // guard has to accept these too or it drops every debug-prompt reply and
+  // its output. Cleared per execute().
+  private inputReplyIds = new Set<string>();
+  // Set by the in-flight execute() so replyToInput() can re-arm its
+  // "kernel is stuck" watchdog: an outstanding input_request means the
+  // kernel is waiting on us, not hung.
+  private onReplySent: (() => void) | null = null;
 
   /** contentsManager is shared with files.ts's UnitFiles -- both the kernel
    *  (mountDrive: true, below) and the browser-side file bridge need to see
@@ -148,7 +158,17 @@ export class OctaveKernelSession {
       msgType: 'input_reply',
       content: { status: 'ok', value },
     });
-    void this.kernel.handleMessage(msg);
+    this.inputReplyIds.add(msg.header.msg_id);
+    this.onReplySent?.(); // re-arm the in-flight execute()'s watchdog
+    const kernel = this.kernel;
+    // Deferred: replyToInput is often called from *inside* the
+    // onInputRequest callback (the debugger sends dbstep/dbstack the moment
+    // it sees a `debug>` prompt). The kernel's coincident stdin bridge
+    // sets up the promise it's about to await *after* it synchronously
+    // dispatches the input_request to us -- so replying in the same tick
+    // resolves the wrong (previous) promise and the real one hangs forever.
+    // A microtask lets the bridge finish wiring first.
+    queueMicrotask(() => void kernel.handleMessage(msg));
   }
 
   /** Execute code, streaming stdout/stderr text and rich display data (e.g.
@@ -167,6 +187,7 @@ export class OctaveKernelSession {
       throw new Error('Kernel is not started');
     }
     const kernel = this.kernel;
+    this.inputReplyIds.clear();
 
     const requestMsg = KernelMessage.createMessage<KernelMessage.IExecuteRequestMsg>({
       session: this.sessionId,
@@ -207,22 +228,33 @@ export class OctaveKernelSession {
       // the execute_reply's own reject can tell runCode()'s catch not to
       // print the same error text a second time.
       let sawError = false;
-      const timeoutId = setTimeout(() => {
-        if (settled) return;
-        finish();
-        reject(
-          new Error(
-            'Kernel did not respond in time -- it may be stuck (a known intermittent issue after ' +
-              're-activating a figure with figure(N)). Try running again; reload the page if it keeps happening.',
-          ),
-        );
-      }, 60000);
+      let timeoutId = 0 as unknown as ReturnType<typeof setTimeout>;
+      const armTimeout = () => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          if (settled) return;
+          finish();
+          reject(
+            new Error(
+              'Kernel did not respond in time -- it may be stuck (a known intermittent issue after ' +
+                're-activating a figure with figure(N)). Try running again; reload the page if it keeps happening.',
+            ),
+          );
+        }, 60000);
+      };
 
       const finish = () => {
         settled = true;
+        this.onReplySent = null;
         clearTimeout(timeoutId);
         if (this.currentAbort === abort) this.currentAbort = null;
       };
+
+      armTimeout();
+      // While the kernel is blocked waiting for *us* (an input()/debug>
+      // prompt) it isn't stuck -- replyToInput() re-arms this when we
+      // answer, and the input_request handler suspends it until then.
+      this.onReplySent = armTimeout;
 
       // Lets stop() interrupt this call immediately -- see stop()'s own
       // comment for why "abort" here can only mean "give up waiting," not a
@@ -256,8 +288,15 @@ export class OctaveKernelSession {
         // here previously verified a message was actually replying to the
         // request this specific closure was built for.
         const parentId = (msg.parent_header as { msg_id?: string } | undefined)?.msg_id;
-        if (parentId !== undefined && parentId !== requestMsg.header.msg_id) return;
+        if (
+          parentId !== undefined &&
+          parentId !== requestMsg.header.msg_id &&
+          !this.inputReplyIds.has(parentId)
+        )
+          return;
         if (msg.header.msg_type === 'input_request') {
+          // Kernel is now blocked waiting for our reply -- not stuck.
+          clearTimeout(timeoutId);
           const content = (msg as KernelMessage.IInputRequestMsg).content;
           onInputRequest?.({ prompt: content.prompt ?? '', password: content.password ?? false });
         } else if (msg.header.msg_type === 'stream') {

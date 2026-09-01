@@ -190,3 +190,21 @@ pre {
     transform: translateX(300%);
   }
 }
+
+/* Debugger: breakpoint dot in the editor glyph margin, and the full-width
+   highlight on the line the debugger is currently paused at. */
+.engr183-bp-glyph::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 9999px;
+  background: #ef4444;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.engr183-debug-line {
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+}

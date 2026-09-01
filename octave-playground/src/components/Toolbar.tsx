@@ -6,6 +6,8 @@ interface ToolbarProps {
   status: KernelStatus
   onRunTests?: () => void
   onRunFile: () => void
+  onDebug: () => void
+  debugging: boolean
   onStop: () => void
   onDownloadFile: () => void
   onDownloadZip: () => void
@@ -39,6 +41,8 @@ export function Toolbar({
   status,
   onRunTests,
   onRunFile,
+  onDebug,
+  debugging,
   onStop,
   onDownloadFile,
   onDownloadZip,
@@ -78,6 +82,14 @@ export function Toolbar({
         onClick={onRunFile}
       >
         Run File
+      </button>
+      <button
+        className="rounded border border-line px-3 py-1 text-sm text-secondary hover:bg-raised disabled:opacity-40"
+        disabled={busy && !debugging}
+        onClick={onDebug}
+        title="Run the current file with the debugger — set breakpoints by clicking the left margin in the editor"
+      >
+        {debugging ? 'Debugging…' : 'Debug'}
       </button>
       {busy && (
         <button

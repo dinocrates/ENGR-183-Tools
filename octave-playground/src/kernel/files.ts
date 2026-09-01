@@ -7,6 +7,7 @@
 import { ContentsManager } from '@jupyterlab/services';
 import { BrowserStorageDrive } from '@jupyterlite/services';
 import localforage from 'localforage';
+import { injectBreakpoints } from './breakpoints';
 
 export function createContentsManager(): ContentsManager {
   const drive = new BrowserStorageDrive({
@@ -128,13 +129,19 @@ export class UnitFiles {
  *  doesn't help, only `clear <name>` does). Without this, a student who
  *  runs Tests once, then fixes their code and runs again in the same
  *  kernel session, would silently see the stale first-run result. */
-export function buildWriteFilesCode(unitId: string, files: Record<string, string>): string {
+export function buildWriteFilesCode(
+  unitId: string,
+  files: Record<string, string>,
+  breakpoints?: Record<string, Iterable<number>>,
+): string {
   const dir = `/engr183/assignments/${unitId}`;
   const lines: string[] = [
     `if ~exist('/engr183/assignments', 'dir'), mkdir('/engr183/assignments'); end`,
     `if ~exist('${dir}', 'dir'), mkdir('${dir}'); end`,
   ];
-  for (const [name, content] of Object.entries(files)) {
+  for (const [name, rawContent] of Object.entries(files)) {
+    const bpLines = breakpoints?.[name];
+    const content = bpLines ? injectBreakpoints(rawContent, bpLines) : rawContent;
     const bytes = Array.from(new TextEncoder().encode(content));
     const fnName = name.replace(/\.m$/, '');
     lines.push(

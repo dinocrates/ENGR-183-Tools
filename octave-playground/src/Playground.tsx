@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Group, Panel, Separator, type PanelImperativeHandle } from 'react-resizable-panels'
 import { OctaveKernelSession, type ExecuteChunk, type ReportedExecuteError } from './kernel/session'
+import { DebugSession, type DebugPhase } from './kernel/debug'
+import { isBreakableLine } from './kernel/breakpoints'
 import { createContentsManager, UnitFiles, buildWriteFilesCode } from './kernel/files'
+import { DebugBar } from './components/DebugBar'
 import { downloadFile, downloadZip } from './kernel/download'
 import { FileBrowser } from './components/FileBrowser'
 import { Editor } from './components/Editor'
@@ -293,6 +296,91 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     void runCode([writeCode, `run('/engr183/assignments/${unit.id}/${activeFile}')`].join('\n'))
   }
 
+  // ---- debugger -------------------------------------------------------
+  // Breakpoint lines per file (1-indexed). Injected as `keyboard;` when a
+  // debug run writes the files -- see kernel/breakpoints.ts.
+  const [breakpoints, setBreakpoints] = useState<Record<string, number[]>>({})
+  const debugRef = useRef<DebugSession | null>(null)
+  const [debugPhase, setDebugPhase] = useState<DebugPhase | null>(null)
+
+  function toggleBreakpoint(file: string, line: number) {
+    if (!isBreakableLine(contents[file] ?? '', line)) return
+    setBreakpoints((prev) => {
+      const cur = prev[file] ?? []
+      const next = cur.includes(line) ? cur.filter((l) => l !== line) : [...cur, line].sort((a, b) => a - b)
+      return { ...prev, [file]: next }
+    })
+  }
+
+  // E2E test hook (m0-spike-driver/t125) -- pixel-clicking a Monaco gutter
+  // is too flaky to rely on. Only exposed when the test flag is set.
+  useEffect(() => {
+    let enabled = false
+    try {
+      enabled = localStorage.getItem('engr183-e2e') === '1'
+    } catch {
+      /* private mode */
+    }
+    if (enabled) {
+      ;(window as unknown as Record<string, unknown>).__bp = {
+        get: () => breakpoints,
+        toggle: toggleBreakpoint,
+        phase: () => debugPhase,
+      }
+    }
+  })
+
+  async function refreshDebugVars() {
+    const dbg = debugRef.current
+    if (!dbg) return
+    try {
+      setWorkspaceVars(await dbg.frameVars())
+    } catch {
+      /* best-effort */
+    }
+  }
+
+  async function handleDebug() {
+    if (!sessionRef.current || debugRef.current) return
+    const totalBp = Object.values(breakpoints).reduce((n, l) => n + l.length, 0)
+    const writeCode = buildWriteFilesCode(unit.id, contents, breakpoints)
+    const code = [writeCode, `run('/engr183/assignments/${unit.id}/${activeFile}')`].join('\n')
+    const dbg = new DebugSession(
+      sessionRef.current,
+      handleExecuteChunk,
+      (p) => {
+        setDebugPhase(p.phase === 'done' ? null : p)
+        if (p.phase === 'paused') void refreshDebugVars()
+      },
+      breakpoints,
+    )
+    debugRef.current = dbg
+    setStatus('running')
+    setOutput(
+      (prev) =>
+        prev +
+        `\n— debugging ${activeFile}` +
+        (totalBp === 0 ? ' (no breakpoints set — will run to the end)\n' : `, ${totalBp} breakpoint(s)\n`),
+    )
+    try {
+      await dbg.run(code)
+    } catch (err) {
+      if (!(err as ReportedExecuteError)?.alreadyReported) {
+        setOutput((prev) => prev + '\n' + String(err))
+      }
+    } finally {
+      debugRef.current = null
+      setDebugPhase(null)
+      setStatus('ready')
+      await refreshWorkspace()
+    }
+  }
+
+  const debugStep = (fn: (d: DebugSession) => void) => () => {
+    const d = debugRef.current
+    if (d) fn(d)
+  }
+
   // For a student who thinks their code is stuck (an accidental infinite
   // loop, or the figure-reactivation kernel bug -- DESIGN.md T3.21). There's
   // no cooperative interrupt available (see session.ts's stop()), so this
@@ -501,6 +589,8 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
         status={status}
         onRunTests={unit.isScratch ? undefined : handleRunTests}
         onRunFile={handleRunFile}
+        onDebug={() => void handleDebug()}
+        debugging={debugPhase !== null}
         onStop={() => void handleStop()}
         onDownloadFile={handleDownloadFile}
         onDownloadZip={handleDownloadZip}
@@ -510,6 +600,17 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
         canResetFile={unit.files.includes(activeFile)}
         zipExcludes={unit.submissionExclude}
       />
+      {debugPhase?.phase === 'paused' && (
+        <DebugBar
+          frame={debugPhase.frame}
+          stack={debugPhase.stack}
+          onContinue={debugStep((d) => d.continue())}
+          onStepOver={debugStep((d) => d.stepOver())}
+          onStepInto={debugStep((d) => d.stepInto())}
+          onStepOut={debugStep((d) => d.stepOut())}
+          onStop={debugStep((d) => d.stopDebugging())}
+        />
+      )}
       <Group orientation="horizontal" className="flex-1 overflow-hidden">
         <Panel id="sidebar" defaultSize="18" minSize="12" maxSize="40">
           <Group orientation="vertical" className="h-full border-r border-line">
@@ -571,6 +672,14 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
                   dirtyFiles={dirtyFiles}
                   onSelectTab={setActiveFile}
                   onChange={handleChange}
+                  breakpoints={breakpoints[activeFile] ?? []}
+                  onToggleBreakpoint={toggleBreakpoint}
+                  debugLine={
+                    debugPhase?.phase === 'paused' &&
+                    (debugPhase.frame.file.split('/').pop() ?? '') === activeFile
+                      ? debugPhase.frame.line
+                      : null
+                  }
                 />
               </Panel>
               <Separator className="h-1 cursor-row-resize bg-raised transition-colors hover:bg-accent" />
