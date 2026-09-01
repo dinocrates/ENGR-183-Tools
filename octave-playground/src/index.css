@@ -202,17 +202,17 @@ pre {
 .engr183-bp-hover::before {
   content: '';
   position: absolute;
-  left: 4px;
+  right: 3px;
   top: 50%;
-  width: 11px;
-  height: 11px;
-  margin-top: -5.5px;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
   border-radius: 9999px;
   background: #ef4444;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
 }
 .engr183-bp-hover::before {
-  background: color-mix(in srgb, #ef4444 40%, transparent);
+  background: color-mix(in srgb, #ef4444 45%, transparent);
   box-shadow: none;
 }
 .engr183-debug-line {

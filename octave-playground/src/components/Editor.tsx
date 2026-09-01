@@ -165,7 +165,15 @@ export function Editor({
             minimap: { enabled: false },
             fontSize,
             automaticLayout: true,
+            // Breakpoint gutter: keep the glyph margin, but strip the
+            // width Monaco normally pads around it -- no folding column,
+            // fewer reserved line-number chars, no extra decorations gap --
+            // so the dot sits right next to the line numbers instead of
+            // way out at the edge with a big empty gap.
             glyphMargin: true,
+            folding: false,
+            lineNumbersMinChars: 3,
+            lineDecorationsWidth: 6,
           }}
         />
       </div>
