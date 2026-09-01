@@ -10,6 +10,11 @@ interface CommandWindowProps {
   onSubmit: (command: string) => void
   disabled: boolean
   onClear: () => void
+  // Non-null while the running program is blocked on an `input()` call. The
+  // input stays usable (even though the kernel is "busy") and the next
+  // Enter answers the prompt instead of starting a new command.
+  stdinPrompt?: string | null
+  onStdinReply?: (value: string) => void
 }
 
 const FONT_SIZE_KEY = 'engr183-console-font-size'
@@ -22,7 +27,10 @@ export function CommandWindow({
   onSubmit,
   disabled,
   onClear,
+  stdinPrompt = null,
+  onStdinReply,
 }: CommandWindowProps) {
+  const awaitingInput = stdinPrompt !== null
   const [fontSize, setFontSize] = useState(() => {
     const stored = Number(localStorage.getItem(FONT_SIZE_KEY))
     return stored > 0 ? stored : DEFAULT_FONT_SIZE
@@ -38,11 +46,17 @@ export function CommandWindow({
   const [history, setHistory] = useState<string[]>([])
   const [historyIndex, setHistoryIndex] = useState<number | null>(null)
   const outputRef = useRef<HTMLPreElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const el = outputRef.current
     if (el) el.scrollTop = el.scrollHeight
   }, [output])
+
+  // Jump focus to the input the moment the program starts waiting for it.
+  useEffect(() => {
+    if (awaitingInput) inputRef.current?.focus()
+  }, [awaitingInput])
 
   function updateFontSize(next: number) {
     setFontSize(next)
@@ -63,6 +77,15 @@ export function CommandWindow({
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    // Answering a program's input() prompt: send the raw line straight to
+    // the kernel, no block-completeness or history handling.
+    if (awaitingInput) {
+      if (e.key === 'Enter') {
+        onStdinReply?.(inputValue)
+        setInputValue('')
+      }
+      return
+    }
     if (e.key === 'Enter') {
       const line = inputValue
       if (line.trim() === '' && bufferLines.length === 0) return
@@ -141,17 +164,26 @@ export function CommandWindow({
       )}
       <div className="flex flex-shrink-0 items-center gap-1.5 border-t border-line px-3 py-1.5">
         <span className="font-mono text-muted" style={{ fontSize }}>
-          {continuing ? '..' : '>>'}
+          {awaitingInput ? '?' : continuing ? '..' : '>>'}
         </span>
         <input
+          ref={inputRef}
           className="w-full rounded border border-line bg-app px-2 py-1 font-mono text-primary outline-none focus:border-accent-hover disabled:opacity-40"
           style={{ fontSize }}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          disabled={disabled}
+          disabled={disabled && !awaitingInput}
           placeholder={
-            disabled ? 'Kernel busy…' : continuing ? 'Continue the block, or Esc to cancel…' : 'Type an Octave command…'
+            awaitingInput
+              ? stdinPrompt
+                ? `${stdinPrompt.trim()} (answer, then Enter)`
+                : 'The program is waiting for input — type a value, then Enter'
+              : disabled
+                ? 'Kernel busy…'
+                : continuing
+                  ? 'Continue the block, or Esc to cancel…'
+                  : 'Type an Octave command…'
           }
           spellCheck={false}
           autoComplete="off"

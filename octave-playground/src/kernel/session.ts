@@ -41,6 +41,12 @@ export type ExecuteChunk =
 
 export type ExecuteListener = (chunk: ExecuteChunk) => void;
 
+/** Fired when the running code asks for a line of stdin -- Octave's
+ *  `input()` / `keypress`, or an interactive `debug>` prompt. The caller
+ *  answers by calling OctaveKernelSession.replyToInput(); until it does,
+ *  the kernel is blocked waiting. */
+export type InputRequestListener = (req: { prompt: string; password: boolean }) => void;
+
 import { formatKernelError, type ReportedExecuteError } from './formatError';
 // Re-exported so callers can keep importing error helpers from './session'.
 export { formatKernelError } from './formatError';
@@ -132,9 +138,31 @@ export class OctaveKernelSession {
     await this.restart();
   }
 
+  /** Send one line of stdin to the kernel, answering an outstanding
+   *  input_request (see InputRequestListener). No-op if nothing is waiting. */
+  replyToInput(value: string): void {
+    if (!this.kernel) return;
+    const msg = KernelMessage.createMessage<KernelMessage.IInputReplyMsg>({
+      session: this.sessionId,
+      channel: 'stdin',
+      msgType: 'input_reply',
+      content: { status: 'ok', value },
+    });
+    void this.kernel.handleMessage(msg);
+  }
+
   /** Execute code, streaming stdout/stderr text and rich display data (e.g.
-   *  plots) as they arrive, in the order the kernel emits them. */
-  async execute(code: string, onOutput?: ExecuteListener): Promise<void> {
+   *  plots) as they arrive, in the order the kernel emits them.
+   *
+   *  onInputRequest fires if the code calls `input()` (or otherwise reads
+   *  stdin); answer it with replyToInput(). Without a handler the kernel
+   *  would block until execute()'s own timeout -- which is exactly the
+   *  pre-existing "input() hangs the REPL" bug this closes. */
+  async execute(
+    code: string,
+    onOutput?: ExecuteListener,
+    onInputRequest?: InputRequestListener,
+  ): Promise<void> {
     if (!this.kernel) {
       throw new Error('Kernel is not started');
     }
@@ -149,7 +177,10 @@ export class OctaveKernelSession {
         silent: false,
         store_history: true,
         user_expressions: {},
-        allow_stdin: false,
+        // The kernel already routes an input_request through this file's
+        // message handler even when this is false -- it just hung, because
+        // nothing answered. With a handler wired below, `input()` works.
+        allow_stdin: true,
         stop_on_error: true,
       },
     });
@@ -226,7 +257,10 @@ export class OctaveKernelSession {
         // request this specific closure was built for.
         const parentId = (msg.parent_header as { msg_id?: string } | undefined)?.msg_id;
         if (parentId !== undefined && parentId !== requestMsg.header.msg_id) return;
-        if (msg.header.msg_type === 'stream') {
+        if (msg.header.msg_type === 'input_request') {
+          const content = (msg as KernelMessage.IInputRequestMsg).content;
+          onInputRequest?.({ prompt: content.prompt ?? '', password: content.password ?? false });
+        } else if (msg.header.msg_type === 'stream') {
           const content = (msg as KernelMessage.IStreamMsg).content;
           onOutput?.({
             kind: 'stream',

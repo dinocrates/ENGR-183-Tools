@@ -228,11 +228,27 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     }
   }
 
+  // Set while the running code is blocked on a line of stdin (an `input()`
+  // call). The Command Window swaps to "answer the prompt" mode; the next
+  // Enter goes to the kernel via replyToInput() instead of starting a new
+  // command.
+  const [stdinPrompt, setStdinPrompt] = useState<string | null>(null)
+
+  function handleStdinReply(value: string) {
+    if (!sessionRef.current) return
+    setOutput((prev) => prev + value + '\n')
+    setStdinPrompt(null)
+    sessionRef.current.replyToInput(value)
+  }
+
   async function runCode(code: string) {
     if (!sessionRef.current) return
     setStatus('running')
     try {
-      await sessionRef.current.execute(code, handleExecuteChunk)
+      await sessionRef.current.execute(code, handleExecuteChunk, (req) => {
+        setOutput((prev) => prev + req.prompt)
+        setStdinPrompt(req.prompt)
+      })
       setDirtyFiles(new Set())
       setStatus('ready')
       await refreshWorkspace()
@@ -247,6 +263,10 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       }
       setStatus('error')
     } finally {
+      // A prompt left dangling here means execute() ended (timeout, Stop,
+      // error) without the input ever being answered -- clear it so the
+      // Command Window doesn't stay stuck in "answer the prompt" mode.
+      setStdinPrompt(null)
       // execute_reply is always the *last* message for a command -- once
       // execute() has settled (by any path), a figure still showing its
       // empty placeholder is provably never going to receive its real data.
@@ -570,6 +590,8 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
                   onSubmit={(command) => void handleReplSubmit(command)}
                   disabled={replBusy}
                   onClear={clearOutput}
+                  stdinPrompt={stdinPrompt}
+                  onStdinReply={handleStdinReply}
                 />
               </Panel>
             </Group>
