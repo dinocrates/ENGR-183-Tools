@@ -1,0 +1,16 @@
+{
+  "id": "u05-gp05-fault-creep",
+  "title": "Unit 5 — GP-05: From Sensor File to Engineering Summary",
+  "description": "Follow the guided code-along to write read_creep_data.m, which reads a real USGS creepmeter file into a validated structure, then use that structure in the main script to report the record count, the slip extremes and where they occur, and the largest day-to-day change versus the net change — finishing with a printed summary and a written report file.",
+  "files": [
+    "U05_GP05_FaultCreep_Starter.m",
+    "read_creep_data.m",
+    "U05_GP05_FaultCreep_PublicCheck.m"
+  ],
+  "dataFiles": ["parkfield_xpk2_daily_excerpt.txt"],
+  "note": "parkfield_xpk2_daily_excerpt.txt is the final 40 daily records from the USGS archive for Parkfield creepmeter station XPK2, frozen so every student has identical input. It records past surface-fault slip and must not be presented as an earthquake forecast. Run Tests and the public check never submit anything to Canvas; Download All (.zip) leaves out U05_GP05_FaultCreep_PublicCheck.m.",
+  "sourceUrl": "https://earthquake.usgs.gov/monitoring/deformation/data/download.php",
+  "category": "guided-practice",
+  "unitNumber": 5,
+  "submissionExclude": ["U05_GP05_FaultCreep_PublicCheck.m"]
+}

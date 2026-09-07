@@ -1,0 +1,27 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U05-APA05-LAKE-PERRIS  |  rubric check
+--------------------------------------------------------------------
+[ PASS ] Required files: the three functions, the main...        1/1
+[ FAIL ] read_reservoir_data: parses the CSV and build...        0/3
+         -> your code raised an error: read_reservoir_data.m: the structure is missing the field 'storage_af'.
+[ FAIL ] read_reservoir_data: invalid inputs raise an ...        0/2
+         -> your code raised an error: a non-character filename should raise an error, but read_reservoir_data.m returned normally instead.
+[ FAIL ] summarize_reservoir: every value is correct a...        0/3
+         -> your code raised an error: summarize_reservoir.m: the summary is missing the field 'valid_count'.
+[ FAIL ] summarize_reservoir: invalid inputs raise an ...        0/2
+         -> your code raised an error: a nonpositive operational capacity should raise an error, but summarize_reservoir.m returned normally instead.
+[ FAIL ] write_reservoir_report: writes a labeled repo...        0/2
+         -> your code raised an error: write_reservoir_report.m: no file was created at the given path.
+[ FAIL ] Function help documentation is complete for a...        0/1
+         -> your code raised an error: read_reservoir_data.m: the help block does not appear to describe the acre-feet unit. Expected wording like: acre-feet / acre feet / af.
+[ FAIL ] The supplied public check passes for a comple...        0/1
+         -> your code raised an error: The supplied public check did not pass. Complete read_reservoir_data.m, summarize_reservoir.m, and write_reservoir_report.m, then run U05_APA05_LakePerris_PublicCheck yourself to see which assertion failed.
+[ FAIL ] Main script: runs the full pipeline and confi...        0/1
+         -> your code raised an error: Main script: no APA05_lake_perris_audit.txt report file was written -- call write_reservoir_report.
+--------------------------------------------------------------------
+Score: 1/16 points (6%)   Criteria met: 1 of 9
+
+8 criteria left. Read the arrows above for hints.
+--------------------------------------------------------------------
+

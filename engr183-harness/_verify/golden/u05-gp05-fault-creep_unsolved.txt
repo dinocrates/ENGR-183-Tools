@@ -1,0 +1,23 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U05-GP05-FAULT-CREEP  |  rubric check
+--------------------------------------------------------------------
+[ PASS ] Required files: read_creep_data.m and the mai...        1/1
+[ FAIL ] read_creep_data: structure fields, shapes, an...        0/2
+         -> your code raised an error: read_creep_data.m: the returned structure is missing the field 'source_file'.
+[ FAIL ] read_creep_data: invalid inputs raise an error          0/2
+         -> your code raised an error: a non-character filename should raise an error, but read_creep_data.m returned normally instead.
+[ FAIL ] read_creep_data: help documentation is complete         0/1
+         -> your code raised an error: read_creep_data.m: the help block does not appear to describe the year column. Expected wording like: year.
+[ FAIL ] The supplied public check passes for a comple...        0/1
+         -> your code raised an error: The supplied public check did not pass. Complete read_creep_data.m, then run U05_GP05_FaultCreep_PublicCheck yourself to see which assertion failed.
+[ FAIL ] Main script: record count, slip extremes, and...        0/2
+         -> your code raised an error: Main script: your script must create a variable named record_count.
+[ FAIL ] Main script: prints a summary and writes a la...        0/1
+         -> your code raised an error: Main script: no report file was written. CHECKPOINT 7 must fopen(report_filename, 'w'), fprintf labeled results, and fclose.
+--------------------------------------------------------------------
+Score: 1/10 points (10%)   Criteria met: 1 of 7
+
+6 criteria left. Read the arrows above for hints.
+--------------------------------------------------------------------
+

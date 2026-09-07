@@ -1,0 +1,19 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U05-APA05-LAKE-PERRIS  |  rubric check
+--------------------------------------------------------------------
+[ PASS ] Required files: the three functions, the main...        1/1
+[ PASS ] read_reservoir_data: parses the CSV and build...        3/3
+[ PASS ] read_reservoir_data: invalid inputs raise an ...        2/2
+[ PASS ] summarize_reservoir: every value is correct a...        3/3
+[ PASS ] summarize_reservoir: invalid inputs raise an ...        2/2
+[ PASS ] write_reservoir_report: writes a labeled repo...        2/2
+[ PASS ] Function help documentation is complete for a...        1/1
+[ PASS ] The supplied public check passes for a comple...        1/1
+[ PASS ] Main script: runs the full pipeline and confi...        1/1
+--------------------------------------------------------------------
+Score: 16/16 points (100%)   Criteria met: 9 of 9
+
+Everything passes. Nice work - you are ready to submit.
+--------------------------------------------------------------------
+

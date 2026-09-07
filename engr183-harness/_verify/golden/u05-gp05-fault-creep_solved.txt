@@ -1,0 +1,17 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U05-GP05-FAULT-CREEP  |  rubric check
+--------------------------------------------------------------------
+[ PASS ] Required files: read_creep_data.m and the mai...        1/1
+[ PASS ] read_creep_data: structure fields, shapes, an...        2/2
+[ PASS ] read_creep_data: invalid inputs raise an error          2/2
+[ PASS ] read_creep_data: help documentation is complete         1/1
+[ PASS ] The supplied public check passes for a comple...        1/1
+[ PASS ] Main script: record count, slip extremes, and...        2/2
+[ PASS ] Main script: prints a summary and writes a la...        1/1
+--------------------------------------------------------------------
+Score: 10/10 points (100%)   Criteria met: 7 of 7
+
+Everything passes. Nice work - you are ready to submit.
+--------------------------------------------------------------------
+

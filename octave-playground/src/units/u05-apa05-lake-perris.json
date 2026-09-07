@@ -1,0 +1,18 @@
+{
+  "id": "u05-apa05-lake-perris",
+  "title": "Unit 5 — APA-05 Lake Perris Reservoir Data Audit",
+  "description": "Build three documented functions that read a frozen CDEC daily-storage CSV into a validated structure, summarize only the rows marked valid (with every result index referring to a row of the original data), and write a labeled audit report; drive them from the main script, run the public check, and download the complete project.",
+  "files": [
+    "U05_APA05_LakePerris_Starter.m",
+    "read_reservoir_data.m",
+    "summarize_reservoir.m",
+    "write_reservoir_report.m",
+    "U05_APA05_LakePerris_PublicCheck.m"
+  ],
+  "dataFiles": ["lake_perris_storage_2025Q1.csv"],
+  "note": "lake_perris_storage_2025Q1.csv is an unmodified California Data Exchange Center (CDEC) response for Lake Perris storage, Jan 1 - Mar 31 2025, frozen so results and tests stay reproducible. You are auditing published observations, not making reservoir operating decisions. Running the public check or Run Tests never submits anything to Canvas; Download All (.zip) leaves out U05_APA05_LakePerris_PublicCheck.m.",
+  "sourceUrl": "https://cdec.water.ca.gov/dynamicapp/QueryF?s=PRR",
+  "category": "individual-assignment",
+  "unitNumber": 5,
+  "submissionExclude": ["U05_APA05_LakePerris_PublicCheck.m"]
+}
