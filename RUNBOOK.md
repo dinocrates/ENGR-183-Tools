@@ -191,10 +191,12 @@ the commit the original run built.
 It probably is, and that's the expected worst case, not a bug: there's no server-side
 storage, no accounts, nothing to recover. Their code lived in that one browser's local
 storage, and clearing site data / a new browser / a new device / incognito mode all wipe
-it. The Playground has no upload/import feature — if they have a previously *downloaded*
-`.m` file, the only way to get it back into the editor is to open the file (Add File in
-the File Browser, or just open the existing starter) and paste the content in by hand.
-If they never downloaded anything, it's gone; they redo the work. This is exactly what
+it. If they downloaded their work earlier, they can get it back: **File Browser → Upload
+(↑) → pick the `.m` file or the whole Download All `.zip`**. A `.zip` restores every
+matching tab at once (it asks before replacing your current copy); an individual `.m`
+either replaces its tab or is added as a new file. (Uploaded `.csv`/text files land in a
+read-only "My files" group instead — see T3.31.) If they never downloaded anything, it's
+gone; they redo the work. This is exactly what
 the first-visit persistence warning (`src/components/PersistenceWarning.tsx`) exists to
 prevent — if this keeps happening, that's a signal to make the warning more prominent or
 revisit its copy (`octave-playground/DESIGN.md`'s T3.4 — the wording was never formally

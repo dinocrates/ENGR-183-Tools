@@ -44,6 +44,64 @@ export function isValidDataFileName(name: string): boolean {
   return DATA_FILE_NAME_RE.test(name) && !/\.m$/i.test(name);
 }
 
+/** Largest single uploaded file we accept. Uploads ride the same
+ *  fwrite(uint8([...])) path as starters (see buildWriteFilesCode), which
+ *  balloons to roughly 4x the file size as JS in every run's source, so
+ *  the cap is deliberately conservative -- course data files are kilobytes,
+ *  not megabytes. */
+export const MAX_UPLOAD_BYTES = 512 * 1024;
+
+/** Most entries we pull out of a single uploaded .zip. */
+export const MAX_ZIP_ENTRIES = 50;
+
+/** Normalizes a student-uploaded file name: trims, drops any directory
+ *  path (zip entries carry one), lowercases the extension, and replaces
+ *  every run of characters outside [A-Za-z0-9._-] with a single '_'.
+ *  Returns { name, changed } or null if nothing usable survives (e.g. an
+ *  empty name, or one that is all separators). A `.m` upload is validated
+ *  through normalizeFileName instead so it stays a real Octave identifier;
+ *  everything else must satisfy DATA_FILE_NAME_RE after sanitizing. */
+export function sanitizeUploadName(raw: string): { name: string; changed: boolean } | null {
+  const base = raw.split(/[\\/]/).pop()?.trim() ?? '';
+  if (base.length === 0) return null;
+
+  if (/\.m$/i.test(base)) {
+    const normalized = normalizeFileName(base);
+    return normalized ? { name: normalized, changed: normalized !== base } : null;
+  }
+
+  const dot = base.lastIndexOf('.');
+  const stem = dot > 0 ? base.slice(0, dot) : base;
+  const ext = dot > 0 ? base.slice(dot + 1).toLowerCase() : '';
+  const cleanStem = stem.replace(/[^A-Za-z0-9._-]+/g, '_').replace(/^[._-]+|[._-]+$/g, '');
+  const cleanExt = ext.replace(/[^A-Za-z0-9]+/g, '');
+  if (cleanStem.length === 0) return null;
+  const name = cleanExt ? `${cleanStem}.${cleanExt}` : cleanStem;
+  if (!DATA_FILE_NAME_RE.test(name)) return null;
+  return { name, changed: name !== base };
+}
+
+/** Whether an uploaded name is a `.m` file (routed to the editable tab set)
+ *  as opposed to a data file (routed to the read-only "My files" group). */
+export function isEditableUpload(name: string): boolean {
+  return /\.m$/i.test(name);
+}
+
+/** Rough "this is text, not a binary blob we can't handle" check on
+ *  already-decoded content: a NUL byte or a cluster of U+FFFD replacement
+ *  characters means readAsText was fed something that isn't UTF-8 text
+ *  (an image, .xlsx, .mat, ...). */
+export function looksBinary(text: string): boolean {
+  if (text.length === 0) return false;
+  let replacements = 0;
+  for (let i = 0; i < text.length; i++) {
+    const code = text.charCodeAt(i);
+    if (code === 0) return true;
+    if (code === 0xfffd) replacements++;
+  }
+  return replacements / text.length > 0.01;
+}
+
 /** Normalizes a student-entered file name (trims, strips a `.m`/`.M`
  *  extension if present so it can be re-appended in a consistent case rather
  *  than double-suffixed, e.g. "HELPER.M" -> "HELPER.m" not "HELPER.M.m")
@@ -111,6 +169,24 @@ export class UnitFiles {
         result[name] = await res.text();
       } catch (err) {
         console.warn(`Could not load data file ${this.unitId}/${name}:`, err);
+      }
+    }
+    return result;
+  }
+
+  /** Load files straight from the drive with no starter fallback -- for
+   *  student-uploaded files (data files in the "My files" group), which
+   *  have no vendored starter to fall back to. A name that isn't in the
+   *  drive is skipped rather than throwing. */
+  async loadRaw(fileNames: string[]): Promise<Record<string, string>> {
+    await this.ensureUnitDir();
+    const result: Record<string, string> = {};
+    for (const name of fileNames) {
+      try {
+        const model = await this.contents.get(this.path(name), { content: true });
+        result[name] = typeof model.content === 'string' ? model.content : '';
+      } catch {
+        // not in the drive (deleted in another tab, storage cleared) -- skip
       }
     }
     return result;

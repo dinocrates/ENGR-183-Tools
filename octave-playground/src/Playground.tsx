@@ -4,6 +4,7 @@ import { OctaveKernelSession, type ExecuteChunk, type ReportedExecuteError } fro
 import { DebugSession, type DebugPhase } from './kernel/debug'
 import { isBreakableLine } from './kernel/breakpoints'
 import { createContentsManager, UnitFiles, buildWriteFilesCode, isValidDataFileName } from './kernel/files'
+import { collectUploads, summarizeUpload } from './kernel/uploads'
 import { DebugBar } from './components/DebugBar'
 import { downloadFile, downloadZip } from './kernel/download'
 import { FileBrowser } from './components/FileBrowser'
@@ -75,6 +76,11 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   // since there's no manifest file, the directory itself is the source of
   // truth for "what extra files exist."
   const [fileList, setFileList] = useState<string[]>(unit.files)
+  // Student-uploaded data files (non-.m). Read-only, deletable, shown in
+  // the File Browser's "My files" group; persisted flat in the drive like
+  // any extra, so a returning student sees them again. `.m` uploads are
+  // NOT here -- those merge into fileList as ordinary editable files.
+  const [uploads, setUploads] = useState<string[]>([])
   const [activeFile, setActiveFile] = useState<string>(unit.files[0])
   const [output, setOutput] = useState('')
   const [figures, setFigures] = useState<Figure[]>([])
@@ -125,11 +131,19 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       const knownFiles = [...unit.files, ...(unit.retiredFiles ?? []), ...dataNames]
       const extraNames = await unitFiles.listExtraFiles(knownFiles)
       if (cancelled) return
-      const extraContents = extraNames.length > 0 ? await unitFiles.load(extraNames) : {}
+      // An extra ending in .m is student code (an "Add File" or a .m
+      // upload) -- editable, like any unit file. Anything else in the
+      // drive dir is an uploaded data file -> the read-only "My files"
+      // group. The directory listing stays the single source of truth.
+      const editableExtras = extraNames.filter((n) => /\.m$/i.test(n))
+      const uploadNames = extraNames.filter((n) => !/\.m$/i.test(n))
+      const extraContents = editableExtras.length > 0 ? await unitFiles.load(editableExtras) : {}
+      const uploadContents = uploadNames.length > 0 ? await unitFiles.loadRaw(uploadNames) : {}
       if (cancelled) return
 
-      setContents({ ...loaded, ...extraContents, ...dataContents })
-      setFileList([...unit.files, ...extraNames])
+      setContents({ ...loaded, ...extraContents, ...dataContents, ...uploadContents })
+      setFileList([...unit.files, ...editableExtras])
+      setUploads(Object.keys(uploadContents))
 
       const session = new OctaveKernelSession()
       await session.start(contentsManager)
@@ -149,9 +163,10 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   }, [unit])
 
   function handleChange(file: string, content: string) {
-    // Data files are read-only; Monaco won't fire this for them, but guard
-    // anyway so a stray call can't dirty one or overwrite the bundled copy.
-    if (dataFiles.includes(file)) return
+    // Data files and uploaded "My files" are read-only; Monaco won't fire
+    // this for them, but guard anyway so a stray call can't dirty one or
+    // overwrite the stored copy.
+    if (dataFiles.includes(file) || uploads.includes(file)) return
     setContents((prev) => ({ ...prev, [file]: content }))
     setDirtyFiles((prev) => new Set(prev).add(file))
 
@@ -482,7 +497,10 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   }
 
   function handleDownloadZip() {
-    void downloadZip(unit.id, contents, unit.submissionExclude ?? [])
+    // Uploaded "My files" are the student's own inputs, not part of a
+    // Canvas submission -- leave them out of the zip alongside whatever the
+    // unit already excludes (e.g. a public-check tab).
+    void downloadZip(unit.id, contents, [...(unit.submissionExclude ?? []), ...uploads])
   }
 
   async function doResetFile(file: string) {
@@ -501,6 +519,76 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     setFileList((prev) => [...prev, name])
     setContents((prev) => ({ ...prev, [name]: '' }))
     setActiveFile(name)
+  }
+
+  // ---- student file upload (individual files or a Download All .zip) ----
+  async function handleUpload(files: FileList | File[]) {
+    const result = await collectUploads(files)
+    if (result.items.length === 0 && result.skipped.length === 0) return
+
+    const overwrites = result.items.filter(
+      (it) => it.kind === 'editable' && (unit.files.includes(it.name) || fileList.includes(it.name)),
+    )
+
+    const apply = async () => {
+      for (const it of result.items) {
+        await unitFilesRef.current?.save(it.name, it.content).catch(() => {})
+        setContents((prev) => ({ ...prev, [it.name]: it.content }))
+        if (it.kind === 'editable') {
+          setFileList((prev) => (prev.includes(it.name) ? prev : [...prev, it.name]))
+          setDirtyFiles((prev) => {
+            const next = new Set(prev)
+            next.delete(it.name)
+            return next
+          })
+        } else {
+          setUploads((prev) => (prev.includes(it.name) ? prev : [...prev, it.name]))
+        }
+      }
+      const last = result.items[result.items.length - 1]
+      if (last) setActiveFile(last.name)
+      const summary = summarizeUpload(result)
+      if (summary) setOutput((prev) => prev + summary)
+    }
+
+    if (overwrites.length > 0) {
+      setConfirmDialog({
+        title: overwrites.length === 1 ? `Replace ${overwrites[0].name}?` : 'Replace files?',
+        message: `This replaces your current ${overwrites
+          .map((o) => o.name)
+          .join(', ')} with the uploaded version. This can't be undone.`,
+        confirmLabel: 'Replace',
+        onConfirm: () => {
+          setConfirmDialog(null)
+          void apply()
+        },
+      })
+    } else {
+      void apply()
+    }
+  }
+
+  async function doDeleteUpload(name: string) {
+    await unitFilesRef.current?.delete(name).catch(() => {})
+    setUploads((prev) => prev.filter((n) => n !== name))
+    setContents((prev) => {
+      const next = { ...prev }
+      delete next[name]
+      return next
+    })
+    if (activeFile === name) setActiveFile(unit.files[0])
+  }
+
+  function handleDeleteUploadRequest(name: string) {
+    setConfirmDialog({
+      title: `Remove ${name}?`,
+      message: `This removes the uploaded file ${name} from this unit. Your own copy on your computer is untouched.`,
+      confirmLabel: 'Remove',
+      onConfirm: () => {
+        void doDeleteUpload(name)
+        setConfirmDialog(null)
+      },
+    })
   }
 
   async function doDeleteFile(file: string) {
@@ -659,12 +747,15 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
                 unitTitle={unit.title}
                 files={fileList}
                 dataFiles={dataFiles}
+                uploads={uploads}
                 protectedFiles={unit.files}
                 activeFile={activeFile}
                 dirtyFiles={dirtyFiles}
                 onSelect={setActiveFile}
                 onAddFile={(name) => void handleAddFile(name)}
                 onDeleteRequest={handleDeleteFileRequest}
+                onUpload={(files) => void handleUpload(files)}
+                onDeleteUpload={handleDeleteUploadRequest}
                 collapsed={fileBrowserCollapsed}
                 onToggleCollapse={toggleFileBrowser}
               />
@@ -702,6 +793,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
                 <Editor
                   files={fileList}
                   dataFiles={dataFiles}
+                  uploads={uploads}
                   activeFile={activeFile}
                   contents={contents}
                   dirtyFiles={dirtyFiles}
