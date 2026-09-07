@@ -235,6 +235,46 @@ In Canvas, submit the completed main script and the two function files. **Do not
 
 ---
 
+## Unit 5 — GP-05: From Sensor File to Engineering Summary (guided practice)
+
+The first unit that reads a real data file. Follow the guided code-along while completing two files in `assignments/u05-gp05-fault-creep/`: `read_creep_data.m` (reads the bundled USGS creepmeter file into a validated structure) and the main script (`U05_GP05_FaultCreep_Starter.m`), which uses that structure to report the record count, the slip extremes and where they occur, and the largest day-to-day change — which is *not* the net change — before printing a summary and writing a report file with `fopen`/`fprintf`/`fclose`. A supplied public checker (`U05_GP05_FaultCreep_PublicCheck.m`) sanity-checks `read_creep_data.m`.
+
+The data file, `parkfield_xpk2_daily_excerpt.txt`, is bundled with the unit — see **Data files bundled with a unit** below. Your code opens it by name (`read_creep_data('parkfield_xpk2_daily_excerpt.txt')`), the way the public checker does.
+
+```matlab
+engr183.runTests('u05-gp05-fault-creep')
+```
+
+9 of this Canvas assignment's 10 points are automated; the last point grades the three written reflection comments.
+
+---
+
+## Unit 5 — APA-05: Lake Perris Reservoir Data Audit
+
+This unit audits a frozen California Data Exchange Center (CDEC) daily-storage CSV for Lake Perris: it parses the file, decides which rows are trustworthy, summarizes only those, and writes a labeled report that states plainly what the audit does and does not support.
+
+### 1. Get the starter
+
+Open `assignments/u05-apa05-lake-perris/`. It has five files: the main script (`U05_APA05_LakePerris_Starter.m`), three function files you must complete (`read_reservoir_data.m`, `summarize_reservoir.m`, `write_reservoir_report.m`), a supplied public checker (`U05_APA05_LakePerris_PublicCheck.m`) you should not edit, and the bundled data file `lake_perris_storage_2025Q1.csv`.
+
+### 2. Do the work
+
+Write `read_reservoir_data.m` first (`textscan` on nine comma-delimited columns, plus a `valid_mask`), then `summarize_reservoir.m` — **every `*_index` field in the summary must refer to a row of the original structure, not a position within the valid subset** — then `write_reservoir_report.m`. Run the public checker before finishing the main script.
+
+### 3. Check your work
+
+```matlab
+engr183.runTests('u05-apa05-lake-perris')
+```
+
+16 of this Canvas assignment's 20 points are automated; the remaining points grade the four written reflection responses and overall formatting. Run Tests includes a mixed-validity case that a solution which skips the index remapping will fail even though the frozen file is entirely valid.
+
+### 4. Submit
+
+In Canvas, submit the completed main script and the three function files. **Do not include `U05_APA05_LakePerris_PublicCheck.m`.** The browser Playground's Download All (.zip) already leaves it out.
+
+---
+
 ## Data files bundled with a unit
 
 Some units ship a data file you read from your code instead of typing the
