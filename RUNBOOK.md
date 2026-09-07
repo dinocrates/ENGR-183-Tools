@@ -35,6 +35,17 @@ stale: step 6 ("add the unit wherever the app's unit list lives") is no longer n
 `src/units/index.ts` auto-discovers every `unitNN.json` via a glob import, so dropping the
 file in is enough.
 
+**A unit that ships a data file** (a CSV/TXT the student reads instead of typing numbers
+in): add `--data readings.csv` (comma-separate for several). That drops a placeholder in
+`engr183-harness/assignments/unit03/readings.csv` — replace it with the real file — and a
+`"dataFiles"` array in the unit JSON. Data files are read-only in the Playground (own
+"Data" group in the File Browser, no editable tab, kept out of dirty-tracking and Reset)
+but *are* in Download All. Student code opens one with `csvread(engr183.data('readings.csv'))`
+— `engr183.data` (new in T3.30) resolves the path so the same line works in the browser,
+from a function, and in a desktop clone. They ride `sync_harness.py` like any starter; no
+script flags needed at sync time. To keep a data file out of the Canvas submission zip,
+add it to the unit JSON's `submissionExclude` too.
+
 ### Script-style units (one scalar script — the current Unit 1's actual shape)
 
 `new_unit.py` doesn't scaffold this shape at all (it's `--functions`-only). Use the current
@@ -110,6 +121,25 @@ npm run build   # do this AFTER the kernel rebuild, not before —
 Forgetting that last `npm run build` (or running it before the kernel rebuild finishes)
 is a real trap — the app will silently keep serving the *previous* kernel/harness out of
 `dist/`, and `npm run preview` will look like your harness change did nothing.
+
+### On native Windows (no WSL): rebuild just the harness mount
+
+If you only touched `engr183-harness/` (not the WASM kernel itself) and can't run
+`build-kernel-assets.sh`, you don't need the full rebuild. After
+`fetch-kernel-assets-from-deploy.sh` has populated `public/xeus/`:
+
+```bash
+cd octave-playground
+python3 scripts/sync_harness.py
+python3 scripts/rebuild-mount-from-vfs.py   # repacks kernel_packages/mount_0.tar.gz from vfs/engr183
+npm run build                              # still AFTER, same trap as above
+```
+
+`rebuild-mount-from-vfs.py` only regenerates the harness mount (`+engr183/`, `tests/`),
+not the Octave WASM build, so `Run Tests` and `engr183.*` then reflect your local harness
+edits on `npm run preview`. It's local-dev-only — CI builds the mount properly via
+`jupyter lite build`. A plain `tar czf` does **not** work here: the in-browser extractor
+needs POSIX-ustar, file-entries-only, which the script produces and GNU tar doesn't.
 
 ---
 

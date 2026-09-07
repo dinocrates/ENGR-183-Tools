@@ -41,6 +41,17 @@ export interface UnitMeta {
   // Absent (or omitted) for every unit whose zip should still contain
   // every tab, which is most of them -- no behavior change when omitted.
   submissionExclude?: string[]
+  // Read-only input files bundled with the unit -- e.g. a CSV the main
+  // script reads with csvread(engr183.data('...')). They live alongside
+  // the unit's .m files in engr183-harness/assignments/<id>/ and are
+  // vendored into public/starters/<id>/ by sync_harness.py, same as a
+  // starter. The app seeds them into the kernel on every run but never
+  // lets the student edit them: no editable editor tab, excluded from
+  // dirty-tracking and Reset, shown in the File Browser's read-only Data
+  // group. Absent for every unit that ships no data -- no behavior change
+  // when omitted. Names must match /^[A-Za-z0-9._-]+$/ (they flow into
+  // generated Octave file-write code -- see kernel/files.ts).
+  dataFiles?: string[]
 }
 
 // Picks up every unitNN.json automatically -- dropping in a new one (via
@@ -73,6 +84,10 @@ export const scratchUnit: UnitMeta = {
   title: 'Scratch Pad',
   description: 'Write and run any Octave code here. Nothing on this page is graded.',
   files: ['scratch.m'],
+  // A tiny bundled dataset so you can practice reading a file --
+  // `csvread(engr183.data('sample_readings.csv'))`. Real units declare
+  // their own; this one doubles as the feature's reference example.
+  dataFiles: ['sample_readings.csv'],
   isScratch: true,
   // Never actually read: UnitIndex renders scratchUnit through its own
   // dedicated block, not the category-grouped sections, so these two

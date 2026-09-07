@@ -3,7 +3,7 @@ import { Group, Panel, Separator, type PanelImperativeHandle } from 'react-resiz
 import { OctaveKernelSession, type ExecuteChunk, type ReportedExecuteError } from './kernel/session'
 import { DebugSession, type DebugPhase } from './kernel/debug'
 import { isBreakableLine } from './kernel/breakpoints'
-import { createContentsManager, UnitFiles, buildWriteFilesCode } from './kernel/files'
+import { createContentsManager, UnitFiles, buildWriteFilesCode, isValidDataFileName } from './kernel/files'
 import { DebugBar } from './components/DebugBar'
 import { downloadFile, downloadZip } from './kernel/download'
 import { FileBrowser } from './components/FileBrowser'
@@ -40,7 +40,23 @@ interface Figure {
 
 const PLOTLY_MIME = 'application/vnd.plotly.v1+json'
 
+// Bundled read-only data files for this unit (e.g. a CSV the main script
+// reads). Malformed names are dropped here rather than risked in generated
+// Octave -- see kernel/files.ts's DATA_FILE_NAME_RE.
+function validDataFiles(unit: UnitMeta): string[] {
+  const declared = unit.dataFiles ?? []
+  const ok = declared.filter(isValidDataFileName)
+  if (ok.length !== declared.length) {
+    console.warn(
+      `${unit.id}: ignoring malformed dataFiles entries:`,
+      declared.filter((n) => !isValidDataFileName(n)),
+    )
+  }
+  return ok
+}
+
 function Playground({ unit, onBackToUnits }: PlaygroundProps) {
+  const dataFiles = validDataFiles(unit)
   const sessionRef = useRef<OctaveKernelSession | null>(null)
   const unitFilesRef = useRef<UnitFiles | null>(null)
   const saveTimers = useRef<Record<string, number>>({})
@@ -91,17 +107,28 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       const loaded = await unitFiles.load(unit.files)
       if (cancelled) return
 
+      // Bundled data files: always fetched fresh, never from (or to) the
+      // drive -- the student can't edit them, so a drive copy would only
+      // ever be a stale shadow. Loaded into `contents` so every run path's
+      // buildWriteFilesCode() seeds them into the kernel alongside the
+      // starters.
+      const dataNames = validDataFiles(unit)
+      const dataContents = dataNames.length > 0 ? await unitFiles.loadDataFiles(dataNames) : {}
+      if (cancelled) return
+
       // retiredFiles (e.g. unit01's old addTwo.m/circleArea.m/greet.m) may
       // still be sitting in a returning student's drive from before a
       // content revision -- excluded here so they're hidden rather than
-      // resurfacing as if the student had created them as extras.
-      const knownFiles = [...unit.files, ...(unit.retiredFiles ?? [])]
+      // resurfacing as if the student had created them as extras. dataFiles
+      // are excluded for the same reason: they're unit content, not a
+      // student-created extra.
+      const knownFiles = [...unit.files, ...(unit.retiredFiles ?? []), ...dataNames]
       const extraNames = await unitFiles.listExtraFiles(knownFiles)
       if (cancelled) return
       const extraContents = extraNames.length > 0 ? await unitFiles.load(extraNames) : {}
       if (cancelled) return
 
-      setContents({ ...loaded, ...extraContents })
+      setContents({ ...loaded, ...extraContents, ...dataContents })
       setFileList([...unit.files, ...extraNames])
 
       const session = new OctaveKernelSession()
@@ -122,6 +149,9 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   }, [unit])
 
   function handleChange(file: string, content: string) {
+    // Data files are read-only; Monaco won't fire this for them, but guard
+    // anyway so a stray call can't dirty one or overwrite the bundled copy.
+    if (dataFiles.includes(file)) return
     setContents((prev) => ({ ...prev, [file]: content }))
     setDirtyFiles((prev) => new Set(prev).add(file))
 
@@ -628,6 +658,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
               <FileBrowser
                 unitTitle={unit.title}
                 files={fileList}
+                dataFiles={dataFiles}
                 protectedFiles={unit.files}
                 activeFile={activeFile}
                 dirtyFiles={dirtyFiles}
@@ -664,11 +695,13 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
               description={unit.description}
               note={unit.note}
               sourceUrl={unit.sourceUrl}
+              dataFiles={dataFiles}
             />
             <Group orientation="vertical" className="flex-1 overflow-hidden">
               <Panel id="editor" defaultSize="70" minSize="15">
                 <Editor
                   files={fileList}
+                  dataFiles={dataFiles}
                   activeFile={activeFile}
                   contents={contents}
                   dirtyFiles={dirtyFiles}

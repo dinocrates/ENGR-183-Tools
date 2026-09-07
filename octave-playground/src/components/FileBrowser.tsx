@@ -5,6 +5,9 @@ import { normalizeFileName } from '../kernel/files'
 interface FileBrowserProps {
   unitTitle: string
   files: string[]
+  // Bundled read-only data files -- listed in their own group below the
+  // editable files, selectable (opens read-only) but never deletable.
+  dataFiles?: string[]
   protectedFiles: string[]
   activeFile: string
   dirtyFiles: Set<string>
@@ -18,6 +21,7 @@ interface FileBrowserProps {
 export function FileBrowser({
   unitTitle,
   files,
+  dataFiles = [],
   protectedFiles,
   activeFile,
   dirtyFiles,
@@ -64,32 +68,62 @@ export function FileBrowser({
           +
         </button>
       </div>
-      <ul className="flex-1 overflow-auto">
-        {files.map((file) => (
-          <li key={file} className="group flex items-center">
-            <button
-              className={`flex flex-1 items-center gap-1.5 border-l-2 px-2.5 py-1 text-left text-sm ${
-                file === activeFile
-                  ? 'border-accent-fg bg-raised text-primary'
-                  : 'border-transparent text-secondary hover:bg-raised/60'
-              }`}
-              onClick={() => onSelect(file)}
-            >
-              <span className="flex-1 truncate">{file}</span>
-              {dirtyFiles.has(file) && <span className="text-accent-fg">●</span>}
-            </button>
-            {!protectedFiles.includes(file) && (
+      <div className="flex-1 overflow-auto">
+        <ul>
+          {files.map((file) => (
+            <li key={file} className="group flex items-center">
               <button
-                className="mr-1.5 hidden rounded px-1 text-xs text-muted hover:bg-raised hover:text-danger-fg group-hover:block"
-                onClick={() => onDeleteRequest(file)}
-                title={`Delete ${file}`}
+                className={`flex flex-1 items-center gap-1.5 border-l-2 px-2.5 py-1 text-left text-sm ${
+                  file === activeFile
+                    ? 'border-accent-fg bg-raised text-primary'
+                    : 'border-transparent text-secondary hover:bg-raised/60'
+                }`}
+                onClick={() => onSelect(file)}
               >
-                ×
+                <span className="flex-1 truncate">{file}</span>
+                {dirtyFiles.has(file) && <span className="text-accent-fg">●</span>}
               </button>
-            )}
-          </li>
-        ))}
-      </ul>
+              {!protectedFiles.includes(file) && (
+                <button
+                  className="mr-1.5 hidden rounded px-1 text-xs text-muted hover:bg-raised hover:text-danger-fg group-hover:block"
+                  onClick={() => onDeleteRequest(file)}
+                  title={`Delete ${file}`}
+                >
+                  ×
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+        {dataFiles.length > 0 && (
+          <>
+            <div
+              className="px-2.5 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wide text-faint"
+              title="Bundled with the unit. Read-only — open them from your code with engr183.data('name')."
+            >
+              Data
+            </div>
+            <ul>
+              {dataFiles.map((file) => (
+                <li key={file}>
+                  <button
+                    className={`flex w-full items-center gap-1.5 border-l-2 px-2.5 py-1 text-left text-sm ${
+                      file === activeFile
+                        ? 'border-accent-fg bg-raised text-primary'
+                        : 'border-transparent text-muted hover:bg-raised/60'
+                    }`}
+                    onClick={() => onSelect(file)}
+                    title="Bundled data file — read-only"
+                  >
+                    <span aria-hidden>🔒</span>
+                    <span className="flex-1 truncate">{file}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </div>
       {adding && (
         <div className="border-t border-line-subtle px-2.5 py-2">
           <input

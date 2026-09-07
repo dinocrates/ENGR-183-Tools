@@ -5,12 +5,16 @@
         --title "Loops and Conditionals" \
         --description "Practice writing loops and conditional logic."
 
+    python scripts/new_unit.py 05 --functions loadReadings \
+        --data readings.csv --title "File I/O"
+
 Generates (source of truth lives in engr183-harness/, same monorepo):
     engr183-harness/assignments/unitNN/<fn>.m        student-facing unsolved stub
+    engr183-harness/assignments/unitNN/<data>        placeholder for each --data file (read-only, bundled)
     engr183-harness/_verify/unsolved/unitNN/<fn>.m    identical copy (see _verify/README.md)
     engr183-harness/_verify/solved/unitNN/<fn>.m      placeholder for YOUR reference solution
     engr183-harness/tests/unitNN_tests.m              placeholder rubric criteria
-    octave-playground/src/units/unitNN.json           unit metadata for the app UI
+    octave-playground/src/units/unitNN.json           unit metadata for the app UI (incl. dataFiles)
 
 Deliberately does not touch vfs/, public/starters/, or golden files -- run
 scripts/sync_harness.py to vendor the new unit into the playground once
@@ -23,6 +27,7 @@ Refuses to overwrite an existing unit unless --force is given.
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -90,6 +95,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("number", help="unit number, e.g. 02")
     parser.add_argument("--functions", required=True, help="comma-separated function names, e.g. sumRange,isPrime")
+    parser.add_argument(
+        "--data",
+        default=None,
+        help="comma-separated bundled read-only data file names, e.g. readings.csv,limits.txt "
+        "(creates a placeholder in assignments/unitNN/ and a dataFiles entry in the unit JSON)",
+    )
     parser.add_argument("--title", default=None, help='e.g. "Loops and Conditionals" (default: "Unit N")')
     parser.add_argument("--description", default=None, help="one-line problem statement (default: TODO placeholder)")
     parser.add_argument("--force", action="store_true", help="overwrite an existing unit")
@@ -101,6 +112,17 @@ def main() -> None:
     if not fns:
         print("Error: --functions must list at least one function name.", file=sys.stderr)
         sys.exit(1)
+
+    data_files = [d.strip() for d in (args.data or "").split(",") if d.strip()]
+    data_name_re = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$")
+    for d in data_files:
+        if d.lower().endswith(".m") or not data_name_re.match(d):
+            print(
+                f"Error: bad --data name {d!r}. Use letters/digits/dot/underscore/hyphen, "
+                "and not a .m file.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
 
     title = args.title or f"Unit {n}"
     description = args.description or "TODO: write the problem statement for this unit."
@@ -122,6 +144,13 @@ def main() -> None:
             args.force,
         )
 
+    for d in data_files:
+        write_new(
+            HARNESS / "assignments" / unit / d,
+            f"TODO: replace this placeholder with the real {d} for {unit}.\n",
+            args.force,
+        )
+
     spec_lines = "\n".join(SPEC_LINE_TEMPLATE.format(fn=fn) for fn in fns)
     write_new(
         HARNESS / "tests" / f"{unit}_tests.m",
@@ -135,6 +164,8 @@ def main() -> None:
         "description": description,
         "files": [f"{fn}.m" for fn in fns],
     }
+    if data_files:
+        unit_json["dataFiles"] = data_files
     write_new(
         ROOT / "src" / "units" / f"{unit}.json",
         json.dumps(unit_json, indent=2, ensure_ascii=False) + "\n",
@@ -142,6 +173,8 @@ def main() -> None:
     )
 
     print(f"\n{unit} scaffolded. Next steps:")
+    if data_files:
+        print(f"  0. Replace the placeholder data file(s) in assignments/{unit}/: {', '.join(data_files)}.")
     print(f"  1. Edit assignments/{unit}/*.m (signatures, docs) and tests/{unit}_tests.m (real criteria).")
     print(f"  2. Write real solutions in _verify/solved/{unit}/*.m.")
     print(f"  3. Verify: octave-cli --eval \"setup; runUnitFilter='{unit}'; run('_verify/run.m')\"")

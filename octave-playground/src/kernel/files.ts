@@ -29,6 +29,21 @@ function starterUrl(unitId: string, fileName: string): string {
 // as a real function/script file anyway.
 const FILE_BASE_NAME_RE = /^[A-Za-z_]\w*$/;
 
+// A unit's dataFiles names (from the unit JSON, instructor-controlled) also
+// flow into buildWriteFilesCode's fopen() path -- but they're not Octave
+// identifiers (they carry a `.csv`/`.txt` extension), so they get their own
+// rule: letters, digits, dot, underscore, hyphen only. No path separators,
+// no quotes, nothing that could break out of the single-quoted literal.
+// Unlike a .m file, a dataFile is never `clear`ed (it's not a function).
+const DATA_FILE_NAME_RE = /^[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$/;
+
+/** True if `name` is a well-formed unit dataFiles entry -- see
+ *  DATA_FILE_NAME_RE. A malformed entry is dropped (with a console warning)
+ *  rather than risking it in generated Octave. */
+export function isValidDataFileName(name: string): boolean {
+  return DATA_FILE_NAME_RE.test(name) && !/\.m$/i.test(name);
+}
+
 /** Normalizes a student-entered file name (trims, strips a `.m`/`.M`
  *  extension if present so it can be re-appended in a consistent case rather
  *  than double-suffixed, e.g. "HELPER.M" -> "HELPER.m" not "HELPER.M.m")
@@ -73,6 +88,29 @@ export class UnitFiles {
         result[name] = typeof model.content === 'string' ? model.content : '';
       } catch {
         result[name] = await this.resetToStarter(name);
+      }
+    }
+    return result;
+  }
+
+  /** Load bundled read-only data files. Unlike load(), these are always
+   *  fetched fresh from the vendored starter asset and never read from (or
+   *  written to) the browser drive: the student can't edit them, so a
+   *  drive copy would only ever be a stale or corrupted shadow of the real
+   *  thing. A file that 404s is skipped with a console warning rather than
+   *  failing the whole unit load. */
+  async loadDataFiles(fileNames: string[]): Promise<Record<string, string>> {
+    const result: Record<string, string> = {};
+    for (const name of fileNames) {
+      try {
+        const res = await fetch(starterUrl(this.unitId, name));
+        if (!res.ok) {
+          console.warn(`Data file ${this.unitId}/${name} not found (${res.status}); skipping.`);
+          continue;
+        }
+        result[name] = await res.text();
+      } catch (err) {
+        console.warn(`Could not load data file ${this.unitId}/${name}:`, err);
       }
     }
     return result;
@@ -123,12 +161,14 @@ export class UnitFiles {
  *  was tried first but is broken in this xeus-octave build -- it fails
  *  even round-tripping Octave's own base64_encode output.
  *
- *  Also `clear`s each written function by name. Octave caches a function
- *  by the path it first loaded it from; overwriting the file on disk
- *  doesn't invalidate that cache (confirmed directly -- even `rehash`
+ *  Also `clear`s each written *function* (`.m`) by name. Octave caches a
+ *  function by the path it first loaded it from; overwriting the file on
+ *  disk doesn't invalidate that cache (confirmed directly -- even `rehash`
  *  doesn't help, only `clear <name>` does). Without this, a student who
  *  runs Tests once, then fixes their code and runs again in the same
- *  kernel session, would silently see the stale first-run result. */
+ *  kernel session, would silently see the stale first-run result. Bundled
+ *  data files (`.csv` etc.) are written the same way but never `clear`ed:
+ *  they aren't functions, and `clear readings.csv` isn't valid syntax. */
 export function buildWriteFilesCode(
   unitId: string,
   files: Record<string, string>,
@@ -136,6 +176,12 @@ export function buildWriteFilesCode(
 ): string {
   const dir = `/engr183/assignments/${unitId}`;
   const lines: string[] = [
+    // Make the engr183 package resolvable for every run mode, not just Run
+    // Tests (which also addpath's it explicitly). Run File / Debug / the
+    // REPL need it too so student code can call engr183.data('...') to
+    // locate a bundled data file. Idempotent -- Octave just moves an
+    // already-present entry to the front.
+    `addpath('/engr183');`,
     `if ~exist('/engr183/assignments', 'dir'), mkdir('/engr183/assignments'); end`,
     `if ~exist('${dir}', 'dir'), mkdir('${dir}'); end`,
   ];
@@ -143,11 +189,12 @@ export function buildWriteFilesCode(
     const bpLines = breakpoints?.[name];
     const content = bpLines ? injectBreakpoints(rawContent, bpLines) : rawContent;
     const bytes = Array.from(new TextEncoder().encode(content));
-    const fnName = name.replace(/\.m$/, '');
     lines.push(
       `fid = fopen('${dir}/${name}', 'w'); fwrite(fid, uint8([${bytes.join(',')}]), 'uint8'); fclose(fid);`,
-      `clear ${fnName}`,
     );
+    if (/\.m$/i.test(name)) {
+      lines.push(`clear ${name.replace(/\.m$/i, '')}`);
+    }
   }
   // `fid` is our own bookkeeping, reused across the loop above -- clear it so
   // it doesn't show up as a leftover base-workspace variable in the

@@ -235,6 +235,32 @@ In Canvas, submit the completed main script and the two function files. **Do not
 
 ---
 
+## Data files bundled with a unit
+
+Some units ship a data file you read from your code instead of typing the
+numbers in by hand — a `.csv` of measurements, a `.txt` log, and so on. When
+a unit has one, its instructions say so by name.
+
+Open it with `engr183.data`, which gives you the full path to the file
+wherever it actually lives:
+
+```matlab
+readings = csvread(engr183.data('readings.csv'));
+fid      = fopen(engr183.data('sensor_log.txt'), 'r');
+```
+
+Pass just the file's name — `engr183.data` finds which unit folder bundles
+it. Use this rather than a bare `csvread('readings.csv')`: the bare form
+only works when that file happens to be in your current folder, so it
+breaks from inside a function, from `engr183.runTests`, or on a machine
+where you cloned the repo somewhere other than your Desktop.
+`engr183.data` keeps working in all three, and identically in the browser
+Playground.
+
+These files are read-only. In the browser Playground they show up in the
+File Browser under a **Data** group with a lock icon — you can open one to
+look at it, but not edit it. Editing the data isn't part of any assignment.
+
 ## How checking works, all semester
 
 Every unit follows this same shape:

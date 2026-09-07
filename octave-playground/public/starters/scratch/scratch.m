@@ -6,4 +6,8 @@
 %   plot(x, sin(x));
 %
 %   disp('hello, octave')
+%
+% Reading the bundled data file (see the Data group in the File Browser):
+%   readings = csvread(engr183.data('sample_readings.csv'));
+%   plot(readings(:, 1), readings(:, 2));
 

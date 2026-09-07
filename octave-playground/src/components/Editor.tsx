@@ -8,6 +8,10 @@ import { useTheme } from '../theme'
 
 interface EditorProps {
   files: string[]
+  // Bundled read-only data files (e.g. a CSV). Rendered as extra tabs after
+  // the editable ones; opening one shows it read-only, as plain text, with
+  // an inert breakpoint gutter (clicks set nothing).
+  dataFiles?: string[]
   activeFile: string
   contents: Record<string, string>
   dirtyFiles: Set<string>
@@ -40,6 +44,7 @@ const DEFAULT_FONT_SIZE = 13
 
 export function Editor({
   files,
+  dataFiles = [],
   activeFile,
   contents,
   dirtyFiles,
@@ -50,6 +55,7 @@ export function Editor({
   debugLine = null,
 }: EditorProps) {
   const { theme } = useTheme()
+  const activeIsData = dataFiles.includes(activeFile)
   const [fontSize, setFontSize] = useState(() => {
     const stored = Number(localStorage.getItem(FONT_SIZE_KEY))
     return stored > 0 ? stored : DEFAULT_FONT_SIZE
@@ -62,7 +68,8 @@ export function Editor({
   // Keep the latest toggle handler / active file reachable from the
   // (once-registered) mouse-down listener without re-registering it.
   const toggleRef = useRef<((line: number) => void) | null>(null)
-  toggleRef.current = onToggleBreakpoint ? (line) => onToggleBreakpoint(activeFile, line) : null
+  toggleRef.current =
+    onToggleBreakpoint && !activeIsData ? (line) => onToggleBreakpoint(activeFile, line) : null
   const bpRef = useRef<number[]>(breakpoints)
   bpRef.current = breakpoints
 
@@ -93,7 +100,7 @@ export function Editor({
       const line =
         GUTTER.has(e.target.type) && e.target.position ? e.target.position.lineNumber : null
       hoverDecoRef.current?.set(
-        line == null || bpRef.current.includes(line)
+        line == null || bpRef.current.includes(line) || !toggleRef.current
           ? []
           : [
               {
@@ -148,6 +155,21 @@ export function Editor({
             {dirtyFiles.has(file) && <span className="ml-1.5 text-accent-fg">●</span>}
           </button>
         ))}
+        {dataFiles.map((file) => (
+          <button
+            key={file}
+            className={`flex items-center gap-1.5 border-r border-line border-t-2 px-3 py-1.5 text-sm ${
+              file === activeFile
+                ? 'border-t-accent-fg bg-app text-primary'
+                : 'border-t-transparent text-muted hover:bg-raised'
+            }`}
+            onClick={() => onSelectTab(file)}
+            title="Bundled data file — read-only"
+          >
+            <span aria-hidden>🔒</span>
+            {file}
+          </button>
+        ))}
         <div className="ml-auto flex items-center pr-2">
           <FontSizeControls size={fontSize} onChange={updateFontSize} />
         </div>
@@ -155,21 +177,28 @@ export function Editor({
       <div className="flex-1">
         <MonacoEditor
           path={activeFile}
-          language={OCTAVE_LANGUAGE_ID}
+          language={activeIsData ? 'plaintext' : OCTAVE_LANGUAGE_ID}
           theme={MONACO_THEME[theme]}
           beforeMount={handleBeforeMount}
           onMount={handleMount}
           value={contents[activeFile] ?? ''}
-          onChange={(value) => onChange(activeFile, value ?? '')}
+          onChange={(value) => {
+            if (!activeIsData) onChange(activeFile, value ?? '')
+          }}
           options={{
             minimap: { enabled: false },
+            readOnly: activeIsData,
             fontSize,
             automaticLayout: true,
             // Breakpoint gutter: keep the glyph margin, but strip the
             // width Monaco normally pads around it -- no folding column,
             // fewer reserved line-number chars, no extra decorations gap --
             // so the dot sits right next to the line numbers instead of
-            // way out at the edge with a big empty gap.
+            // way out at the edge with a big empty gap. Left on for a
+            // read-only data file too (toggling a Monaco layout option
+            // per-tab is unreliable through @monaco-editor/react); the
+            // gutter is simply inert there -- toggleRef is null, so a
+            // click sets nothing and no hover hint shows.
             glyphMargin: true,
             folding: false,
             lineNumbersMinChars: 3,
