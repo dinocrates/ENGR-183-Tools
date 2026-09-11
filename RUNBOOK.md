@@ -41,8 +41,14 @@ in): add `--data readings.csv` (comma-separate for several). That drops a placeh
 `"dataFiles"` array in the unit JSON. Data files are read-only in the Playground (own
 "Data" group in the File Browser, no editable tab, kept out of dirty-tracking and Reset)
 but *are* in Download All. Student code opens one with `csvread(engr183.data('readings.csv'))`
-— `engr183.data` (new in T3.30) resolves the path so the same line works in the browser,
-from a function, and in a desktop clone. They ride `sync_harness.py` like any starter; no
+or `readmatrix(engr183.data('readings.csv'))` — `engr183.data` (T3.30) resolves the path so
+either line works in the browser, from a function, and in a desktop clone. `readmatrix`
+itself (T3.32, `engr183-harness/compat/readmatrix.m`) is a course-provided stand-in: neither
+the Playground's Octave build nor a plain desktop Octave install ships MATLAB's real
+`readmatrix`/`readtable` (no `io` package), so use `readmatrix` in unit content freely but
+don't reach for `readtable` yet — it's still unavailable everywhere, tracked as a T3.33
+follow-up (it needs a from-scratch table-like class, not a small wrapper). They ride
+`sync_harness.py` like any starter; no
 script flags needed at sync time. To keep a data file out of the Canvas submission zip,
 add it to the unit JSON's `submissionExclude` too.
 

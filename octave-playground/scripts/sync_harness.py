@@ -4,6 +4,7 @@
 Source of truth is ../engr183-harness (same monorepo). This script copies:
     engr183-harness/+engr183/    -> vfs/engr183/+engr183/
     engr183-harness/tests/       -> vfs/engr183/tests/
+    engr183-harness/compat/      -> vfs/engr183/compat/
     engr183-harness/assignments/ -> public/starters/
 
 public/starters/ (not a bare starters/) because the React app fetches
@@ -36,6 +37,7 @@ MANIFEST_PATH = ROOT / "scripts" / ".sync_manifest.json"
 SYNC_PAIRS = [
     (HARNESS_SRC / "+engr183", ROOT / "vfs" / "engr183" / "+engr183", frozenset()),
     (HARNESS_SRC / "tests", ROOT / "vfs" / "engr183" / "tests", frozenset()),
+    (HARNESS_SRC / "compat", ROOT / "vfs" / "engr183" / "compat", frozenset()),
     (HARNESS_SRC / "assignments", ROOT / "public" / "starters", frozenset({"scratch"})),
 ]
 

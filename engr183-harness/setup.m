@@ -10,6 +10,7 @@
 
 thisDir = fileparts(mfilename('fullpath'));
 addpath(thisDir);
+addpath(fullfile(thisDir, 'compat'));  % MATLAB-compat shims: readmatrix, ...
 
 fprintf('\n');
 fprintf('ENGR-183 course tools are ready.\n');

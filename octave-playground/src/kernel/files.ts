@@ -258,6 +258,10 @@ export function buildWriteFilesCode(
     // locate a bundled data file. Idempotent -- Octave just moves an
     // already-present entry to the front.
     `addpath('/engr183');`,
+    // MATLAB-compat shims (readmatrix, ...) -- see engr183-harness/compat/.
+    // A plain global function folder, not a package, so it needs its own
+    // addpath entry; '/engr183' itself only makes +engr183.* resolvable.
+    `addpath('/engr183/compat');`,
     `if ~exist('/engr183/assignments', 'dir'), mkdir('/engr183/assignments'); end`,
     `if ~exist('${dir}', 'dir'), mkdir('${dir}'); end`,
   ];
