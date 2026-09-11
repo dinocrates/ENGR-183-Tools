@@ -278,6 +278,16 @@ export class UnitFiles {
     return result;
   }
 
+  /** Removes one output file. Note this only clears the persisted copy in
+   *  the drive -- the file the student's code wrote is still sitting in the
+   *  live kernel session's assignment dir (that dir isn't wiped between
+   *  runs), so if their code still writes it, the next run mirrors it right
+   *  back. That's expected, not a bug: it mirrors what "delete a file your
+   *  program regenerates" means anywhere else. */
+  async deleteOutput(fileName: string): Promise<void> {
+    await this.contents.delete(this.outputPath(fileName));
+  }
+
   /** Wipes every output file -- called on "Reset unit", matching its
    *  "fresh start" mental model alongside restoring the starter .m files. */
   async clearOutputs(): Promise<void> {

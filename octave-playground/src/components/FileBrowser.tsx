@@ -12,7 +12,8 @@ interface FileBrowserProps {
   // removable, never in a Canvas submission.
   uploads?: string[]
   // Files the student's own code wrote while running -- selectable,
-  // read-only, cleared by "Reset unit" (not individually removable).
+  // read-only, individually removable, and also cleared in bulk by
+  // "Reset unit".
   outputs?: string[]
   protectedFiles: string[]
   activeFile: string
@@ -24,6 +25,7 @@ interface FileBrowserProps {
   // Download All .zip). Playground decides what to do with each.
   onUpload: (files: FileList | File[]) => void
   onDeleteUpload: (name: string) => void
+  onDeleteOutput: (name: string) => void
   collapsed: boolean
   onToggleCollapse: () => void
 }
@@ -44,6 +46,7 @@ export function FileBrowser({
   onDeleteRequest,
   onUpload,
   onDeleteUpload,
+  onDeleteOutput,
   collapsed,
   onToggleCollapse,
 }: FileBrowserProps) {
@@ -218,15 +221,15 @@ export function FileBrowser({
           <>
             <div
               className="px-2.5 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wide text-faint"
-              title="Written by your own code while it ran (e.g. fopen('results.txt', 'w')). Read-only here; download to keep a copy. Cleared by Reset unit."
+              title="Written by your own code while it ran (e.g. fopen('results.txt', 'w')). Read-only here; download to keep a copy. Removable individually, or all at once by Reset unit."
             >
               Output files
             </div>
             <ul>
               {outputs.map((file) => (
-                <li key={file}>
+                <li key={file} className="group flex items-center">
                   <button
-                    className={`flex w-full items-center gap-1.5 border-l-2 px-2.5 py-1 text-left text-sm ${
+                    className={`flex flex-1 items-center gap-1.5 border-l-2 px-2.5 py-1 text-left text-sm ${
                       file === activeFile
                         ? 'border-accent-fg bg-raised text-primary'
                         : 'border-transparent text-muted hover:bg-raised/60'
@@ -236,6 +239,13 @@ export function FileBrowser({
                   >
                     <span aria-hidden>📤</span>
                     <span className="flex-1 truncate">{file}</span>
+                  </button>
+                  <button
+                    className="mr-1.5 hidden rounded px-1 text-xs text-muted hover:bg-raised hover:text-danger-fg group-hover:block"
+                    onClick={() => onDeleteOutput(file)}
+                    title={`Remove ${file}`}
+                  >
+                    ×
                   </button>
                 </li>
               ))}

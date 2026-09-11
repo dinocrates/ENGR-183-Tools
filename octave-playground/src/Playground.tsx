@@ -635,6 +635,28 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     })
   }
 
+  async function doDeleteOutput(name: string) {
+    await unitFilesRef.current?.deleteOutput(name).catch(() => {})
+    setOutputs((prev) => {
+      const next = { ...prev }
+      delete next[name]
+      return next
+    })
+    if (activeFile === name) setActiveFile(unit.files[0])
+  }
+
+  function handleDeleteOutputRequest(name: string) {
+    setConfirmDialog({
+      title: `Remove ${name}?`,
+      message: `This removes ${name} from your Output files. If your code still writes it, it'll reappear the next time you run.`,
+      confirmLabel: 'Remove',
+      onConfirm: () => {
+        void doDeleteOutput(name)
+        setConfirmDialog(null)
+      },
+    })
+  }
+
   async function doDeleteFile(file: string) {
     await unitFilesRef.current?.delete(file)
     setFileList((prev) => prev.filter((f) => f !== file))
@@ -805,6 +827,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
                 onDeleteRequest={handleDeleteFileRequest}
                 onUpload={(files) => void handleUpload(files)}
                 onDeleteUpload={handleDeleteUploadRequest}
+                onDeleteOutput={handleDeleteOutputRequest}
                 collapsed={fileBrowserCollapsed}
                 onToggleCollapse={toggleFileBrowser}
               />
