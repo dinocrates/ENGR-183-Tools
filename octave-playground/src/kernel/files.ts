@@ -227,6 +227,65 @@ export class UnitFiles {
     await this.save(fileName, text);
     return text;
   }
+
+  // ---- output files (T3.34) --------------------------------------------
+  // A separate `_outputs` subfolder of the unit's own drive directory, not
+  // the flat directory itself -- so this never collides with
+  // listExtraFiles's "what did the student upload" discovery there. A plain
+  // Contents API directory, listed non-recursively like any other; the
+  // kernel side (buildMirrorOutputsCode) writes into it directly through
+  // the mounted drive, bypassing this ContentsManager entirely, so nothing
+  // here ever has to escape file content into Octave source.
+
+  // The kernel side (buildMirrorOutputsCode) creates `_outputs` itself via
+  // mkdir before writing into it -- this class only ever reads/lists it,
+  // never creates it, so there's no ensureOutputsDir counterpart to
+  // ensureUnitDir above.
+  private outputPath(fileName?: string): string {
+    return fileName ? `${this.unitId}/_outputs/${fileName}` : `${this.unitId}/_outputs`;
+  }
+
+  /** Names of every file the student's own code has produced (mirrored
+   *  there by buildMirrorOutputsCode after a run) that's still sitting in
+   *  the drive from this session or a previous one. */
+  async listOutputFiles(): Promise<string[]> {
+    try {
+      const dir = await this.contents.get(this.outputPath(), { content: true });
+      const children = Array.isArray(dir.content) ? (dir.content as { name: string; type: string }[]) : [];
+      return children.filter((c) => c.type === 'file').map((c) => c.name);
+    } catch {
+      return []; // no _outputs dir yet -- nothing's been written
+    }
+  }
+
+  async loadOutputs(fileNames: string[]): Promise<Record<string, string>> {
+    const result: Record<string, string> = {};
+    for (const name of fileNames) {
+      try {
+        // format: 'text' is required here -- unlike load()/loadRaw(), this
+        // content never went through ContentsManager.save() (the kernel
+        // wrote it straight into the mounted drive), so the drive has no
+        // stored hint that it's text and otherwise hands back base64
+        // (confirmed empirically: content came back as e.g.
+        // 'YW5zd2VyID0gNDIK' for a plain "answer = 42\n" file).
+        const model = await this.contents.get(this.outputPath(name), { content: true, format: 'text' });
+        result[name] = typeof model.content === 'string' ? model.content : '';
+      } catch {
+        // vanished between the listing and the read, or genuinely isn't
+        // valid UTF-8 text (a binary output file) -- skip it either way.
+      }
+    }
+    return result;
+  }
+
+  /** Wipes every output file -- called on "Reset unit", matching its
+   *  "fresh start" mental model alongside restoring the starter .m files. */
+  async clearOutputs(): Promise<void> {
+    const names = await this.listOutputFiles();
+    for (const name of names) {
+      await this.contents.delete(this.outputPath(name)).catch(() => {});
+    }
+  }
 }
 
 /** Octave source that writes `files` into the kernel's mounted
@@ -283,4 +342,54 @@ export function buildWriteFilesCode(
     lines.push('clear fid');
   }
   return lines.join('\n');
+}
+
+/** Octave source that copies any file the student's own code created in the
+ *  assignment dir -- via a bare `fopen(name, 'w')`, matching real MATLAB --
+ *  into `/drive/<unitId>/_outputs/`, the one part of the kernel filesystem
+ *  that's actually the browser-persisted drive (see T3.34: everything else
+ *  under /engr183/assignments/<unitId> is a fresh in-memory copy, rewritten
+ *  every run and gone on kernel restart or reload -- and, unlike that path,
+ *  invisible to the File Browser, which only ever renders React state, never
+ *  a live kernel directory listing).
+ *
+ *  `_outputs` is a dedicated subdirectory, not the unit's own drive folder
+ *  (where `.m`/data/upload content already lives) -- kept separate so this
+ *  never collides with UnitFiles.listExtraFiles's existing "what did the
+ *  student upload" discovery, which lists that top-level folder directly.
+ *
+ *  Deliberately dumb: no reporting, no cleverness. What actually happened
+ *  is discovered afterward from the browser side via UnitFiles.listOutputFiles
+ *  / loadOutputs -- the same ContentsManager already used for everything
+ *  else in the drive, not a stdout-scraping round trip. `copyfile`/`system()`
+ *  don't work under this WASM build (no subprocess support, confirmed in
+ *  M0-FINDINGS T0.4's side finding) so the copy is a plain fopen/fread/fwrite,
+ *  which is filesystem-only and works fine. */
+export function buildMirrorOutputsCode(unitId: string, knownNames: string[]): string {
+  const dir = `/engr183/assignments/${unitId}`;
+  const outDir = `/drive/${unitId}/_outputs`;
+  const known = knownNames.map((n) => `'${n.replace(/'/g, "''")}'`).join(', ');
+  return [
+    `if ~exist('${outDir}', 'dir'), mkdir('${outDir}'); end`,
+    `__engr183_known__ = {${known}};`,
+    `__engr183_entries__ = dir('${dir}');`,
+    `__engr183_copied__ = 0;`,
+    `for __engr183_i__ = 1:numel(__engr183_entries__)`,
+    `  __engr183_e__ = __engr183_entries__(__engr183_i__);`,
+    `  if __engr183_e__.isdir || any(strcmp(__engr183_e__.name, __engr183_known__)) || __engr183_copied__ >= ${MAX_ZIP_ENTRIES} || __engr183_e__.bytes > ${MAX_UPLOAD_BYTES}`,
+    `    continue;`,
+    `  end`,
+    `  __engr183_src__ = fopen(fullfile('${dir}', __engr183_e__.name), 'rb');`,
+    `  if __engr183_src__ < 0, continue; end`,
+    `  __engr183_bytes__ = fread(__engr183_src__, Inf, 'uint8=>uint8');`,
+    `  fclose(__engr183_src__);`,
+    `  __engr183_dst__ = fopen(fullfile('${outDir}', __engr183_e__.name), 'wb');`,
+    `  if __engr183_dst__ >= 0`,
+    `    fwrite(__engr183_dst__, __engr183_bytes__, 'uint8');`,
+    `    fclose(__engr183_dst__);`,
+    `    __engr183_copied__ = __engr183_copied__ + 1;`,
+    `  end`,
+    `end`,
+    `clear __engr183_known__ __engr183_entries__ __engr183_copied__ __engr183_i__ __engr183_e__ __engr183_src__ __engr183_bytes__ __engr183_dst__;`,
+  ].join('\n');
 }

@@ -11,6 +11,9 @@ interface FileBrowserProps {
   // Student-uploaded read-only data files ("My files") -- selectable,
   // removable, never in a Canvas submission.
   uploads?: string[]
+  // Files the student's own code wrote while running -- selectable,
+  // read-only, cleared by "Reset unit" (not individually removable).
+  outputs?: string[]
   protectedFiles: string[]
   activeFile: string
   dirtyFiles: Set<string>
@@ -32,6 +35,7 @@ export function FileBrowser({
   files,
   dataFiles = [],
   uploads = [],
+  outputs = [],
   protectedFiles,
   activeFile,
   dirtyFiles,
@@ -204,6 +208,34 @@ export function FileBrowser({
                     title={`Remove ${file}`}
                   >
                     ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {outputs.length > 0 && (
+          <>
+            <div
+              className="px-2.5 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wide text-faint"
+              title="Written by your own code while it ran (e.g. fopen('results.txt', 'w')). Read-only here; download to keep a copy. Cleared by Reset unit."
+            >
+              Output files
+            </div>
+            <ul>
+              {outputs.map((file) => (
+                <li key={file}>
+                  <button
+                    className={`flex w-full items-center gap-1.5 border-l-2 px-2.5 py-1 text-left text-sm ${
+                      file === activeFile
+                        ? 'border-accent-fg bg-raised text-primary'
+                        : 'border-transparent text-muted hover:bg-raised/60'
+                    }`}
+                    onClick={() => onSelect(file)}
+                    title="Written by your own code — read-only"
+                  >
+                    <span aria-hidden>📤</span>
+                    <span className="flex-1 truncate">{file}</span>
                   </button>
                 </li>
               ))}

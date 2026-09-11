@@ -15,6 +15,9 @@ interface EditorProps {
   // Student-uploaded read-only data files ("My files"). Same read-only
   // treatment as dataFiles, different tab icon.
   uploads?: string[]
+  // Files the student's own code wrote while running (T3.34). Same
+  // read-only treatment, its own tab icon.
+  outputs?: string[]
   activeFile: string
   contents: Record<string, string>
   dirtyFiles: Set<string>
@@ -49,6 +52,7 @@ export function Editor({
   files,
   dataFiles = [],
   uploads = [],
+  outputs = [],
   activeFile,
   contents,
   dirtyFiles,
@@ -59,7 +63,7 @@ export function Editor({
   debugLine = null,
 }: EditorProps) {
   const { theme } = useTheme()
-  const activeIsData = dataFiles.includes(activeFile) || uploads.includes(activeFile)
+  const activeIsData = dataFiles.includes(activeFile) || uploads.includes(activeFile) || outputs.includes(activeFile)
   const [fontSize, setFontSize] = useState(() => {
     const stored = Number(localStorage.getItem(FONT_SIZE_KEY))
     return stored > 0 ? stored : DEFAULT_FONT_SIZE
@@ -186,6 +190,21 @@ export function Editor({
             title="Your uploaded file — read-only"
           >
             <span aria-hidden>📎</span>
+            {file}
+          </button>
+        ))}
+        {outputs.map((file) => (
+          <button
+            key={file}
+            className={`flex items-center gap-1.5 border-r border-line border-t-2 px-3 py-1.5 text-sm ${
+              file === activeFile
+                ? 'border-t-accent-fg bg-app text-primary'
+                : 'border-t-transparent text-muted hover:bg-raised'
+            }`}
+            onClick={() => onSelectTab(file)}
+            title="Written by your own code — read-only"
+          >
+            <span aria-hidden>📤</span>
             {file}
           </button>
         ))}

@@ -3,7 +3,13 @@ import { Group, Panel, Separator, type PanelImperativeHandle } from 'react-resiz
 import { OctaveKernelSession, type ExecuteChunk, type ReportedExecuteError } from './kernel/session'
 import { DebugSession, type DebugPhase } from './kernel/debug'
 import { isBreakableLine } from './kernel/breakpoints'
-import { createContentsManager, UnitFiles, buildWriteFilesCode, isValidDataFileName } from './kernel/files'
+import {
+  createContentsManager,
+  UnitFiles,
+  buildWriteFilesCode,
+  buildMirrorOutputsCode,
+  isValidDataFileName,
+} from './kernel/files'
 import { collectUploads, summarizeUpload } from './kernel/uploads'
 import { DebugBar } from './components/DebugBar'
 import { downloadFile, downloadZip } from './kernel/download'
@@ -81,6 +87,12 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   // any extra, so a returning student sees them again. `.m` uploads are
   // NOT here -- those merge into fileList as ordinary editable files.
   const [uploads, setUploads] = useState<string[]>([])
+  // Files the student's own code created (a bare `fopen(name, 'w')`), mirrored
+  // out of the ephemeral kernel filesystem into the drive after every run --
+  // see DESIGN.md T3.34. Read-only, shown in its own File Browser group,
+  // content lives here (not merged into `contents`) since nothing should
+  // ever be written back into it through the normal editor/save path.
+  const [outputs, setOutputs] = useState<Record<string, string>>({})
   const [activeFile, setActiveFile] = useState<string>(unit.files[0])
   const [output, setOutput] = useState('')
   const [figures, setFigures] = useState<Figure[]>([])
@@ -145,6 +157,14 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       setFileList([...unit.files, ...editableExtras])
       setUploads(Object.keys(uploadContents))
 
+      // Output files from a previous session -- e.g. the student ran code
+      // that wrote a result file, closed the tab, and came back later.
+      const outputNames = await unitFiles.listOutputFiles()
+      if (cancelled) return
+      const outputContents = outputNames.length > 0 ? await unitFiles.loadOutputs(outputNames) : {}
+      if (cancelled) return
+      setOutputs(outputContents)
+
       const session = new OctaveKernelSession()
       await session.start(contentsManager)
       if (cancelled) return
@@ -163,10 +183,10 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   }, [unit])
 
   function handleChange(file: string, content: string) {
-    // Data files and uploaded "My files" are read-only; Monaco won't fire
-    // this for them, but guard anyway so a stray call can't dirty one or
-    // overwrite the stored copy.
-    if (dataFiles.includes(file) || uploads.includes(file)) return
+    // Data files, uploaded "My files", and output files are all read-only;
+    // Monaco won't fire this for them, but guard anyway so a stray call
+    // can't dirty one or overwrite the stored copy.
+    if (dataFiles.includes(file) || uploads.includes(file) || file in outputs) return
     setContents((prev) => ({ ...prev, [file]: content }))
     setDirtyFiles((prev) => new Set(prev).add(file))
 
@@ -276,6 +296,25 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     }
   }
 
+  // Runs after every Run Tests/Run File/REPL command (including a failed
+  // one -- see runCode's `finally` below), same "separate execute() call,
+  // own local callback, never touches the Command Window" shape as
+  // refreshWorkspace. Picks up any file the student's own code wrote (T3.34)
+  // by mirroring new ones out of the ephemeral kernel filesystem into the
+  // drive, then re-reading whatever's there through the same ContentsManager
+  // the rest of the File Browser already uses -- no stdout-scraping.
+  async function syncOutputs() {
+    if (!sessionRef.current || !unitFilesRef.current) return
+    try {
+      await sessionRef.current.execute(buildMirrorOutputsCode(unit.id, Object.keys(contents)), () => {})
+      const names = await unitFilesRef.current.listOutputFiles()
+      const fresh = names.length > 0 ? await unitFilesRef.current.loadOutputs(names) : {}
+      setOutputs(fresh)
+    } catch {
+      // best-effort; leave the Output files group showing its last-known state
+    }
+  }
+
   // Set while the running code is blocked on a line of stdin (an `input()`
   // call). The Command Window swaps to "answer the prompt" mode; the next
   // Enter goes to the kernel via replyToInput() instead of starting a new
@@ -322,6 +361,9 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       setFigures((prev) =>
         prev.map((f) => (Object.keys(f.mimeBundle).length === 0 ? { ...f, failed: true } : f)),
       )
+      // Regardless of success/error/Stop -- a script that wrote a file then
+      // crashed should still surface what it managed to write before that.
+      await syncOutputs()
     }
   }
 
@@ -493,14 +535,16 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   }
 
   function handleDownloadFile() {
-    downloadFile(activeFile, contents[activeFile] ?? '')
+    downloadFile(activeFile, contents[activeFile] ?? outputs[activeFile] ?? '')
   }
 
   function handleDownloadZip() {
     // Uploaded "My files" are the student's own inputs, not part of a
     // Canvas submission -- leave them out of the zip alongside whatever the
-    // unit already excludes (e.g. a public-check tab).
-    void downloadZip(unit.id, contents, [...(unit.submissionExclude ?? []), ...uploads])
+    // unit already excludes (e.g. a public-check tab). Output files are the
+    // opposite of an input: what the student's code produced, so they're
+    // folded in rather than excluded.
+    void downloadZip(unit.id, { ...contents, ...outputs }, [...(unit.submissionExclude ?? []), ...uploads])
   }
 
   async function doResetFile(file: string) {
@@ -625,6 +669,10 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     for (const file of unit.files) {
       await doResetFile(file)
     }
+    // "Fresh start" should also clear whatever the student's code has
+    // written out, same as it restores starter code -- T3.34.
+    await unitFilesRef.current?.clearOutputs().catch(() => {})
+    setOutputs({})
   }
 
   function handleResetFile() {
@@ -642,7 +690,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   function handleResetUnit() {
     setConfirmDialog({
       title: `Reset all of ${unit.title}?`,
-      message: `This discards your changes to every file in this unit (${unit.files.join(', ')}) and restores the original starter code. This can't be undone.`,
+      message: `This discards your changes to every file in this unit (${unit.files.join(', ')}) and restores the original starter code, and clears any output files your code created. This can't be undone.`,
       confirmLabel: 'Reset unit',
       onConfirm: () => {
         void doResetUnit()
@@ -748,6 +796,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
                 files={fileList}
                 dataFiles={dataFiles}
                 uploads={uploads}
+                outputs={Object.keys(outputs)}
                 protectedFiles={unit.files}
                 activeFile={activeFile}
                 dirtyFiles={dirtyFiles}
@@ -794,8 +843,9 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
                   files={fileList}
                   dataFiles={dataFiles}
                   uploads={uploads}
+                  outputs={Object.keys(outputs)}
                   activeFile={activeFile}
-                  contents={contents}
+                  contents={{ ...contents, ...outputs }}
                   dirtyFiles={dirtyFiles}
                   onSelectTab={setActiveFile}
                   onChange={handleChange}

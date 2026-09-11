@@ -201,7 +201,10 @@ it. If they downloaded their work earlier, they can get it back: **File Browser 
 (↑) → pick the `.m` file or the whole Download All `.zip`**. A `.zip` restores every
 matching tab at once (it asks before replacing your current copy); an individual `.m`
 either replaces its tab or is added as a new file. (Uploaded `.csv`/text files land in a
-read-only "My files" group instead — see T3.31.) If they never downloaded anything, it's
+read-only "My files" group instead — see T3.31.) A file the student's *own code* wrote via
+`fopen(name, 'w')` needs no re-upload at all — it's mirrored into the same persisted drive
+automatically and shows up in its own read-only "Output files" group, downloadable the same
+way as anything else — see T3.34. If they never downloaded anything, it's
 gone; they redo the work. This is exactly what
 the first-visit persistence warning (`src/components/PersistenceWarning.tsx`) exists to
 prevent — if this keeps happening, that's a signal to make the warning more prominent or
