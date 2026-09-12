@@ -2,8 +2,12 @@
 
 creep = read_creep_data('parkfield_xpk2_daily_excerpt.txt');
 assert(isstruct(creep));
+assert(all(isfield(creep, {'source_file', 'year', 'day_of_year', 'slip_mm', 'valid_mask'})));
+assert(iscolumn(creep.year) && iscolumn(creep.day_of_year) && ...
+       iscolumn(creep.slip_mm) && iscolumn(creep.valid_mask));
 assert(numel(creep.slip_mm) == 40);
 assert(creep.year(1) == 2013 && creep.day_of_year(1) == 151);
+assert(abs(creep.slip_mm(1) - 217.08) < 1e-10);
 assert(abs(creep.slip_mm(end) - 218.18) < 1e-10);
 assert(all(creep.valid_mask));
 
@@ -25,5 +29,14 @@ catch
   raised = true;
 end
 assert(raised);
+
+% This check creates its own fixture files above -- clean them up so they
+% don't linger in the project after the check runs.
+if exist('gp05_optional_column_test.txt', 'file') == 2
+  delete('gp05_optional_column_test.txt');
+end
+if exist('gp05_bad_day_test.txt', 'file') == 2
+  delete('gp05_bad_day_test.txt');
+end
 
 fprintf('GP-05 public checks passed.\n');

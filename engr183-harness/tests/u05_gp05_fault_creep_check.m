@@ -67,13 +67,37 @@ function result = u05_gp05_fault_creep_check(criterion)
       if ~isequal(extra.slip_mm(:), [10.5; 10.8])
         error('read_creep_data.m: a fourth column must be ignored (expected slip_mm [10.5; 10.8]).');
       end
+
+      % Results must be derived from whatever file is given, not hardcoded
+      % to the authentic excerpt's own answers.
+      altPath = [tempname() '.txt'];
+      writeLines(altPath, {'2020 10 5.50', '2020 11 -3.25', '2021 200 42.00'});
+      cleanAlt = onCleanup(@() deleteQuietly(altPath));
+      alt = callOrFail('read_creep_data', {altPath});
+      if numel(alt.slip_mm) ~= 3 || ~isequal(alt.year(:), [2020; 2020; 2021]) || ...
+         ~isequal(alt.day_of_year(:), [10; 11; 200]) || ...
+         any(abs(alt.slip_mm(:) - [5.50; -3.25; 42.00]) > 1e-9)
+        error(['read_creep_data.m: results must be derived from the file given, not ' ...
+               'hardcoded to the authentic excerpt (a different 3-record file did not ' ...
+               'produce matching year/day_of_year/slip_mm values).']);
+      end
       result = true;
 
     case 'read_creep_data_validation'
       expectRaises('read_creep_data', {42}, ...
         'a non-character filename should raise an error');
+      expectRaises('read_creep_data', {''}, ...
+        'an empty filename should raise an error');
+      expectRaises('read_creep_data', {['ab'; 'cd']}, ...
+        'a non-row (multi-row character) filename should raise an error');
       expectRaises('read_creep_data', {fullfile(assignDir, 'no_such_creep_file.txt')}, ...
         'an unopenable file should raise an error');
+
+      zeroDay = [tempname() '.txt'];
+      writeLines(zeroDay, {'2024 0 10.5'});
+      c0 = onCleanup(@() deleteQuietly(zeroDay));
+      expectRaises('read_creep_data', {zeroDay}, ...
+        'a day of year of 0 should raise an error');
 
       badDay = [tempname() '.txt'];
       writeLines(badDay, {'2024 367 10.5'});
@@ -81,9 +105,42 @@ function result = u05_gp05_fault_creep_check(criterion)
       expectRaises('read_creep_data', {badDay}, ...
         'a day of year outside 1-366 should raise an error');
 
+      nonIntYear = [tempname() '.txt'];
+      writeLines(nonIntYear, {'2024.5 100 10.5'});
+      c2 = onCleanup(@() deleteQuietly(nonIntYear));
+      expectRaises('read_creep_data', {nonIntYear}, ...
+        'a non-integer year should raise an error');
+
+      nonIntDay = [tempname() '.txt'];
+      writeLines(nonIntDay, {'2024 100.5 10.5'});
+      c3 = onCleanup(@() deleteQuietly(nonIntDay));
+      expectRaises('read_creep_data', {nonIntDay}, ...
+        'a non-integer day of year should raise an error');
+
+      infYear = [tempname() '.txt'];
+      writeLines(infYear, {'Inf 100 10.5'});
+      c4 = onCleanup(@() deleteQuietly(infYear));
+      expectRaises('read_creep_data', {infYear}, ...
+        'a non-finite year should raise an error');
+
+      % NaN must land on a line after the first: resolveHeaderLines only
+      % inspects the file's first line, and a literal "NaN" token there
+      % would itself be (mis)read as a non-numeric header cell.
+      nanSlip = [tempname() '.txt'];
+      writeLines(nanSlip, {'2024 100 10.5', '2024 101 NaN'});
+      c5 = onCleanup(@() deleteQuietly(nanSlip));
+      expectRaises('read_creep_data', {nanSlip}, ...
+        'a NaN slip value should raise an error');
+
+      infSlip = [tempname() '.txt'];
+      writeLines(infSlip, {'2024 100 Inf'});
+      c6 = onCleanup(@() deleteQuietly(infSlip));
+      expectRaises('read_creep_data', {infSlip}, ...
+        'an infinite slip value should raise an error');
+
       twoCol = [tempname() '.txt'];
       writeLines(twoCol, {'2024 100', '2024 101'});
-      c2 = onCleanup(@() deleteQuietly(twoCol));
+      c7 = onCleanup(@() deleteQuietly(twoCol));
       expectRaises('read_creep_data', {twoCol}, ...
         'a file with fewer than three columns should raise an error');
       result = true;
@@ -152,6 +209,9 @@ function result = u05_gp05_fault_creep_check(criterion)
         {{'minimum', 'min slip', 'min '}, 'the minimum slip'}, ...
         {{'maximum', 'max slip', 'max '}, 'the maximum slip'}, ...
         {{'largest'}, 'the largest daily increase'}, ...
+        {{'mm', 'millimet'}, 'millimeter units'}, ...
+        {{'source', 'parkfield', 'xpk2', 'usgs'}, 'the data source'}, ...
+        {{'day'}, 'the year/day-of-year dates for each result'}, ...
         {{'forecast', 'not a forecast', 'interpretation'}, 'the interpretation boundary'} ...
       };
       for k = 1:numel(needs)

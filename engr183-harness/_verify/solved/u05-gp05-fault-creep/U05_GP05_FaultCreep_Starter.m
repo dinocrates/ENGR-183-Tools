@@ -48,7 +48,7 @@ if fid == -1
   error('Could not open %s for writing.', report_filename);
 end
 fprintf(fid, 'GP-05 Fault Creep Summary\n');
-fprintf(fid, 'Source file: %s\n', creep.source_file);
+fprintf(fid, 'Source: USGS Parkfield creepmeter XPK2, file %s\n', creep.source_file);
 fprintf(fid, 'Records: %d\n', record_count);
 fprintf(fid, 'First slip (mm): %.2f\n', first_slip_mm);
 fprintf(fid, 'Final slip (mm): %.2f\n', final_slip_mm);
@@ -58,7 +58,8 @@ fprintf(fid, 'Maximum slip (mm): %.2f on %d day %d\n', max_slip_mm, max_year, ma
 fprintf(fid, 'Largest daily increase (mm): %.2f ending %d day %d\n', ...
         largest_increase_mm, creep.year(largest_increase_row), ...
         creep.day_of_year(largest_increase_row));
-fprintf(fid, 'Interpretation boundary: this is a summary of past surface-slip measurements, not an earthquake forecast.\n');
+fprintf(fid, ['Interpretation boundary: this is a descriptive surface-slip summary, ' ...
+              'not an earthquake or hazard forecast.\n']);
 fclose(fid);
 
 % REFLECTIONS

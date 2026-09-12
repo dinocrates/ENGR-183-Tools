@@ -1,21 +1,25 @@
 function creep = read_creep_data(filename)
-  % READ_CREEP_DATA Read and validate a numeric USGS creepmeter file.
+  % READ_CREEP_DATA Import and validate a numeric USGS creepmeter file.
 
-  % TODO 1: Verify filename is a character vector and open it for reading.
-  % If fopen returns -1, raise an informative error. Close the file after
-  % the check so dlmread can read it by name.
+  % TODO 1: Verify that filename is a nonempty row character vector.
+  % Raise an informative error when the input contract is not satisfied.
 
-  % TODO 2: Read the whitespace-delimited numeric file with dlmread.
+  % TODO 2: Import the complete numeric file with readmatrix.
+  % Do not call fopen before readmatrix.
+  % raw = readmatrix(filename);
 
-  % TODO 3: Require at least three columns. Ignore any columns after the
-  % third; USGS documentation allows an optional fourth column.
+  % TODO 3: Require a nonempty matrix with at least three columns.
+  % USGS documentation allows an optional fourth column, so ignore all
+  % columns after the third.
 
-  % TODO 4: Separate year, day_of_year, and slip_mm. Validate that years
-  % are positive integers, days are integers from 1 through 366, and all
-  % slip values are finite.
+  % TODO 4: Extract year, day_of_year, and slip_mm from columns 1:3.
+  % Require positive integer years, integer days from 1 through 366,
+  % and finite slip values.
 
-  % TODO 5: Return a structure with source_file, year, day_of_year,
-  % slip_mm, and valid_mask fields. Use column vectors.
+  % TODO 5: Return column vectors in a structure with these exact fields:
+  % source_file, year, day_of_year, slip_mm, and valid_mask.
+  % Because invalid records raise an error in this guided practice,
+  % valid_mask should contain true for every returned record.
 
   creep = struct();
 end
