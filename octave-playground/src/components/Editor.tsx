@@ -221,6 +221,20 @@ export function Editor({
           onMount={handleMount}
           value={contents[activeFile] ?? ''}
           onChange={(value) => {
+            // @monaco-editor/react force-syncs a read-only model's value via
+            // a plain model.setValue() whenever switching *into* a
+            // data/output/upload tab -- unlike the editable-tab path, that
+            // call isn't wrapped in its own "suppress the change event"
+            // flag. That setValue() fires in an effect that runs *before*
+            // the effect that re-subscribes this onChange callback to the
+            // new model, so this closure can still belong to the *previous*
+            // (editable) file -- reporting the file we just switched *to*
+            // as a change to the one we just left, silently overwriting it.
+            // Guard by checking the live model's own path actually matches
+            // what this closure thinks is active before trusting anything
+            // else here; a real edit's model always matches.
+            const livePath = editorRef.current?.getModel()?.uri.path.replace(/^\//, '')
+            if (livePath !== activeFile) return
             if (!activeIsData) onChange(activeFile, value ?? '')
           }}
           options={{

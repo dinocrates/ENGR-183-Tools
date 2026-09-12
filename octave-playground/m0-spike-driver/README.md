@@ -552,3 +552,44 @@ and "two or more figures doesn't work." Root-caused to the same place:
   space -- both are just how Monaco renders, discovered by dumping the raw
   DOM structure when the first version of this script mysteriously
   couldn't find lines it had just proven existed.
+
+## GP-05: `dlmread` -> `readmatrix` (T3.35), and a stale-tab-switch bug it surfaced (T3.36)
+
+- `t128-gp05-readmatrix.js` -- against `npm run preview` on `u05-gp05-fault-creep`.
+  Pastes the `_verify/solved` `readmatrix`-based `read_creep_data.m` and main script
+  into the real Monaco editor, confirms the starters/data file load, runs the main
+  script and checks the printed summary, confirms the generated report appears in the
+  File Browser with no reload, opens it, downloads it individually and via Download
+  All (.zip) and byte-compares both against the live model, runs the public check and
+  confirms its two fixture files don't linger in the Output files list, runs
+  `engr183.runTests(...)` for a live 10/10 (7 of 7 criteria), and confirms Reset unit
+  clears the report and restores the published starters. 21/21.
+- `t129-gp05-minimal.js` -- same paste-and-run, no tab switching at all: confirms the
+  `readmatrix` solution and updated hidden checker are correct on their own (10/10)
+  before any editor-interaction bug could be blamed on them.
+- `t130-gp05-tabswitch-isolate.js` / `t132-narrow-cause.js` -- bisection scripts for the
+  T3.36 bug below: switch tabs one step at a time, reading each file's Monaco model
+  value directly (`window.monaco.editor.getModels()`, not `.view-lines` DOM text, which
+  only ever holds the currently-scrolled-into-view lines) to find exactly which
+  tab-switch corrupted which file.
+- `t131-monaco-model-check.js` -- dumps every open Monaco model's URI/length/head after
+  each step of the full GP-05 flow; the run that caught T3.36 red-handed (the main
+  script's model silently became the output report's content after a later,
+  unrelated tab switch).
+- `t133-gp05-unsolved-baseline.js` -- confirms the raw unsolved starter still reproduces
+  `_verify/golden/u05-gp05-fault-creep_unsolved.txt`'s exact 1/10 score (no local Octave
+  available to run `_verify/check_golden.m` itself in this environment).
+
+**T3.36** (found via the above, not GP-05-specific): switching from an editable file to
+a read-only one (a bundled data file, an upload, or a T3.34 output file) and then to a
+*third*, different editable file could silently overwrite the *first* file's stored
+content with the read-only file's text -- invisible until switching back to the first
+file, since Monaco only re-syncs a model's value when that model becomes active again.
+Root cause was `@monaco-editor/react`'s own effect ordering (model swap, then the
+`readOnly` option, then value-sync all run before the effect that re-subscribes
+`onDidChangeModelContent` to the current render's `onChange` closure -- so the
+read-only branch's unguarded `model.setValue()` can fire through the *previous*
+render's listener, still closed over the *previous*, editable `activeFile`). Fixed in
+`Editor.tsx` by checking the live editor's actual current model path against
+`activeFile` before trusting anything else in the `onChange` callback -- see DESIGN.md
+T3.36 for the full trace. `t132-narrow-cause.js` no longer reproduces it after the fix.
