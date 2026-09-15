@@ -87,7 +87,7 @@ export class DebugSession {
   }
 
   /** Start a debug run. Resolves when the program finishes (or is stopped
-   *  with stopDebugging / an error / the kernel timeout). */
+   *  with stopDebugging / an error / a kernel restart). */
   run(code: string): Promise<void> {
     this.onPhase({ phase: 'running' });
     this.runPromise = this.session

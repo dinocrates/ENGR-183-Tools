@@ -18,6 +18,18 @@ Run from this directory:
 The browser scripts also accept the deployed staging/production URL. PNG
 artifacts are ignored by Git.
 
+## Long-execution regression checks
+
+- `node t137-long-execution.js http://127.0.0.1:4180/` — a real 65-second
+  script warns and completes with output and a saved plot. Also checks infinite
+  loops, Stop/restart recovery, input prompts, late errors and Debug. Secondary
+  cases shorten only the app notice timer in the test browser.
+- `node t106-figure-reactivation-timeout.js http://127.0.0.1:4180/` — the known
+  figure reactivation pattern either completes or warns and allows Stop.
+- `node t107-stop-button.js http://127.0.0.1:4180/` — Stop restarts the kernel,
+  clears variables, preserves edited files and accepts new commands.
+- `node t125-debugger.js http://127.0.0.1:4180/` — debugger stepping regression.
+
 - `explore.js` — loads the REPL app, dumps interesting `window` globals and console
   logs. Used for initial T0.1/T0.3 exploration (kernel version banner).
 - `console-driver.js` — `runCell(page, code)` helper that types Octave into the REPL's

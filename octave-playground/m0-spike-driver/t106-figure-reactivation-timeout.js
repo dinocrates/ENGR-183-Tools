@@ -3,17 +3,13 @@
 // figure sometimes (~1 in 4-5 tries, confirmed via raw kernel message dumps
 // in m0-spike-driver history) makes the kernel never send
 // update_display_data or execute_reply at all, even though Octave's own
-// interpreter finishes the script correctly. Without session.ts's 60s
-// execute() timeout, this hangs the app forever (status stuck 'running',
-// Command Window input stuck disabled) -- a page reload was the only
-// recovery. The dropped kernel message can't be fixed from this repo (it's
-// the prebuilt xeus-octave WASM binary, not this app's own source); this
-// test instead verifies the mitigation: the app never stays permanently
-// stuck, whether or not the bug happens to trigger on a given run.
+// interpreter finishes the script correctly. The app now warns after 60s
+// and keeps waiting. If the reply never arrives, explicit Stop restarts
+// the kernel. The test covers that recovery without rejecting valid long runs.
 //
 // This can't reliably force the underlying kernel race, so it runs the
-// trigger pattern several times and asserts recovery within a bound
-// (comfortably above the 60s timeout) every time -- slow by design, not
+// trigger pattern several times and asserts completion or a stoppable
+// warning within a bound every time -- slow by design, not
 // meant for a tight regression loop.
 const { chromium } = require('playwright');
 
@@ -58,16 +54,19 @@ disp('done');
     await page.keyboard.insertText(SCRIPT);
     await page.getByText('Run File', { exact: true }).click();
 
-    // Must settle (either genuinely complete, or the timeout mitigation
-    // fires) well within 60s + slack -- never permanently "Running…".
+    // A missing reply must expose the advisory and remain stoppable.
     const settled = await page
       .waitForFunction(() => {
         const el = Array.from(document.querySelectorAll('span')).find((s) => /Ready|Error/.test(s.textContent || ''));
-        return !!el;
+        return !!el || document.body.innerText.includes('This script is taking a while to execute.');
       }, null, { timeout: 70000 })
       .then(() => true)
       .catch(() => false);
-    check(`attempt ${attempt}: app settles to Ready or Error within 70s (never stuck at Running)`, settled);
+    check(`attempt ${attempt}: app completes or warns within 70s`, settled);
+    if (await page.getByRole('status').filter({ hasText: 'This script is taking a while to execute.' }).count()) {
+      await page.getByRole('button', { name: 'Stop', exact: true }).click();
+      await page.waitForFunction(() => [...document.querySelectorAll('span')].some(s => s.textContent === 'Ready'), null, { timeout: 30000 });
+    }
 
     const inputUsable = await page
       .getByPlaceholder(/Type an Octave command|Continue the block/)

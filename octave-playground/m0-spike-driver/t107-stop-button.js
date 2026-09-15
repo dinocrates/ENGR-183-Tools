@@ -51,7 +51,7 @@ const BASE = process.argv[2] || 'http://localhost:4173/';
     .then(() => true)
     .catch(() => false);
   const elapsed = Date.now() - t0;
-  check('clicking Stop settles the app back to Ready well under the 60s timeout', settled && elapsed < 20000);
+  check('clicking Stop settles the app back to Ready within 20s', settled && elapsed < 20000);
   console.log(`  (settled in ${elapsed}ms)`);
 
   const text = await outputText();

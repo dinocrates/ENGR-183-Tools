@@ -593,6 +593,27 @@ export, reload, fresh-browser ZIP restoration, reruns, removal and reset.
 `t136-saved-figure-data.js` tests capture ownership, immutability, failed runs,
 format validation and archive limits.
 
+**Long-execution advisory (supersedes T3.21's hard timeout) — DONE**
+
+`session.ts` now reports a slow execution after 60 seconds without settling
+the execute promise or dropping subsequent messages. A notice under the toolbar
+explains that a long calculation or a frozen script may be responsible, with
+the choice to keep waiting or use Stop. The toolbar/REPL remain busy until an
+actual completion/error or explicit restart. The shared session callback covers
+Run File, Run Tests, commands, and Debug. Input/debug prompts suspend the timer
+and hide the notice; replying re-arms it. Completion, error, Stop and disposal
+clear the timer. Output alone does not reset it.
+
+Stop increments an execution generation so the interrupted run's cleanup cannot
+query the restarting kernel or prematurely mark it Ready/Error. Complete figure
+snapshots captured before Stop can still be saved as an incomplete run.
+
+`t137-long-execution.js` checks a real 65-second computation with late output and
+saved plot, plus infinite-loop restart, prompt suspension/resumption, late error,
+and Debug completion/restart. Secondary cases shorten only the notice timer in
+the test browser. `t106-figure-reactivation-timeout.js` now accepts natural
+completion or the advisory followed by explicit Stop.
+
 **T3.2 — Download files — DONE**
 Bumped ahead of the rest of M3: with LTI/grade-passback confirmed out of scope for now (§7 — "Not an autograder... Grading stays local"), manual download-then-upload-to-Canvas is the actual submission path, not a placeholder for something else. `src/kernel/download.ts`'s `downloadFile`/`downloadZip` read straight from `Playground.tsx`'s live `contents` state (not the browser-persisted drive), so a download is never stale relative to unsaved autosave debounce. `downloadZip` (via `jszip`) writes files flat, no folders — matching the local Octave mental model of one working directory per unit. Toolbar gained "Download File" and "Download All (.zip)" buttons, available in every unit including the Scratch Pad.
 *Acceptance:* Downloaded files run unmodified under local Octave 8.4 — no packaging/transformation is applied (plain UTF-8 text in, plain UTF-8 text out), so this reduces to "is the content byte-identical to the editor buffer," verified directly via `m0-spike-driver/t29-download.js` (single-file and zipped copies both reflect a live in-editor edit, not the original starter).

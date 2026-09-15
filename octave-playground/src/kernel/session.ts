@@ -55,15 +55,16 @@ export type { ReportedExecuteError } from './formatError';
 
 /** Thin wrapper around one running Octave kernel. */
 export class OctaveKernelSession {
+  /** A long execution is advisory, not evidence of a hung kernel. */
+  onSlowExecution: ((slow: boolean) => void) | null = null;
   private plotTitles = new PlotTitles();
   private kernel: IKernel | null = null;
   private kernelSpecs = new KernelSpecs();
   private sessionId = crypto.randomUUID();
   private contentsManager: ContentsManager | null = null;
   // Set for the duration of the current in-flight execute() call, cleared
-  // once it settles by any path (reply, error, timeout, or this). Lets
-  // stop() reject that call immediately instead of the caller having to
-  // wait out execute()'s own 60s safety-net timeout -- see stop() below.
+  // once it settles by any path (reply, error, or Stop). Lets stop() reject
+  // that call immediately while restarting the kernel -- see stop() below.
   private currentAbort: (() => void) | null = null;
   // msg_ids of the input_reply messages we've sent. After an input_reply is
   // handled, the kernel stamps *its* header as the parent of subsequent
@@ -72,7 +73,7 @@ export class OctaveKernelSession {
   // its output. Cleared per execute().
   private inputReplyIds = new Set<string>();
   // Set by the in-flight execute() so replyToInput() can re-arm its
-  // "kernel is stuck" watchdog: an outstanding input_request means the
+  // long-execution notice: an outstanding input_request means the
   // kernel is waiting on us, not hung.
   private onReplySent: (() => void) | null = null;
 
@@ -142,8 +143,7 @@ export class OctaveKernelSession {
    *  but handleMessage()/dispose(), no pause or cancel -- so "stop" can only
    *  mean "kill the kernel and start a fresh one," which is exactly what
    *  restart() already does. currentAbort() rejects the in-flight
-   *  execute() call immediately, rather than leaving the caller to wait out
-   *  its own 60s timeout, since a user clicking Stop wants instant
+   *  execute() call immediately, since a user clicking Stop wants instant
    *  feedback. This clears all in-kernel state (Octave variables); file
    *  edits are untouched, since those live in the separate browser file
    *  bridge, not the kernel. */
@@ -163,7 +163,7 @@ export class OctaveKernelSession {
       content: { status: 'ok', value },
     });
     this.inputReplyIds.add(msg.header.msg_id);
-    this.onReplySent?.(); // re-arm the in-flight execute()'s watchdog
+    this.onReplySent?.(); // re-arm the in-flight execute()'s notice timer
     const kernel = this.kernel;
     // Deferred: replyToInput is often called from *inside* the
     // onInputRequest callback (the debugger sends dbstep/dbstack the moment
@@ -180,8 +180,8 @@ export class OctaveKernelSession {
    *
    *  onInputRequest fires if the code calls `input()` (or otherwise reads
    *  stdin); answer it with replyToInput(). Without a handler the kernel
-   *  would block until execute()'s own timeout -- which is exactly the
-   *  pre-existing "input() hangs the REPL" bug this closes. */
+   *  blocks until Stop -- the caller must provide a handler for code that
+   *  can ask for input. */
   async execute(
     code: string,
     onOutput?: ExecuteListener,
@@ -211,22 +211,10 @@ export class OctaveKernelSession {
     });
 
     return new Promise<void>((resolve, reject) => {
-      // Belt-and-suspenders against a genuine kernel bug found via
-      // m0-spike-driver/t104: re-calling figure(N) on an already-open
-      // figure intermittently (~1 in 4-5 tries, confirmed via raw message
-      // dumps) makes xeus-octave never send update_display_data or
-      // execute_reply at all -- Octave's own interpreter finishes the
-      // script correctly (any trailing disp() output still arrives), but
-      // this specific execute_request just never gets acknowledged. Without
-      // this timeout that hangs the UI forever (status stuck 'running',
-      // Command Window input stuck disabled) -- a page reload was the only
-      // recovery. This can't be fixed from here: the dropped message is a
-      // third-party kernel-side bug (xeus-octave's prebuilt WASM binary,
-      // not this repo's own source), not a request/response bug in this
-      // file. 60s is generous enough not to interrupt legitimate slow
-      // student loops (a 200k-iteration for-loop measured well under half
-      // that -- see t78-repl.js's calibration comment) while still
-      // eventually recovering instead of hanging indefinitely.
+      // A missing execute_reply can mean a long calculation, an infinite
+      // loop, or the intermittent figure(N) kernel bug (T3.21). Elapsed
+      // time cannot distinguish them. Warn after 60s, keep accepting all
+      // replies, and let the student explicitly Stop/restart if needed.
       let settled = false;
       // Set once an iopub `error` message has been streamed to onOutput, so
       // the execute_reply's own reject can tell runCode()'s catch not to
@@ -235,15 +223,10 @@ export class OctaveKernelSession {
       let timeoutId = 0 as unknown as ReturnType<typeof setTimeout>;
       const armTimeout = () => {
         clearTimeout(timeoutId);
+        this.onSlowExecution?.(false);
         timeoutId = setTimeout(() => {
           if (settled) return;
-          finish();
-          reject(
-            new Error(
-              'Kernel did not respond in time -- it may be stuck (a known intermittent issue after ' +
-                're-activating a figure with figure(N)). Try running again; reload the page if it keeps happening.',
-            ),
-          );
+          this.onSlowExecution?.(true);
         }, 60000);
       };
 
@@ -251,6 +234,7 @@ export class OctaveKernelSession {
         settled = true;
         this.onReplySent = null;
         clearTimeout(timeoutId);
+        this.onSlowExecution?.(false);
         if (this.currentAbort === abort) this.currentAbort = null;
       };
 
@@ -301,6 +285,7 @@ export class OctaveKernelSession {
         if (msg.header.msg_type === 'input_request') {
           // Kernel is now blocked waiting for our reply -- not stuck.
           clearTimeout(timeoutId);
+          this.onSlowExecution?.(false);
           const content = (msg as KernelMessage.IInputRequestMsg).content;
           onInputRequest?.({ prompt: content.prompt ?? '', password: content.password ?? false });
         } else if (msg.header.msg_type === 'stream') {
@@ -370,6 +355,7 @@ export class OctaveKernelSession {
   }
 
   dispose(): void {
+    this.currentAbort?.();
     this.kernel?.dispose();
     this.kernel = null;
   }

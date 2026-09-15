@@ -77,6 +77,10 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   const commandWindowPanelRef = useRef<PanelImperativeHandle>(null)
 
   const [status, setStatus] = useState<KernelStatus>('starting')
+  const [slowExecution, setSlowExecution] = useState(false)
+  // Stop owns the restart. An older run must not issue follow-up kernel
+  // queries or change status after that restart has begun.
+  const executionEpoch = useRef(0)
   const [contents, setContents] = useState<Record<string, string>>({})
   const [dirtyFiles, setDirtyFiles] = useState<Set<string>>(new Set())
   // unit.files (from the JSON / scratchUnit const) is the protected/original
@@ -184,6 +188,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       }
 
       const session = new OctaveKernelSession()
+      session.onSlowExecution = (slow) => { if (!cancelled) setSlowExecution(slow) }
       await session.start(contentsManager)
       if (cancelled) return
       sessionRef.current = session
@@ -196,6 +201,8 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     })
     return () => {
       cancelled = true
+      // oxlint-disable-next-line react-hooks/exhaustive-deps -- Invalidate the current generation; this is a counter, not a DOM ref.
+      executionEpoch.current++
       sessionRef.current?.dispose()
     }
   }, [unit])
@@ -431,6 +438,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   async function runCode(code: string, sourceScript: string | null | false = null) {
     if (!sessionRef.current) return
     if (downloading || status === 'running' || status === 'starting') return
+    const epoch = executionEpoch.current
     const capture: FigureCapture = { sourceScript: sourceScript || null, plots: new Map() }
     const pending = new Set<string>()
     let succeeded = false
@@ -440,6 +448,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
         setOutput((prev) => prev + req.prompt)
         setStdinPrompt(req.prompt)
       })
+      if (epoch !== executionEpoch.current) return
       setDirtyFiles(new Set())
       succeeded = true
       await refreshWorkspace()
@@ -447,13 +456,12 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       // A kernel execution error has already been streamed into `output` in
       // position (with its full "error: called from ..." trace) by
       // session.ts's iopub `error` handler -- don't print it again. Other
-      // rejections (the figure(N) timeout, Stop) aren't flagged and still
-      // surface here.
-      if (!(err as ReportedExecuteError)?.alreadyReported) {
+      // unreported errors still surface here. Stop has its own message.
+      if (epoch === executionEpoch.current && !(err as ReportedExecuteError)?.alreadyReported) {
         setOutput((prev) => prev + '\n' + String(err))
       }
     } finally {
-      // A prompt left dangling here means execute() ended (timeout, Stop,
+      // A prompt left dangling here means execute() ended (Stop,
       // error) without the input ever being answered -- clear it so the
       // Command Window doesn't stay stuck in "answer the prompt" mode.
       setStdinPrompt(null)
@@ -464,11 +472,11 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       setFigures((prev) =>
         prev.map((f) => (Object.keys(f.mimeBundle).length === 0 ? { ...f, failed: true } : f)),
       )
-      // Regardless of success/error/Stop -- a script that wrote a file then
-      // crashed should still surface what it managed to write before that.
-      await syncOutputs()
-      if (sourceScript !== false) await saveCapture(capture, succeeded && pending.size === 0)
-      setStatus(succeeded ? 'ready' : 'error')
+      // Mirror files after success/error. Stop destroys the old kernel's
+      // filesystem, so never query its replacement from this run's cleanup.
+      if (epoch === executionEpoch.current) await syncOutputs()
+      if (sourceScript !== false) await saveCapture(capture, succeeded && epoch === executionEpoch.current && pending.size === 0)
+      if (epoch === executionEpoch.current) setStatus(succeeded ? 'ready' : 'error')
     }
   }
 
@@ -536,7 +544,8 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
 
   async function handleDebug() {
     if (!sessionRef.current || debugRef.current) return
-    if (downloading) return
+    if (downloading || status === 'running' || status === 'starting') return
+    const epoch = executionEpoch.current
     const capture: FigureCapture = { sourceScript: activeFile, plots: new Map() }
     const pending = new Set<string>()
     let succeeded = false
@@ -567,15 +576,15 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       await dbg.run(code)
       succeeded = true
     } catch (err) {
-      if (!(err as ReportedExecuteError)?.alreadyReported) {
+      if (epoch === executionEpoch.current && !(err as ReportedExecuteError)?.alreadyReported) {
         setOutput((prev) => prev + '\n' + String(err))
       }
     } finally {
       debugRef.current = null
       setDebugPhase(null)
-      await refreshWorkspace()
-      await saveCapture(capture, succeeded && !debugCancelled.current && pending.size === 0)
-      setStatus('ready')
+      if (epoch === executionEpoch.current) await refreshWorkspace()
+      await saveCapture(capture, succeeded && epoch === executionEpoch.current && !debugCancelled.current && pending.size === 0)
+      if (epoch === executionEpoch.current) setStatus('ready')
     }
   }
 
@@ -594,6 +603,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   // boot). Variables are cleared; file edits are untouched, since those
   // live in the browser file bridge, not the kernel.
   async function handleStop() {
+    executionEpoch.current++
     debugCancelled.current = true
     setStatus('starting')
     setWorkspaceVars([])
@@ -928,6 +938,12 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
         zipExcludes={unit.submissionExclude}
         downloading={downloading}
       />
+      {slowExecution && status === 'running' && (
+        <div role="status" className="border-b border-line bg-surface px-3 py-2 text-sm text-primary">
+          This script is taking a while to execute. It may be running a long calculation, or it may be frozen.
+          {' '}You can keep waiting, or use Stop to restart Octave. Stopping clears variables but keeps your saved files.
+        </div>
+      )}
       {figureError && (
         <div role="alert" className="flex items-center justify-between gap-3 border-b border-line bg-surface px-3 py-2 text-sm text-danger-fg">
           <span>{figureError}</span>

@@ -234,6 +234,22 @@ Link students to the unit index (`.../octave-playground/`) or a specific unit's 
 
 ## Troubleshooting quick reference
 
+### Long-running or frozen scripts
+
+After 60 seconds without completing an execution, the Playground displays:
+"This script is taking a while to execute. It may be running a long calculation,
+or it may be frozen." This is a notice, not an error or an automatic cutoff.
+The app keeps receiving output and plots and waits for the completion reply.
+Run remains disabled; **Stop** remains available to restart Octave. Restarting
+clears variables but preserves saved files and saved figures.
+
+Waiting at `input()` or a debugger prompt hides the notice and suspends its
+timer. Answering starts a fresh 60-second interval. Completion, an execution
+error, or Stop clears the notice. A genuine infinite loop or the intermittent
+`figure(N)` missing completion reply needs an explicit Stop; elapsed time alone
+cannot tell these apart from useful computation. The former "Kernel did not
+respond in time" error is no longer emitted after one minute.
+
 ### Saved figures and ZIP submissions
 
 Plots from Run File, the Command Window, and Debug are saved automatically in
