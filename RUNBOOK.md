@@ -254,6 +254,11 @@ respond in time" error is no longer emitted after one minute.
 
 ### Saved figures and ZIP submissions
 
+Legend labels use an Arial/Helvetica font fallback and omit Plotly's invisible
+text-box padding so they fit inside Octave's pre-sized legend borders. This is
+applied when rendering live/saved figures and PNG exports; existing saved figure
+data does not need to be regenerated.
+
 Plots from Run File, the Command Window, and Debug are saved automatically in
 the current unit's **Saved figures** list. Clicking one opens an interactive
 graph with hover values, zoom and pan. Closing/minimizing a figure window does

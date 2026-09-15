@@ -593,6 +593,18 @@ export, reload, fresh-browser ZIP restoration, reruns, removal and reset.
 `t136-saved-figure-data.js` tests capture ownership, immutability, failed runs,
 format validation and archive limits.
 
+**Legend label bounds — DONE**
+
+The shared `figureLayout()` uses an Arial/Helvetica
+fallback instead of Plotly's wider Verdana fallback and removes the default
+invisible border/padding from unframed annotations. Octave supplies legend
+geometry as extra axes and text annotations, so the previous defaults pushed
+"Configuration A" about 3px past the border. Explicit annotation box styles
+are preserved. Normalization operates on a clone, covering live figures,
+reopened snapshots and PNG/ZIP export without changing saved plot data.
+`t139-legend-bounds.js` measures the rendered text against all four legend
+borders and checks the actual offscreen PNG renderer as well as saved data.
+
 **Long-execution advisory (supersedes T3.21's hard timeout) — DONE**
 
 `session.ts` now reports a slow execution after 60 seconds without settling

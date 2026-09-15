@@ -14,6 +14,8 @@ Run from this directory:
 - `node --test t136-saved-figure-data.js` — snapshot data, ownership, failure
   behavior, immutability, format validation and limits (Node 24 TypeScript support).
 - `node t134-plot-title.js http://127.0.0.1:4180/` — title rendering regression.
+- `node t139-legend-bounds.js http://127.0.0.1:4180/` — legend text bounds in
+  the cooling comparison, saved-figure reopening and PNG/ZIP rendering.
 
 The browser scripts also accept the deployed staging/production URL. PNG
 artifacts are ignored by Git.

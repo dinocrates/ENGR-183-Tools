@@ -2,10 +2,26 @@ import type { PlotlyFigure } from './savedFigures'
 
 /** Match the interactive figure's theme without altering the saved data. */
 export function figureLayout(layout?: Record<string, unknown>): Record<string, unknown> {
+  const styled = structuredClone(layout ?? {})
+  if (Array.isArray(styled.annotations)) {
+    styled.annotations = styled.annotations.map(annotation => {
+      if (!annotation || typeof annotation !== 'object' || Array.isArray(annotation)) return annotation
+      // Octave already positions unframed text inside its legend axes.
+      // Plotly otherwise adds an invisible 1px border plus 1px padding,
+      // shifting left-anchored labels 2px toward the legend's right edge.
+      // Keep explicitly styled annotation boxes as supplied.
+      if ('bordercolor' in annotation || 'bgcolor' in annotation) return annotation
+      return { borderpad: 0, borderwidth: 0, ...annotation }
+    })
+  }
   return {
-    ...structuredClone(layout ?? {}),
+    ...styled,
     paper_bgcolor: '#ffffff', plot_bgcolor: '#ffffff',
-    font: { color: '#1e293b', size: 11 }, modebar: { orientation: 'v' },
+    // Use a Helvetica-compatible default for Octave's pre-sized legends.
+    // Plotly's default falls back to wider Verdana when Open Sans is absent,
+    // which lets labels extend beyond the already-computed legend border.
+    font: { family: 'Arial, Helvetica, sans-serif', color: '#1e293b', size: 11 },
+    modebar: { orientation: 'v' },
   }
 }
 
