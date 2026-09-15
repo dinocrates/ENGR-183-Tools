@@ -240,6 +240,8 @@ After 60 seconds without completing an execution, the Playground displays:
 "This script is taking a while to execute. It may be running a long calculation,
 or it may be frozen." This is a notice, not an error or an automatic cutoff.
 The app keeps receiving output and plots and waits for the completion reply.
+An elapsed timer beside Running shows the total time since the run started,
+including any time spent waiting for input; it resets for each new run.
 Run remains disabled; **Stop** remains available to restart Octave. Restarting
 clears variables but preserves saved files and saved figures.
 

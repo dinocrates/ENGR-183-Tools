@@ -20,6 +20,9 @@ artifacts are ignored by Git.
 
 ## Long-execution regression checks
 
+- `node t138-elapsed-run-time.js http://127.0.0.1:4180/` — real elapsed time
+  and kernel execution with a shortened notice delay: continued counting after
+  the notice, and timer cleanup/reset across Stop and another run.
 - `node t137-long-execution.js http://127.0.0.1:4180/` — a real 65-second
   script warns and completes with output and a saved plot. Also checks infinite
   loops, Stop/restart recovery, input prompts, late errors and Debug. Secondary

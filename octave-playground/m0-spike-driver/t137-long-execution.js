@@ -48,9 +48,12 @@ const BASE = process.argv[2] || 'http://127.0.0.1:4180/';
     await script("clc; tic; while toc < 65; end;\nlong_result = 42; disp(long_result);\nplot([1 2 3], [2 4 6]); title('Finished after warning');");
     await warned();
     assert(Date.now() - started >= 59000, 'Production notice threshold is one minute');
+    // The display ticks once a second and mounts just after execution starts.
+    await page.waitForFunction(() => /^1:\d{2}$/.test(document.querySelector('[aria-label="Elapsed run time"]')?.textContent ?? ''), null, { timeout: 3000 });
     assert(await page.getByPlaceholder('Kernel busy…', { exact: true }).isDisabled(), 'A second command cannot run while waiting');
     await ready();
     assert.equal(await notice.count(), 0);
+    assert.equal(await page.getByLabel('Elapsed run time').count(), 0, 'Elapsed timer clears when the run finishes');
     assert((await page.locator('pre').allTextContents()).join('\n').includes('42'));
     await closeFigures();
     const saved = page.locator('section[aria-label="Saved figures"] button[title^="Open "]');

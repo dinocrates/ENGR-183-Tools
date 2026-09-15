@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { ThemeToggle } from './ThemeToggle'
 
 export type KernelStatus = 'starting' | 'ready' | 'running' | 'error'
@@ -36,6 +37,22 @@ const STATUS_DOT: Record<KernelStatus, string> = {
   ready: 'bg-cyan-400',
   running: 'bg-cyan-400 animate-pulse',
   error: 'bg-red-400',
+}
+
+// Mounted only during a run, so each new run starts at zero. Keep the
+// ticking state here rather than re-rendering the editor and plots each second.
+function RunningTime() {
+  const [seconds, setSeconds] = useState(0)
+  useEffect(() => {
+    const started = Date.now()
+    const timer = window.setInterval(() => setSeconds(Math.floor((Date.now() - started) / 1000)), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
+  return (
+    <span aria-label="Elapsed run time" className="tabular-nums">
+      {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, '0')}
+    </span>
+  )
 }
 
 export function Toolbar({
@@ -143,6 +160,7 @@ export function Toolbar({
         <span className={`h-1.5 w-1.5 rounded-full ${STATUS_DOT[status]}`} />
         <span className={status === 'error' ? 'text-danger-fg' : undefined}>
           {STATUS_LABEL[status]}
+          {status === 'running' && <> <RunningTime /></>}
         </span>
       </span>
       <ThemeToggle variant="inline" />
