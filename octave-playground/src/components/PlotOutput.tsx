@@ -151,6 +151,8 @@ export function PlotOutput({ mimeBundle, failed, width, height }: PlotOutputProp
         paper_bgcolor: '#ffffff',
         plot_bgcolor: '#ffffff',
         font: { color: '#1e293b', size: 11 },
+        // Use the right margin for controls so they don't cover axes titles.
+        modebar: { orientation: 'v' },
       }
       if (width !== undefined) layout.width = width
       if (height !== undefined) layout.height = height

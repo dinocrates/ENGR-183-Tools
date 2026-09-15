@@ -8,6 +8,7 @@ import { KernelMessage, type ContentsManager } from '@jupyterlab/services';
 import { KernelSpecs, type IKernel } from '@jupyterlite/services';
 import { WebWorkerKernel } from '@jupyterlite/xeus';
 import { PageConfig } from '@jupyterlab/coreutils';
+import { installPlotTitleCode, PlotTitles } from './plotTitles';
 
 const KERNEL_NAME = 'xoctave';
 const ENV_NAME = 'xeus-kernel';
@@ -54,6 +55,7 @@ export type { ReportedExecuteError } from './formatError';
 
 /** Thin wrapper around one running Octave kernel. */
 export class OctaveKernelSession {
+  private plotTitles = new PlotTitles();
   private kernel: IKernel | null = null;
   private kernelSpecs = new KernelSpecs();
   private sessionId = crypto.randomUUID();
@@ -120,6 +122,8 @@ export class OctaveKernelSession {
     });
 
     await this.kernel.ready;
+    this.plotTitles = new PlotTitles();
+    await this.execute(installPlotTitleCode());
   }
 
   async restart(): Promise<void> {
@@ -331,10 +335,13 @@ export class OctaveKernelSession {
               | KernelMessage.IExecuteResultMsg
               | KernelMessage.IUpdateDisplayDataMsg
           ).content;
+          const bundle = content.data as Record<string, unknown>;
+          if (this.plotTitles.consume(bundle)) return;
+          const displayId = content.transient?.display_id as string | undefined;
           onOutput?.({
             kind: 'display',
-            displayId: content.transient?.display_id as string | undefined,
-            mimeBundle: content.data as Record<string, unknown>,
+            displayId,
+            mimeBundle: this.plotTitles.apply(displayId, bundle),
           });
         } else if (msg.header.msg_type === 'execute_reply') {
           finish();
