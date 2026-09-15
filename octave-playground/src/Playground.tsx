@@ -12,7 +12,9 @@ import {
 } from './kernel/files'
 import { collectUploads, summarizeUpload } from './kernel/uploads'
 import { DebugBar } from './components/DebugBar'
-import { downloadFile, downloadZip } from './kernel/download'
+import { downloadFile, downloadZip, triggerDownload } from './kernel/download'
+import { figurePng } from './kernel/figureExport'
+import { figureStem, mergeFigureCapture, MAX_SAVED_FIGURES, type SavedFigure, type FigureCapture, type PlotlyFigure } from './kernel/savedFigures'
 import { FileBrowser } from './components/FileBrowser'
 import { Editor } from './components/Editor'
 import { CommandWindow } from './components/CommandWindow'
@@ -43,6 +45,7 @@ interface Figure {
   // *last* message for a command, so once execute() has settled, an empty
   // figure is provably never going to complete -- no point spinning forever.
   failed?: boolean
+  reopen?: number
 }
 
 const PLOTLY_MIME = 'application/vnd.plotly.v1+json'
@@ -93,6 +96,12 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   // content lives here (not merged into `contents`) since nothing should
   // ever be written back into it through the normal editor/save path.
   const [outputs, setOutputs] = useState<Record<string, string>>({})
+  const [savedFigures, setSavedFigures] = useState<SavedFigure[]>([])
+  const savedFiguresRef = useRef<SavedFigure[]>([])
+  const savedIdentities = useRef(new Map<string, string>())
+  const archiveWrites = useRef<Promise<void>>(Promise.resolve())
+  const [figureError, setFigureError] = useState<string | null>(null)
+  const [downloading, setDownloading] = useState(false)
   const [activeFile, setActiveFile] = useState<string>(unit.files[0])
   const [output, setOutput] = useState('')
   const [figures, setFigures] = useState<Figure[]>([])
@@ -165,6 +174,15 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       if (cancelled) return
       setOutputs(outputContents)
 
+      try {
+        const saved = await unitFiles.loadSavedFigures()
+        if (cancelled) return
+        savedFiguresRef.current = saved
+        setSavedFigures(saved)
+      } catch (err) {
+        if (!cancelled) setFigureError(`Could not load saved figures: ${String(err)}`)
+      }
+
       const session = new OctaveKernelSession()
       await session.start(contentsManager)
       if (cancelled) return
@@ -206,6 +224,88 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
 
   function closeFigure(id: string) {
     setFigures((prev) => prev.filter((f) => f.id !== id))
+  }
+
+  async function storeFigures(next: SavedFigure[]) {
+    savedFiguresRef.current = next
+    const files = unitFilesRef.current
+    if (!files) return
+    archiveWrites.current = archiveWrites.current.catch(() => {}).then(() => files.saveSavedFigures(next))
+    try {
+      await archiveWrites.current
+      setFigureError(null)
+    } catch {
+      setFigureError('Could not save figures in this browser. Download All to keep a copy before closing the page.')
+    } finally {
+      // A visible add/remove means the persistence attempt has settled, so
+      // immediately reloading after removing a figure doesn't restore it.
+      const current = savedFiguresRef.current
+      setSavedFigures(current)
+      setFigures(prev => prev.flatMap(f => {
+        if (!f.id.startsWith('saved:')) return [f]
+        const saved = current.find(item => item.name === f.id.slice('saved:'.length))
+        return saved ? [{ ...f, mimeBundle: { [PLOTLY_MIME]: structuredClone(saved.plot) } }] : []
+      }))
+    }
+  }
+
+  function captureOutput(capture: FigureCapture, pending: Set<string>, chunk: ExecuteChunk) {
+    if (chunk.kind === 'display') {
+      const id = chunk.displayId ?? crypto.randomUUID()
+      if (chunk.displayId && Object.keys(chunk.mimeBundle).length === 0) pending.add(id)
+      const plot = chunk.mimeBundle[PLOTLY_MIME]
+      if (plot && typeof plot === 'object' && Array.isArray((plot as { data?: unknown }).data)) {
+        pending.delete(id)
+        // Snapshot before Plotly can mutate its rendering inputs.
+        capture.plots.set(id, structuredClone(plot) as PlotlyFigure)
+      }
+    }
+    handleExecuteChunk(chunk)
+  }
+
+  async function saveCapture(capture: FigureCapture, succeeded: boolean) {
+    if (capture.sourceScript === null && capture.plots.size === 0) return
+    try {
+      const next = mergeFigureCapture(savedFiguresRef.current, capture, succeeded, savedIdentities.current)
+      await storeFigures(next)
+    } catch (err) {
+      setFigureError(`Could not save these figures: ${String(err)}`)
+    }
+  }
+
+  function openSavedFigure(saved: SavedFigure) {
+    const id = `saved:${saved.name}`
+    focusFigure(id)
+    setFigures(prev => {
+      const bundle = { [PLOTLY_MIME]: structuredClone(saved.plot) }
+      const existing = prev.find(f => f.id === id)
+      if (existing) return prev.map(f => f.id === id ? { ...f, mimeBundle: bundle, reopen: (f.reopen ?? 0) + 1 } : f)
+      const cascade = (prev.length % 5) * 28
+      return [...prev, { id, label: figureStem(saved.name), mimeBundle: bundle, position: { x: 240 + cascade, y: 90 + cascade } }]
+    })
+  }
+
+  function removeSavedFigure(saved: SavedFigure) {
+    setConfirmDialog({
+      title: `Remove ${figureStem(saved.name)}?`,
+      message: 'This removes the saved figure from this unit and future ZIP downloads. Running its script again can recreate it.',
+      confirmLabel: 'Remove',
+      onConfirm: () => {
+        setConfirmDialog(null)
+        closeFigure(`saved:${saved.name}`)
+        void storeFigures(savedFiguresRef.current.filter(f => f.name !== saved.name))
+      },
+    })
+  }
+
+  async function downloadFigure(saved: SavedFigure) {
+    if (downloading || replBusy) return
+    setDownloading(true)
+    try {
+      triggerDownload(await figurePng(saved.plot), `${figureStem(saved.name)}.png`)
+    } catch (err) {
+      setFigureError(`Could not download ${figureStem(saved.name)}: ${String(err)}`)
+    } finally { setDownloading(false) }
   }
 
   // Desktop Octave opens each plot in its own Figure window, not inline in
@@ -328,16 +428,20 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     sessionRef.current.replyToInput(value)
   }
 
-  async function runCode(code: string) {
+  async function runCode(code: string, sourceScript: string | null | false = null) {
     if (!sessionRef.current) return
+    if (downloading || status === 'running' || status === 'starting') return
+    const capture: FigureCapture = { sourceScript: sourceScript || null, plots: new Map() }
+    const pending = new Set<string>()
+    let succeeded = false
     setStatus('running')
     try {
-      await sessionRef.current.execute(code, handleExecuteChunk, (req) => {
+      await sessionRef.current.execute(code, chunk => sourceScript === false ? handleExecuteChunk(chunk) : captureOutput(capture, pending, chunk), (req) => {
         setOutput((prev) => prev + req.prompt)
         setStdinPrompt(req.prompt)
       })
       setDirtyFiles(new Set())
-      setStatus('ready')
+      succeeded = true
       await refreshWorkspace()
     } catch (err) {
       // A kernel execution error has already been streamed into `output` in
@@ -348,7 +452,6 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       if (!(err as ReportedExecuteError)?.alreadyReported) {
         setOutput((prev) => prev + '\n' + String(err))
       }
-      setStatus('error')
     } finally {
       // A prompt left dangling here means execute() ended (timeout, Stop,
       // error) without the input ever being answered -- clear it so the
@@ -364,6 +467,8 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       // Regardless of success/error/Stop -- a script that wrote a file then
       // crashed should still surface what it managed to write before that.
       await syncOutputs()
+      if (sourceScript !== false) await saveCapture(capture, succeeded && pending.size === 0)
+      setStatus(succeeded ? 'ready' : 'error')
     }
   }
 
@@ -375,12 +480,13 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
         `addpath('/engr183'); addpath('/engr183/tests');`,
         `engr183.runTests('${unit.id}')`,
       ].join('\n'),
+      false,
     )
   }
 
   function handleRunFile() {
     const writeCode = buildWriteFilesCode(unit.id, contents)
-    void runCode([writeCode, `run('/engr183/assignments/${unit.id}/${activeFile}')`].join('\n'))
+    void runCode([writeCode, `run('/engr183/assignments/${unit.id}/${activeFile}')`].join('\n'), activeFile)
   }
 
   // ---- debugger -------------------------------------------------------
@@ -388,6 +494,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   // debug run writes the files -- see kernel/breakpoints.ts.
   const [breakpoints, setBreakpoints] = useState<Record<string, number[]>>({})
   const debugRef = useRef<DebugSession | null>(null)
+  const debugCancelled = useRef(false)
   const [debugPhase, setDebugPhase] = useState<DebugPhase | null>(null)
 
   function toggleBreakpoint(file: string, line: number) {
@@ -429,12 +536,17 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
 
   async function handleDebug() {
     if (!sessionRef.current || debugRef.current) return
+    if (downloading) return
+    const capture: FigureCapture = { sourceScript: activeFile, plots: new Map() }
+    const pending = new Set<string>()
+    let succeeded = false
+    debugCancelled.current = false
     const totalBp = Object.values(breakpoints).reduce((n, l) => n + l.length, 0)
     const writeCode = buildWriteFilesCode(unit.id, contents, breakpoints)
     const code = [writeCode, `run('/engr183/assignments/${unit.id}/${activeFile}')`].join('\n')
     const dbg = new DebugSession(
       sessionRef.current,
-      handleExecuteChunk,
+      chunk => captureOutput(capture, pending, chunk),
       (p) => {
         setDebugPhase(p.phase === 'done' ? null : p)
         if (p.phase === 'paused') void refreshDebugVars()
@@ -453,6 +565,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     )
     try {
       await dbg.run(code)
+      succeeded = true
     } catch (err) {
       if (!(err as ReportedExecuteError)?.alreadyReported) {
         setOutput((prev) => prev + '\n' + String(err))
@@ -460,8 +573,9 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     } finally {
       debugRef.current = null
       setDebugPhase(null)
-      setStatus('ready')
       await refreshWorkspace()
+      await saveCapture(capture, succeeded && !debugCancelled.current && pending.size === 0)
+      setStatus('ready')
     }
   }
 
@@ -480,6 +594,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   // boot). Variables are cleared; file edits are untouched, since those
   // live in the browser file bridge, not the kernel.
   async function handleStop() {
+    debugCancelled.current = true
     setStatus('starting')
     setWorkspaceVars([])
     setOutput(
@@ -506,7 +621,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     // busy, this is defense-in-depth against a stale prop / fast double-Enter.
     // Uses replBusy (defined below, before the JSX return), NOT
     // status !== 'ready' -- see its comment for why.
-    if (replBusy) return
+    if (replBusy || downloading) return
 
     if (trimmed === 'clc' || trimmed === 'clc;') {
       clearOutput()
@@ -538,13 +653,19 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     downloadFile(activeFile, contents[activeFile] ?? outputs[activeFile] ?? '')
   }
 
-  function handleDownloadZip() {
+  async function handleDownloadZip() {
+    if (downloading || replBusy) return
+    setDownloading(true)
     // Uploaded "My files" are the student's own inputs, not part of a
     // Canvas submission -- leave them out of the zip alongside whatever the
     // unit already excludes (e.g. a public-check tab). Output files are the
     // opposite of an input: what the student's code produced, so they're
     // folded in rather than excluded.
-    void downloadZip(unit.id, { ...contents, ...outputs }, [...(unit.submissionExclude ?? []), ...uploads])
+    try {
+      await downloadZip(unit.id, { ...contents, ...outputs }, [...(unit.submissionExclude ?? []), ...uploads], structuredClone(savedFiguresRef.current))
+    } catch (err) {
+      setFigureError(`Download All could not finish: ${String(err)}. No ZIP was downloaded; try again.`)
+    } finally { setDownloading(false) }
   }
 
   async function doResetFile(file: string) {
@@ -567,15 +688,28 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
 
   // ---- student file upload (individual files or a Download All .zip) ----
   async function handleUpload(files: FileList | File[]) {
+    if (replBusy || downloading) return
     const result = await collectUploads(files)
     if (result.items.length === 0 && result.skipped.length === 0) return
 
     const overwrites = result.items.filter(
-      (it) => it.kind === 'editable' && (unit.files.includes(it.name) || fileList.includes(it.name)),
+      (it) => (it.kind === 'editable' && (unit.files.includes(it.name) || fileList.includes(it.name))) ||
+        (it.kind === 'figure' && savedFiguresRef.current.some(f => f.name === it.name)),
     )
 
     const apply = async () => {
+      const importedFigures = result.items.filter(it => it.kind === 'figure').map(it => it.figure!)
+      if (importedFigures.length) {
+        const names = new Set(importedFigures.map(f => f.name))
+        const next = [...savedFiguresRef.current.filter(f => !names.has(f.name)), ...importedFigures]
+        if (next.length > MAX_SAVED_FIGURES) {
+          setFigureError('Too many saved figures. Remove some before uploading this ZIP (limit: 50).')
+          return
+        }
+        await storeFigures(next)
+      }
       for (const it of result.items) {
+        if (it.kind === 'figure') continue
         await unitFilesRef.current?.save(it.name, it.content).catch(() => {})
         setContents((prev) => ({ ...prev, [it.name]: it.content }))
         if (it.kind === 'editable') {
@@ -589,7 +723,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
           setUploads((prev) => (prev.includes(it.name) ? prev : [...prev, it.name]))
         }
       }
-      const last = result.items[result.items.length - 1]
+      const last = result.items.filter(it => it.kind !== 'figure').at(-1)
       if (last) setActiveFile(last.name)
       const summary = summarizeUpload(result)
       if (summary) setOutput((prev) => prev + summary)
@@ -695,6 +829,9 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     // written out, same as it restores starter code -- T3.34.
     await unitFilesRef.current?.clearOutputs().catch(() => {})
     setOutputs({})
+    await storeFigures([])
+    savedIdentities.current.clear()
+    setFigures([])
   }
 
   function handleResetFile() {
@@ -712,7 +849,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
   function handleResetUnit() {
     setConfirmDialog({
       title: `Reset all of ${unit.title}?`,
-      message: `This discards your changes to every file in this unit (${unit.files.join(', ')}) and restores the original starter code, and clears any output files your code created. This can't be undone.`,
+      message: `This discards your changes to every file in this unit (${unit.files.join(', ')}) and restores the original starter code, and clears output files and saved figures. This can't be undone.`,
       confirmLabel: 'Reset unit',
       onConfirm: () => {
         void doResetUnit()
@@ -789,7 +926,14 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
         onBackToUnits={onBackToUnits}
         canResetFile={unit.files.includes(activeFile)}
         zipExcludes={unit.submissionExclude}
+        downloading={downloading}
       />
+      {figureError && (
+        <div role="alert" className="flex items-center justify-between gap-3 border-b border-line bg-surface px-3 py-2 text-sm text-danger-fg">
+          <span>{figureError}</span>
+          <button onClick={() => setFigureError(null)} aria-label="Dismiss figure message">×</button>
+        </div>
+      )}
       {debugPhase?.phase === 'paused' && (
         <DebugBar
           frame={debugPhase.frame}
@@ -798,7 +942,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
           onStepOver={debugStep((d) => d.stepOver())}
           onStepInto={debugStep((d) => d.stepInto())}
           onStepOut={debugStep((d) => d.stepOut())}
-          onStop={debugStep((d) => d.stopDebugging())}
+          onStop={debugStep((d) => { debugCancelled.current = true; d.stopDebugging() })}
         />
       )}
       <Group orientation="horizontal" className="flex-1 overflow-hidden">
@@ -819,6 +963,11 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
                 dataFiles={dataFiles}
                 uploads={uploads}
                 outputs={Object.keys(outputs)}
+                savedFigures={savedFigures}
+                onOpenFigure={openSavedFigure}
+                onDownloadFigure={saved => void downloadFigure(saved)}
+                onRemoveFigure={removeSavedFigure}
+                busy={replBusy || downloading}
                 protectedFiles={unit.files}
                 activeFile={activeFile}
                 dirtyFiles={dirtyFiles}
@@ -909,7 +1058,7 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
       </Group>
       {figures.map((figure) => (
         <FloatingFigure
-          key={figure.id}
+          key={`${figure.id}:${figure.reopen ?? 0}`}
           id={figure.id}
           label={figure.label}
           mimeBundle={figure.mimeBundle}

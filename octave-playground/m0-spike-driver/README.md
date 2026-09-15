@@ -3,6 +3,21 @@ Playwright/Node scripts used to produce `../M0-FINDINGS.md`. Scratch, not shippe
 Requires the M0 spike site built and served locally (see M0-FINDINGS.md T0.1) at
 `http://localhost:8000`. `npm install && npx playwright install chromium` first.
 
+## Saved figure regression checks
+
+For the current app, build with Node 24 and serve with `vite preview`.
+Run from this directory:
+
+- `node t135-saved-figures.js http://127.0.0.1:4180/` — real Octave figures,
+  interactive reopening, hover/zoom, PNG and ZIP export, persistence, ZIP
+  restoration in a fresh browser, reruns, deletion/reset, invalid imports.
+- `node --test t136-saved-figure-data.js` — snapshot data, ownership, failure
+  behavior, immutability, format validation and limits (Node 24 TypeScript support).
+- `node t134-plot-title.js http://127.0.0.1:4180/` — title rendering regression.
+
+The browser scripts also accept the deployed staging/production URL. PNG
+artifacts are ignored by Git.
+
 - `explore.js` — loads the REPL app, dumps interesting `window` globals and console
   logs. Used for initial T0.1/T0.3 exploration (kernel version banner).
 - `console-driver.js` — `runCell(page, code)` helper that types Octave into the REPL's

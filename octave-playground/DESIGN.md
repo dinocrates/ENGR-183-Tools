@@ -566,6 +566,33 @@ Root cause is in `@monaco-editor/react`'s own `Editor` component (`node_modules/
 Fixed in `Editor.tsx`'s `onChange` handler alone (no patch to the third-party library, no change to `Playground.tsx`'s guard, which is fine once it's never handed a stale filename): before trusting `activeFile`/`activeIsData`, compare against the *live* editor's actual current model path (`editorRef.current?.getModel()?.uri.path`) and bail if they don't match -- a real keystroke in the genuinely-active file always matches; a stale cross-tab event never does, regardless of the exact internal timing that produced it.
 *Acceptance:* the T3.35 minimal repro (`t132-narrow-cause.js`) no longer reproduces -- the main script's model stays byte-stable across the same edit → Run File → open output tab → open a third tab → switch-back sequence that corrupted it before the fix. The full T3.35 21-check run (`t128-gp05-readmatrix.js`) passes end to end afterward. This bug predates GP-05's `readmatrix` change and is generic to any unit with a data or output file, not GP-05-specific -- flagging for awareness since it was never caught by `t126-data-files.js`/`t127-uploads.js` (neither happens to switch back to an *editable* file after visiting a read-only one in the same run).
 
+**Saved interactive figures and PNG submissions**
+
+`kernel/savedFigures.ts` defines a versioned `.figure.json` document containing
+Plotly traces/layout, a safe filename and the source script. `Playground.tsx`
+captures the final native payload for each display ID before the renderer can
+mutate it, then saves the completed run to the unit's browser drive at
+`_figures/archive.json`. Writes are serialized; File Browser additions/removals
+appear after persistence settles. An error is surfaced if saving fails, while
+the in-memory snapshots remain available for download. Successful script runs
+replace only their own snapshots; failed/incomplete runs preserve previous
+ones. The archive is independent of live windows and the Octave workspace.
+
+The File Browser opens saved snapshots in interactive FloatingFigure windows.
+`figureExport.ts` renders a cloned snapshot in a temporary offscreen container,
+using the same layout styling as PlotOutput, and exports PNG bytes. Download All
+waits for exports and adds PNG/JSON pairs under `figures/`; code/text packaging
+and unit submission exclusions remain intact. ZIP upload validates figure
+versions/data and restores interactive records; accompanying PNGs are derived
+previews and need no duplicate storage. Original window zoom/resize does not
+alter saved plot data. Raw PNG imports, native `.fig` compatibility, and full
+Octave workspace restoration are outside this feature.
+
+Tests: `t135-saved-figures.js` exercises real-kernel saving, hover/zoom, PNG/ZIP
+export, reload, fresh-browser ZIP restoration, reruns, removal and reset.
+`t136-saved-figure-data.js` tests capture ownership, immutability, failed runs,
+format validation and archive limits.
+
 **T3.2 — Download files — DONE**
 Bumped ahead of the rest of M3: with LTI/grade-passback confirmed out of scope for now (§7 — "Not an autograder... Grading stays local"), manual download-then-upload-to-Canvas is the actual submission path, not a placeholder for something else. `src/kernel/download.ts`'s `downloadFile`/`downloadZip` read straight from `Playground.tsx`'s live `contents` state (not the browser-persisted drive), so a download is never stale relative to unsaved autosave debounce. `downloadZip` (via `jszip`) writes files flat, no folders — matching the local Octave mental model of one working directory per unit. Toolbar gained "Download File" and "Download All (.zip)" buttons, available in every unit including the Scratch Pad.
 *Acceptance:* Downloaded files run unmodified under local Octave 8.4 — no packaging/transformation is applied (plain UTF-8 text in, plain UTF-8 text out), so this reduces to "is the content byte-identical to the editor buffer," verified directly via `m0-spike-driver/t29-download.js` (single-file and zipped copies both reflect a live in-editor edit, not the original starter).

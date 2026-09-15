@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type * as PlotlyModule from 'plotly.js-dist-min'
+import { figureLayout } from '../kernel/figureExport'
 
 const PLOTLY_MIME = 'application/vnd.plotly.v1+json'
 
@@ -146,17 +147,10 @@ export function PlotOutput({ mimeBundle, failed, width, height }: PlotOutputProp
       // same reason (an earlier version forced non-zero margins, shifting
       // the plot area out from under annotations positioned for the
       // kernel's own zero-margin default).
-      const layout: Record<string, unknown> = {
-        ...figure.layout,
-        paper_bgcolor: '#ffffff',
-        plot_bgcolor: '#ffffff',
-        font: { color: '#1e293b', size: 11 },
-        // Use the right margin for controls so they don't cover axes titles.
-        modebar: { orientation: 'v' },
-      }
+      const layout = figureLayout(figure.layout)
       if (width !== undefined) layout.width = width
       if (height !== undefined) layout.height = height
-      return Plotly.newPlot(container, figure.data as never, layout, {
+      return Plotly.newPlot(container, structuredClone(figure.data), layout, {
         responsive: width === undefined,
         displaylogo: false,
         // Plotly's modebar (zoom/pan/box-select/reset/camera) defaults to

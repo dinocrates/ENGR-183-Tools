@@ -3,8 +3,10 @@
 // (Playground's `contents` state), not the browser-persisted drive, so
 // there's no dependency on the autosave debounce having already fired.
 import JSZip from 'jszip'
+import { figurePng } from './figureExport'
+import { figureStem, serializeFigure, type SavedFigure } from './savedFigures'
 
-function triggerDownload(blob: Blob, filename: string): void {
+export function triggerDownload(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
@@ -17,8 +19,8 @@ export function downloadFile(filename: string, content: string): void {
   triggerDownload(new Blob([content], { type: 'text/plain' }), filename)
 }
 
-/** Zips files flat (no folders) -- matches the local Octave mental model:
- *  one unit's .m files sitting together in a single working directory.
+/** Code/text files stay flat, matching Octave's working directory. Saved
+ * figures travel as PNG/JSON pairs in a separate figures/ folder.
  *
  *  `exclude` (UnitMeta.submissionExclude) drops specific tabs from the
  *  zip's contents -- e.g. APA-03's supplied public-check script, which is
@@ -29,12 +31,20 @@ export async function downloadZip(
   unitId: string,
   files: Record<string, string>,
   exclude: string[] = [],
+  figures: SavedFigure[] = [],
 ): Promise<void> {
   const zip = new JSZip()
   const excluded = new Set(exclude)
   for (const [name, content] of Object.entries(files)) {
     if (excluded.has(name)) continue
     zip.file(name, content)
+  }
+  // Sequential exports keep memory bounded and ensure no ZIP is downloaded
+  // with silently missing PNGs when one of the renders fails.
+  for (const figure of figures) {
+    if (excluded.has(figure.name) || (figure.sourceScript && excluded.has(figure.sourceScript))) continue
+    zip.file(`figures/${figure.name}`, serializeFigure(figure))
+    zip.file(`figures/${figureStem(figure.name)}.png`, await figurePng(figure.plot))
   }
   const blob = await zip.generateAsync({ type: 'blob' })
   triggerDownload(blob, `${unitId}.zip`)

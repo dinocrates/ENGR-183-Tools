@@ -8,6 +8,7 @@ import { ContentsManager } from '@jupyterlab/services';
 import { BrowserStorageDrive } from '@jupyterlite/services';
 import localforage from 'localforage';
 import { injectBreakpoints } from './breakpoints';
+import { parseSavedFigure, serializeFigure, MAX_SAVED_FIGURES, type SavedFigure } from './savedFigures';
 
 export function createContentsManager(): ContentsManager {
   const drive = new BrowserStorageDrive({
@@ -125,6 +126,31 @@ export class UnitFiles {
 
   private path(fileName: string): string {
     return `${this.unitId}/${fileName}`;
+  }
+
+  async loadSavedFigures(): Promise<SavedFigure[]> {
+    let model;
+    try {
+      model = await this.contents.get(`${this.unitId}/_figures/archive.json`, { content: true, format: 'text' });
+    } catch (err) {
+      if ((err as { response?: { status?: number } }).response?.status === 404) return [];
+      // BrowserStorageDrive's missing-file error is a plain Error.
+      if (/not found|does not exist|no such/i.test(String(err))) return [];
+      throw err;
+    }
+    const entries = JSON.parse(String(model.content));
+    if (!Array.isArray(entries) || entries.length > MAX_SAVED_FIGURES) throw new Error('Invalid saved figure archive');
+    return entries.map(entry => parseSavedFigure(JSON.stringify(entry)));
+  }
+
+  async saveSavedFigures(figures: SavedFigure[]): Promise<void> {
+    await this.ensureUnitDir();
+    const dir = `${this.unitId}/_figures`;
+    try { await this.contents.get(dir, { content: false }); }
+    catch { await this.contents.save(dir, { type: 'directory' }); }
+    await this.contents.save(`${dir}/archive.json`, {
+      type: 'file', format: 'text', content: `[${figures.map(serializeFigure).join(',')}]`,
+    });
   }
 
   private async ensureUnitDir(): Promise<void> {

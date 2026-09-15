@@ -21,6 +21,7 @@ interface ToolbarProps {
   // tooltip so it's clear the zip isn't literally "every tab" for those
   // units. Omitted (or empty) leaves the plain "all files" tooltip.
   zipExcludes?: string[]
+  downloading?: boolean
 }
 
 const STATUS_LABEL: Record<KernelStatus, string> = {
@@ -51,6 +52,7 @@ export function Toolbar({
   onBackToUnits,
   canResetFile,
   zipExcludes,
+  downloading = false,
 }: ToolbarProps) {
   const busy = status === 'starting' || status === 'running'
   const zipTooltip =
@@ -70,7 +72,7 @@ export function Toolbar({
       {onRunTests && (
         <button
           className="font-pixel rounded bg-accent px-3 py-1 text-sm font-medium text-on-accent hover:bg-accent-hover disabled:opacity-40"
-          disabled={busy}
+          disabled={busy || downloading}
           onClick={onRunTests}
         >
           Run Tests
@@ -78,14 +80,14 @@ export function Toolbar({
       )}
       <button
         className="font-pixel rounded bg-accent px-3 py-1 text-sm font-medium text-on-accent hover:bg-accent-hover disabled:opacity-40"
-        disabled={busy}
+        disabled={busy || downloading}
         onClick={onRunFile}
       >
         Run File
       </button>
       <button
         className="rounded border border-line px-3 py-1 text-sm text-secondary hover:bg-raised disabled:opacity-40"
-        disabled={busy && !debugging}
+        disabled={(busy && !debugging) || downloading}
         onClick={onDebug}
         title="Run the current file with the debugger — set breakpoints by clicking the left margin in the editor"
       >
@@ -109,16 +111,17 @@ export function Toolbar({
         Download File
       </button>
       <button
-        className="rounded border border-line px-3 py-1 text-sm text-secondary hover:bg-raised"
+        className="rounded border border-line px-3 py-1 text-sm text-secondary hover:bg-raised disabled:opacity-40"
+        disabled={busy || downloading}
         onClick={onDownloadZip}
         title={zipTooltip}
       >
-        Download All (.zip)
+        {downloading ? 'Preparing download…' : 'Download All (.zip)'}
       </button>
       <div className="mx-1 h-5 w-px bg-line" />
       <button
         className="rounded border border-line px-3 py-1 text-sm text-secondary hover:bg-raised disabled:opacity-40"
-        disabled={busy || !canResetFile}
+        disabled={busy || downloading || !canResetFile}
         onClick={onResetFile}
         title={
           canResetFile
@@ -130,7 +133,7 @@ export function Toolbar({
       </button>
       <button
         className="rounded px-2 py-1 text-xs text-muted hover:bg-raised hover:text-secondary disabled:opacity-40"
-        disabled={busy}
+        disabled={busy || downloading}
         onClick={onResetUnit}
         title="Discard changes to every file in this unit, restoring the original starters"
       >

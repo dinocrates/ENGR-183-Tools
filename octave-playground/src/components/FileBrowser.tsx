@@ -1,6 +1,7 @@
 import { useRef, useState, type ChangeEvent, type DragEvent as ReactDragEvent } from 'react'
 import { PanelHeader } from './PanelHeader'
 import { normalizeFileName } from '../kernel/files'
+import { figureStem, type SavedFigure } from '../kernel/savedFigures'
 
 interface FileBrowserProps {
   unitTitle: string
@@ -15,6 +16,11 @@ interface FileBrowserProps {
   // read-only, individually removable, and also cleared in bulk by
   // "Reset unit".
   outputs?: string[]
+  savedFigures?: SavedFigure[]
+  onOpenFigure?: (figure: SavedFigure) => void
+  onDownloadFigure?: (figure: SavedFigure) => void
+  onRemoveFigure?: (figure: SavedFigure) => void
+  busy?: boolean
   protectedFiles: string[]
   activeFile: string
   dirtyFiles: Set<string>
@@ -38,6 +44,11 @@ export function FileBrowser({
   dataFiles = [],
   uploads = [],
   outputs = [],
+  savedFigures = [],
+  onOpenFigure,
+  onDownloadFigure,
+  onRemoveFigure,
+  busy = false,
   protectedFiles,
   activeFile,
   dirtyFiles,
@@ -77,6 +88,7 @@ export function FileBrowser({
   }
 
   function handlePicked(e: ChangeEvent<HTMLInputElement>) {
+    if (busy) return
     if (e.target.files && e.target.files.length > 0) onUpload(e.target.files)
     e.target.value = '' // let the same file be picked again later
   }
@@ -84,6 +96,7 @@ export function FileBrowser({
   function handleDrop(e: ReactDragEvent) {
     e.preventDefault()
     setDragging(false)
+    if (busy) return
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) onUpload(e.dataTransfer.files)
   }
 
@@ -96,7 +109,8 @@ export function FileBrowser({
           <button
             className="rounded px-1.5 text-xs text-muted hover:bg-raised hover:text-secondary"
             onClick={() => fileInputRef.current?.click()}
-            title="Upload a file (CSV, text, or a Download All .zip)"
+            disabled={busy}
+            title="Upload code, data, saved figures, or a Download All .zip"
           >
             ↑
           </button>
@@ -112,6 +126,7 @@ export function FileBrowser({
       <input
         ref={fileInputRef}
         type="file"
+        disabled={busy}
         multiple
         accept={UPLOAD_ACCEPT}
         className="hidden"
@@ -216,6 +231,37 @@ export function FileBrowser({
               ))}
             </ul>
           </>
+        )}
+        {savedFigures.length > 0 && (
+          <section aria-label="Saved figures">
+            <div className="px-2.5 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-wide text-faint">
+              Saved figures
+            </div>
+            <p className="px-2.5 pb-1 text-[10px] text-muted">Click to explore. PNGs are included in Download All.</p>
+            <ul>
+              {savedFigures.map(figure => (
+                <li key={figure.name} className="flex items-center gap-1 px-1.5">
+                  <button
+                    className="min-w-0 flex-1 truncate rounded px-1 py-1 text-left text-sm text-secondary hover:bg-raised"
+                    onClick={() => onOpenFigure?.(figure)}
+                    title={`Open ${figureStem(figure.name)} — interactive saved figure`}
+                  >{figureStem(figure.name)}</button>
+                  <button
+                    className="rounded px-1 text-[10px] text-muted hover:bg-raised disabled:opacity-40"
+                    disabled={busy}
+                    onClick={() => onDownloadFigure?.(figure)}
+                    title={`Download ${figureStem(figure.name)}.png`}
+                  >PNG</button>
+                  <button
+                    className="rounded px-1 text-xs text-muted hover:bg-raised hover:text-danger-fg disabled:opacity-40"
+                    disabled={busy}
+                    onClick={() => onRemoveFigure?.(figure)}
+                    title={`Remove saved figure ${figureStem(figure.name)}`}
+                  >×</button>
+                </li>
+              ))}
+            </ul>
+          </section>
         )}
         {outputs.length > 0 && (
           <>
