@@ -135,6 +135,7 @@ export class UnitFiles {
     } catch (err) {
       if ((err as { response?: { status?: number } }).response?.status === 404) return [];
       // BrowserStorageDrive's missing-file error is a plain Error.
+      if (err instanceof Error && err.message === `Could not find content with path ${this.unitId}/_figures/archive.json`) return [];
       if (/not found|does not exist|no such/i.test(String(err))) return [];
       throw err;
     }

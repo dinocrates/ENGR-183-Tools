@@ -68,6 +68,7 @@ disp('saved-example-complete');`;
       await count(page, 2);
     }
     const page = await newPage();
+    assert.deepEqual((await page.getByRole('alert').allTextContents()).filter(t => t.trim()), [], 'A fresh browser has an empty figure archive, not a load error');
     await run(page, SCRIPT);
     await count(page, 2);
     assert.deepEqual(await saved(page).allTextContents(), ['scratch_figure_1', 'scratch_figure_2']);

@@ -43,6 +43,7 @@ const BASE = process.argv[2] || 'http://127.0.0.1:4180/';
       }
     }
     await ready();
+    assert.deepEqual((await page.getByRole('alert').allTextContents()).filter(t => t.trim()), [], 'No startup errors in a fresh browser');
     const started = Date.now();
     await script("clc; tic; while toc < 65; end;\nlong_result = 42; disp(long_result);\nplot([1 2 3], [2 4 6]); title('Finished after warning');");
     await warned();
