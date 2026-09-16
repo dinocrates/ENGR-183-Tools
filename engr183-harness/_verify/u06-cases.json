@@ -1,0 +1,619 @@
+{
+  "gp": {
+    "id": "u06-gp06-cooling",
+    "file": "U06_GP06_CoolingPlots.m",
+    "cases": [
+      {
+        "name": "solved",
+        "replace": [],
+        "append": "",
+        "fail": []
+      },
+      {
+        "name": "repeat solved",
+        "replace": [],
+        "append": "",
+        "fail": []
+      },
+      {
+        "name": "reversed difference",
+        "replace": [
+          [
+            "temp_A_C - temp_B_C",
+            "temp_B_C - temp_A_C"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "difference",
+          "bottom"
+        ]
+      },
+      {
+        "name": "interior temperature",
+        "replace": [
+          [
+            "34; 42;",
+            "34; 43;"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "data",
+          "difference",
+          "top"
+        ]
+      },
+      {
+        "name": "wrong limit",
+        "replace": [
+          [
+            "[limit_C limit_C]",
+            "[69 69]"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "top"
+        ]
+      },
+      {
+        "name": "omitted limit",
+        "replace": [
+          [
+            "plot([0 12], [limit_C limit_C], 'k--', 'LineWidth', 1.5);",
+            ""
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "top"
+        ]
+      },
+      {
+        "name": "sample indices",
+        "replace": [
+          [
+            "plot(time_min,",
+            "plot(1:13,"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "top",
+          "bottom"
+        ]
+      },
+      {
+        "name": "swapped legends",
+        "replace": [
+          [
+            "legend('Configuration A', 'Configuration B'",
+            "legend('Configuration B', 'Configuration A'"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "identification"
+        ]
+      },
+      {
+        "name": "swapped styles",
+        "replace": [
+          [
+            "temp_A_C, '-o'",
+            "temp_A_C, '--s'"
+          ],
+          [
+            "temp_B_C, '--s'",
+            "temp_B_C, '-o'"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "identification"
+        ]
+      },
+      {
+        "name": "swapped panels",
+        "replace": [
+          [
+            "subplot(2, 1, 1);",
+            "subplot(2, 1, 9);"
+          ],
+          [
+            "subplot(2, 1, 2);",
+            "subplot(2, 1, 1);"
+          ],
+          [
+            "subplot(2, 1, 9);",
+            "subplot(2, 1, 2);"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "top",
+          "bottom"
+        ]
+      },
+      {
+        "name": "missing title",
+        "replace": [
+          [
+            "title('Temperature difference between configurations');",
+            "title('');"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "labels"
+        ]
+      },
+      {
+        "name": "missing unit",
+        "replace": [
+          [
+            "ylabel('Temperature (C)');",
+            "ylabel('Temperature');"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "labels"
+        ]
+      },
+      {
+        "name": "clipped values",
+        "replace": [
+          [
+            "ylim([20 85])",
+            "ylim([30 60])"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "limits"
+        ]
+      },
+      {
+        "name": "wrong grid",
+        "replace": [],
+        "append": "set(gca, 'xgrid', 'off');",
+        "fail": [
+          "labels"
+        ]
+      },
+      {
+        "name": "rows and marker aliases",
+        "replace": [
+          [
+            "delta_C = temp_A_C - temp_B_C;",
+            "time_min=time_min'; temp_A_C=temp_A_C'; temp_B_C=temp_B_C';\ndelta_C = temp_A_C - temp_B_C;"
+          ],
+          [
+            "temp_B_C, '--s'",
+            "temp_B_C, '--', 'Marker', 'square'"
+          ],
+          [
+            "delta_C, '-d'",
+            "delta_C, '-', 'Marker', 'diamond'"
+          ],
+          [
+            "ylabel('A - B temperature (C)')",
+            "ylabel('Temperature difference (deg C)')"
+          ]
+        ],
+        "append": "",
+        "fail": []
+      },
+      {
+        "name": "reference at all samples",
+        "replace": [
+          [
+            "plot([0 12], [limit_C limit_C],",
+            "plot(time_min, limit_C*ones(size(time_min)),"
+          ]
+        ],
+        "append": "",
+        "fail": []
+      },
+      {
+        "name": "missing panel",
+        "replace": [
+          [
+            "subplot(2, 1, 2);",
+            "subplot(2, 1, 1);"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "arrangement"
+        ]
+      },
+      {
+        "name": "extra figure",
+        "replace": [],
+        "append": "figure; plot(0:2);",
+        "fail": [
+          "arrangement"
+        ]
+      },
+      {
+        "name": "horizontal panels",
+        "replace": [
+          [
+            "subplot(2, 1,",
+            "subplot(1, 2,"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "arrangement"
+        ]
+      },
+      {
+        "name": "blank name",
+        "replace": [
+          [
+            "% Name: Instructor",
+            "% Name: "
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "personalization"
+        ]
+      },
+      {
+        "name": "runtime error",
+        "replace": [],
+        "append": "error('intentional Unit 6 error');",
+        "fail": [
+          "execution"
+        ]
+      },
+      {
+        "name": "recovery after failure",
+        "replace": [],
+        "append": "",
+        "fail": []
+      }
+    ]
+  },
+  "apa": {
+    "id": "u06-apa06-battery-discharge",
+    "file": "U06_APA06_BatteryPlots.m",
+    "cases": [
+      {
+        "name": "solved",
+        "replace": [],
+        "append": "",
+        "fail": []
+      },
+      {
+        "name": "repeat solved",
+        "replace": [],
+        "append": "",
+        "fail": []
+      },
+      {
+        "name": "interior power",
+        "replace": [
+          [
+            "figure;",
+            "power_A_W(7) = power_A_W(7)+0.2;\nfigure;"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "power",
+          "bottom"
+        ]
+      },
+      {
+        "name": "matrix power",
+        "replace": [
+          [
+            "voltage_A_V .* current_A_A",
+            "voltage_A_V * current_A_A'"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "power",
+          "bottom"
+        ]
+      },
+      {
+        "name": "wrong cutoff",
+        "replace": [
+          [
+            "[cutoff_V cutoff_V]",
+            "[3.1 3.1]"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "top"
+        ]
+      },
+      {
+        "name": "omitted cutoff",
+        "replace": [
+          [
+            "plot([0 120], [cutoff_V cutoff_V], 'k--', 'LineWidth', 1.5);",
+            ""
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "top"
+        ]
+      },
+      {
+        "name": "sample indices",
+        "replace": [
+          [
+            "plot(time_min,",
+            "plot(1:13,"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "top",
+          "bottom"
+        ]
+      },
+      {
+        "name": "swapped legends",
+        "replace": [
+          [
+            "legend('Battery A', 'Battery B'",
+            "legend('Battery B', 'Battery A'"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "presentation"
+        ]
+      },
+      {
+        "name": "inconsistent styles",
+        "replace": [
+          [
+            "power_A_W, '-o'",
+            "power_A_W, ':x'"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "presentation"
+        ]
+      },
+      {
+        "name": "indistinguishable styles",
+        "replace": [
+          [
+            "'--s'",
+            "'-o'"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "presentation"
+        ]
+      },
+      {
+        "name": "missing title",
+        "replace": [
+          [
+            "title('Electrical power during battery discharge');",
+            "title('');"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "presentation"
+        ]
+      },
+      {
+        "name": "missing unit",
+        "replace": [
+          [
+            "ylabel('Voltage (V)');",
+            "ylabel('Voltage');"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "presentation"
+        ]
+      },
+      {
+        "name": "clipped voltage",
+        "replace": [
+          [
+            "ylim([2.5 4.4])",
+            "ylim([3 4.2])"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "limits"
+        ]
+      },
+      {
+        "name": "clipped power",
+        "replace": [
+          [
+            "ylim([5 9])",
+            "ylim([6 8])"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "limits"
+        ]
+      },
+      {
+        "name": "missing final output",
+        "replace": [
+          [
+            "fprintf('Battery B final power: %.2f W\\n', power_B_W(end));",
+            ""
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "output"
+        ]
+      },
+      {
+        "name": "swapped final output",
+        "replace": [
+          [
+            "fprintf('Battery A final power: %.2f W\\n', power_A_W(end));\nfprintf('Battery B final power: %.2f W\\n', power_B_W(end));",
+            "fprintf('Battery A: %.2f W; Battery B: %.2f W\\n', power_B_W(end), power_A_W(end));"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "output"
+        ]
+      },
+      {
+        "name": "different valid presentation",
+        "replace": [
+          [
+            "'-o'",
+            "':x'"
+          ],
+          [
+            "'--s'",
+            "'-.^'"
+          ],
+          [
+            "title('Battery discharge voltage at constant load')",
+            "title('Potential during synthetic discharge')"
+          ],
+          [
+            "title('Electrical power during battery discharge')",
+            "title('Output under a constant load')"
+          ],
+          [
+            "'3.20 V exercise cutoff');",
+            "'Discharge threshold', 'Location', 'southwest');"
+          ],
+          [
+            "legend('Battery A', 'Battery B');",
+            "legend('Cell A', 'Cell B', 'Location', 'northwest');"
+          ],
+          [
+            "ylim([2.5 4.4])",
+            "ylim([2 5])"
+          ],
+          [
+            "ylim([5 9])",
+            "ylim([0 10])"
+          ]
+        ],
+        "append": "",
+        "fail": []
+      },
+      {
+        "name": "row vectors",
+        "replace": [
+          [
+            "power_A_W =",
+            "time_min=time_min'; voltage_A_V=voltage_A_V'; voltage_B_V=voltage_B_V'; current_A_A=current_A_A'; current_B_A=current_B_A';\npower_A_W ="
+          ]
+        ],
+        "append": "",
+        "fail": []
+      },
+      {
+        "name": "reference at all samples",
+        "replace": [
+          [
+            "plot([0 120], [cutoff_V cutoff_V],",
+            "plot(time_min, cutoff_V*ones(size(time_min)),"
+          ]
+        ],
+        "append": "",
+        "fail": []
+      },
+      {
+        "name": "scientific output and shared units",
+        "replace": [
+          [
+            "fprintf('Battery A final power: %.2f W\\n', power_A_W(end));\nfprintf('Battery B final power: %.2f W\\n', power_B_W(end));",
+            "fprintf('Final power (W): Battery A = %.3e; Battery B = %.3e\\n', power_A_W(end), power_B_W(end));"
+          ]
+        ],
+        "append": "",
+        "fail": []
+      },
+      {
+        "name": "missing panel",
+        "replace": [
+          [
+            "subplot(2, 1, 2);",
+            "subplot(2, 1, 1);"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "arrangement"
+        ]
+      },
+      {
+        "name": "extra figure",
+        "replace": [],
+        "append": "figure; plot(0:2);",
+        "fail": [
+          "arrangement"
+        ]
+      },
+      {
+        "name": "horizontal panels",
+        "replace": [
+          [
+            "subplot(2, 1,",
+            "subplot(1, 2,"
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "arrangement"
+        ]
+      },
+      {
+        "name": "blank name",
+        "replace": [
+          [
+            "% Name: Instructor",
+            "% Name: "
+          ]
+        ],
+        "append": "",
+        "fail": [
+          "personalization"
+        ]
+      },
+      {
+        "name": "runtime error",
+        "replace": [],
+        "append": "error('intentional Unit 6 error');",
+        "fail": [
+          "execution"
+        ]
+      },
+      {
+        "name": "recovery after failure",
+        "replace": [],
+        "append": "",
+        "fail": []
+      }
+    ]
+  }
+}

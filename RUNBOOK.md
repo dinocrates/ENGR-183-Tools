@@ -94,6 +94,12 @@ return value entirely from variables assigned *after* execution. `unit01_check.m
 
 ## The dev/main kernel-sharing gotcha
 
+Unit 6 plotting assignments have additional focused verification documented in
+[`engr183-harness/_verify/UNIT06.md`](engr183-harness/_verify/UNIT06.md).
+Their untouched starters intentionally score 2/10; solved fixtures score 10/10
+code-check feedback. Run GP and APA separately, inspect the actual browser camera
+exports, and verify the mounted checker hash before accepting browser results.
+
 `pages.yml` builds the WASM kernel — which bakes in `/engr183/tests/` and
 `/engr183/+engr183/`, i.e. the harness itself — **only from `main`**, then copies that
 same build into the `dev` deploy to avoid paying for it twice. `public/starters/` (what

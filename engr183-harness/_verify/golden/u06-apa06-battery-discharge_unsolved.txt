@@ -1,0 +1,32 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U06-APA06-BATTERY-DISCHARGE  |  code-check feedback
+--------------------------------------------------------------------
+[ FAIL ] Personalization: completed Name and Date                0/1
+         -> your code raised an error: Fill in the Name comment instead of leaving it blank or at the starter placeholder.
+[ PASS ] Execution: script completes                             1/1
+[ PASS ] Given data: all samples and cutoff                      1/1
+[ FAIL ] Power calculations: both complete arrays                0/1
+         -> your code raised an error: Create the variable power_A_W.
+[ FAIL ] Final-power output: Battery A and Battery B             0/1
+         -> your code raised an error: Print each final power with Battery A/B labels and W units, using the calculated arrays.
+[ FAIL ] Figure arrangement: two vertical panels                 0/1
+         -> your code raised an error: Create exactly one figure containing both panels.
+[ FAIL ] Voltage panel: A, B and cutoff                          0/1
+         -> your code raised an error: Create exactly one figure containing both panels.
+[ FAIL ] Power panel: both calculated records                    0/1
+         -> your code raised an error: Create exactly one figure containing both panels.
+[ FAIL ] Presentation: labels, grid, legends, styles             0/1
+         -> your code raised an error: Create exactly one figure containing both panels.
+[ FAIL ] Axis limits: include all supplied values                0/1
+         -> your code raised an error: Create exactly one figure containing both panels.
+--------------------------------------------------------------------
+Score: 2/10 points (20%)   Criteria met: 2 of 10
+
+Practice feedback only; this is not the final Canvas grade.
+Review calculation methods and interpretation with the Canvas rubric.
+Inspect both panels and export the PNG; download the named .m file.
+Check filenames, readability and complete submission in Canvas.
+Run Tests never submits to Canvas.
+--------------------------------------------------------------------
+

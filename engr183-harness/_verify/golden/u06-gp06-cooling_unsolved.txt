@@ -1,0 +1,32 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U06-GP06-COOLING  |  code-check feedback
+--------------------------------------------------------------------
+[ FAIL ] Personalization: completed Name and Date                0/1
+         -> your code raised an error: Fill in the Name comment instead of leaving it blank or at the starter placeholder.
+[ PASS ] Execution: script completes                             1/1
+[ PASS ] Given data: all samples and limit                       1/1
+[ FAIL ] Difference and labeled final output                     0/1
+         -> your code raised an error: Create the variable delta_C.
+[ FAIL ] Figure arrangement: two vertical panels                 0/1
+         -> your code raised an error: Create exactly one figure containing both panels.
+[ FAIL ] Top-panel values: A, B and limit                        0/1
+         -> your code raised an error: Create exactly one figure containing both panels.
+[ FAIL ] Bottom-panel values: A minus B                          0/1
+         -> your code raised an error: Create exactly one figure containing both panels.
+[ FAIL ] Titles, quantity/unit labels and grid                   0/1
+         -> your code raised an error: Create exactly one figure containing both panels.
+[ FAIL ] Series styles and associated top legend                 0/1
+         -> your code raised an error: Create exactly one figure containing both panels.
+[ FAIL ] Axis limits: both panels                                0/1
+         -> your code raised an error: Create exactly one figure containing both panels.
+--------------------------------------------------------------------
+Score: 2/10 points (20%)   Criteria met: 2 of 10
+
+Practice feedback only; this is not the final Canvas grade.
+Review calculation methods and interpretation with the Canvas rubric.
+Inspect both panels and export the PNG; download the named .m file.
+Check filenames, readability and complete submission in Canvas.
+Run Tests never submits to Canvas.
+--------------------------------------------------------------------
+

@@ -1,0 +1,9 @@
+{
+  "id": "u06-gp06-cooling",
+  "title": "Unit 6 — GP-06: Cooling-System Comparison",
+  "description": "Follow the guided MATLAB lesson using the preloaded U06_GP06_CoolingPlots.m and its embedded data. Both configurations assume the same heat load and starting temperature. Calculate A minus B at every sample, store the last difference in final_delta_C, and print a labeled result with C units. Build one figure with two vertically stacked panels: temperatures A and B plus the horizontal 70 C limit above, and their difference below. Use solid circles for A, dashed squares for B, a black dashed limit, and solid diamonds for the difference. Add descriptive titles, quantity/unit labels, grid, and a correctly associated top legend. Use x limits [0,12], top y limits [20,85], and bottom y limits [0,30], with readable line widths. Write 2–3 sentences as MATLAB comments giving numerical evidence, what the exercise limit reveals, and a limitation of the synthetic discrete samples. Run File, inspect both panels, then Run Tests. Download the completed U06_GP06_CoolingPlots.m and separately export GP06_cooling_comparison.png using the plot toolbar camera; submit both in Canvas.",
+  "files": ["U06_GP06_CoolingPlots.m"],
+  "note": "The data are synthetic and 70 C is an exercise design limit. All starting data are in the script. Run Tests provides up to 10 code-check feedback points and never submits to Canvas or replaces its grade. Canvas rubric: Directions 30%; Compilation/syntax 15%; Runtime/input-output 30%; Correctness 25%. Canvas supplies points and due dates. Source calculation methods, interpretation, threshold reasoning, filenames, complete submission, and PNG readability/scale receive manual review; a first supplied exceedance does not establish an exact between-sample crossing time.",
+  "category": "guided-practice",
+  "unitNumber": 6
+}

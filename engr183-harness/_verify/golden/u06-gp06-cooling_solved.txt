@@ -1,0 +1,24 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U06-GP06-COOLING  |  code-check feedback
+--------------------------------------------------------------------
+[ PASS ] Personalization: completed Name and Date                1/1
+[ PASS ] Execution: script completes                             1/1
+[ PASS ] Given data: all samples and limit                       1/1
+[ PASS ] Difference and labeled final output                     1/1
+[ PASS ] Figure arrangement: two vertical panels                 1/1
+[ PASS ] Top-panel values: A, B and limit                        1/1
+[ PASS ] Bottom-panel values: A minus B                          1/1
+[ PASS ] Titles, quantity/unit labels and grid                   1/1
+[ PASS ] Series styles and associated top legend                 1/1
+[ PASS ] Axis limits: both panels                                1/1
+--------------------------------------------------------------------
+Score: 10/10 points (100%)   Criteria met: 10 of 10
+
+Practice feedback only; this is not the final Canvas grade.
+Review calculation methods and interpretation with the Canvas rubric.
+Inspect both panels and export the PNG; download the named .m file.
+Check filenames, readability and complete submission in Canvas.
+Run Tests never submits to Canvas.
+--------------------------------------------------------------------
+

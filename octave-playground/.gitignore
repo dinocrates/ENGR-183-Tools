@@ -50,3 +50,8 @@ public/starters/*
 # there's no engr183-harness counterpart to sync it from, it's hand-authored
 # playground-only content, so it's real source and must be tracked.
 !public/starters/scratch/
+
+# Local evidence from the focused Unit 6 browser checks.
+m0-spike-driver/u06-*-results.json
+m0-spike-driver/u06-*-last-output.txt
+m0-spike-driver/u06-probe-output.txt

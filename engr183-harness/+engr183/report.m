@@ -14,9 +14,12 @@ function report(unit, results, noisy)
 
   width = 68;
   rule = repmat('-', 1, width);
+  practice = any(strcmp(unit, {'u06-gp06-cooling', 'u06-apa06-battery-discharge'}));
+  reportLabel = 'rubric check';
+  if practice, reportLabel = 'code-check feedback'; end
 
   fprintf('\n%s\n', rule);
-  fprintf('ENGR-183  |  %s  |  rubric check\n', upper(unit));
+  fprintf('ENGR-183  |  %s  |  %s\n', upper(unit), reportLabel);
   fprintf('%s\n', rule);
 
   if isempty(results)
@@ -68,7 +71,13 @@ function report(unit, results, noisy)
   fprintf('Score: %g/%g points (%.0f%%)   Criteria met: %d of %d\n', ...
           earned, total, pct, met, numel(results));
 
-  if met == numel(results)
+  if practice
+    fprintf(['\nPractice feedback only; this is not the final Canvas grade.\n' ...
+      'Review calculation methods and interpretation with the Canvas rubric.\n' ...
+      'Inspect both panels and export the PNG; download the named .m file.\n' ...
+      'Check filenames, readability and complete submission in Canvas.\n' ...
+      'Run Tests never submits to Canvas.\n']);
+  elseif met == numel(results)
     fprintf('\nEverything passes. Nice work - you are ready to submit.\n');
   else
     remaining = numel(results) - met;

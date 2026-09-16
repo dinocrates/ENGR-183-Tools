@@ -1,0 +1,16 @@
+function specs = u06_gp06_cooling_tests()
+% Ten practice feedback points, separate from the Canvas rubric.
+% Reset here, not in a criterion: edits, retries and unit switches get a new run.
+  u06_gp06_cooling_check('reset');
+  keys = {'personalization', 'execution', 'data', 'difference', 'arrangement', ...
+          'top', 'bottom', 'labels', 'identification', 'limits'};
+  names = {'Personalization: completed Name and Date', 'Execution: script completes', ...
+    'Given data: all samples and limit', 'Difference and labeled final output', ...
+    'Figure arrangement: two vertical panels', 'Top-panel values: A, B and limit', ...
+    'Bottom-panel values: A minus B', 'Titles, quantity/unit labels and grid', ...
+    'Series styles and associated top legend', 'Axis limits: both panels'};
+  specs = cell(1, numel(keys));
+  for k = 1:numel(keys)
+    specs{k} = engr183.spec(names{k}, 'u06_gp06_cooling_check', {keys{k}}, true, 1);
+  end
+end
