@@ -8,7 +8,8 @@ import { KernelMessage, type ContentsManager } from '@jupyterlab/services';
 import { KernelSpecs, type IKernel } from '@jupyterlite/services';
 import { WebWorkerKernel } from '@jupyterlite/xeus';
 import { PageConfig } from '@jupyterlab/coreutils';
-import { installPlotTitleCode, PlotTitles } from './plotTitles';
+import { PlotTitles } from './plotTitles';
+import { installGraphicsCode } from './graphicsCompatibility';
 
 const KERNEL_NAME = 'xoctave';
 const ENV_NAME = 'xeus-kernel';
@@ -124,7 +125,7 @@ export class OctaveKernelSession {
 
     await this.kernel.ready;
     this.plotTitles = new PlotTitles();
-    await this.execute(installPlotTitleCode());
+    await this.execute(installGraphicsCode());
   }
 
   async restart(): Promise<void> {

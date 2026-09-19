@@ -1,24 +1,5 @@
-import titleSource from './octave/title.m?raw';
-
 const TITLE_MIME = 'application/vnd.engr183.plot-titles+json';
 const PLOTLY_MIME = 'application/vnd.plotly.v1+json';
-
-/** Install only in the browser kernel; desktop Octave needs no workaround. */
-export function installPlotTitleCode(): string {
-  const bytes = Array.from(new TextEncoder().encode(titleSource));
-  return [
-    `setappdata(0, '__engr183_native_title__', @title);`,
-    `mkdir('/tmp/engr183-graphics');`,
-    `__engr183_fid__ = fopen('/tmp/engr183-graphics/title.m', 'w');`,
-    `fwrite(__engr183_fid__, uint8([${bytes.join(',')}]), 'uint8');`,
-    `fclose(__engr183_fid__); clear __engr183_fid__;`,
-    // This intentional shadow should not produce a student-facing warning.
-    `__engr183_warning__ = warning('query', 'Octave:shadowed-function');`,
-    `warning('off', 'Octave:shadowed-function');`,
-    `addpath('/tmp/engr183-graphics');`,
-    `warning(__engr183_warning__.state, 'Octave:shadowed-function'); clear __engr183_warning__;`,
-  ].join('\n');
-}
 
 /** The native toolkit omits axes titles. Merge the shim's annotations into
  * each subsequent native figure payload, preserving its legend annotations. */
