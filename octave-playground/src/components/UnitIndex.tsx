@@ -37,8 +37,9 @@ function UnitButton({ unit, onSelect }: { unit: UnitMeta; onSelect: (unitId: str
 }
 
 export function UnitIndex({ units, scratchUnit, onSelect }: UnitIndexProps) {
+  // Let long lists grow beyond the viewport so centering cannot clip their start.
   return (
-    <div className="mx-auto flex h-full max-w-2xl flex-col justify-center px-6">
+    <div className="mx-auto flex min-h-full max-w-2xl flex-col justify-center px-6 py-16">
       <h1 className="font-pixel mb-1 text-xl font-semibold text-primary">ENGR-183 Octave Playground</h1>
       <p className="mb-6 text-sm text-muted">Pick an exercise to open it.</p>
       {SECTION_ORDER.map(({ category, heading }, i) => {
