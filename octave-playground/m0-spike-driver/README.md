@@ -18,6 +18,8 @@ Run from this directory:
   the cooling comparison, saved-figure reopening and PNG/ZIP rendering.
 - `node t140-legend-repeat.js http://127.0.0.1:4180/` — repeated cooling
   scripts in one kernel and legend cleanup during clearing/removal.
+- `node t141-legend-markers.js http://127.0.0.1:4180/` — marker-only and mixed
+  legend samples, live property/layout updates, saved figures, and PNG/ZIP exports.
 
 The browser scripts also accept the deployed staging/production URL. PNG
 artifacts are ignored by Git.
