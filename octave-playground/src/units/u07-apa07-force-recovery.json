@@ -1,0 +1,12 @@
+{
+  "id": "u07-apa07-force-recovery",
+  "title": "Unit 7 — APA-07: Recovering Forces from Coupled Sensor Readings",
+  "description": "Use MATLAB to recover three signed force components from coupled sensor readings, verify a known-load case, and interpret rank, residuals, conditioning, and sensitivity. Use the supplied completed solver while writing your own main script from the APA-07 Canvas requirements.",
+  "files": [
+    "U07_APA07_ForceRecovery.m",
+    "solve_checked_system.m"
+  ],
+  "note": "All inputs and the completed solver are included. The readings are synthetic; channels 1 and 2 are deliberately similar. Keep 0.200 and 0.201 distinct. Run Tests gives feedback and does not submit to Canvas.",
+  "category": "individual-assignment",
+  "unitNumber": 7
+}

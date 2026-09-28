@@ -1,0 +1,28 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U07-APA07-FORCE-RECOVERY  |  code-check feedback
+--------------------------------------------------------------------
+[ PASS ] Personalization: completed Name and Date                1/1
+[ PASS ] Execution: main script completes                        1/1
+[ PASS ] Inputs: values and scalar/column dimensions             1/1
+[ PASS ] Matrix: supplied coefficients and right side            1/1
+[ PASS ] Helper: general solves and input rejection              1/1
+[ PASS ] Baseline: solution, rank and conditioning               1/1
+[ PASS ] Residual: matching equations and maximum                1/1
+[ PASS ] Known answer: independent data and error                1/1
+[ PASS ] Application: whole-vector percent changes               1/1
+[ PASS ] Changed system: solution and sensitivity                1/1
+[ PASS ] Plot: data, labels, legend, styles and range            1/1
+[ PASS ] Output: labeled numbers and units                       1/1
+--------------------------------------------------------------------
+Score: 12/12 points (100%)   Criteria met: 12 of 12
+
+Practice feedback only; this is not the final Canvas grade.
+Review calculation methods and interpretation with the Canvas rubric.
+Inspect the figure and export the PNG; download the main script and helper.
+Canvas rubric: Directions 30%, Compilation/Syntax 15%, Runtime/IO 30%, Correctness 25%.
+Submit those three completed files, not tests or test transcripts.
+Check filenames, readability and complete submission in Canvas.
+Run Tests never submits to Canvas.
+--------------------------------------------------------------------
+

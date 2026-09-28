@@ -1,0 +1,748 @@
+{
+  "gp": {
+    "id": "u07-gp07-circuit",
+    "file": "U07_GP07_Circuit.m",
+    "starterScore": 2,
+    "cases": [
+      {
+        "name": "complete reference",
+        "fail": [],
+        "replace": [],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "repeat reference",
+        "fail": [],
+        "replace": [],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "blank personalization",
+        "fail": [
+          "personalization"
+        ],
+        "replace": [
+          [
+            "Instructor Reference",
+            ""
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "runtime error",
+        "fail": [
+          "execution"
+        ],
+        "replace": [],
+        "append": "error('intentional Unit 7 error');",
+        "helper": []
+      },
+      {
+        "name": "corrected after error",
+        "fail": [],
+        "replace": [],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "hard-coded helper",
+        "fail": [
+          "helper"
+        ],
+        "replace": [],
+        "append": "",
+        "helper": [
+          [
+            "x = A\\b;",
+            "x = [1; 2; 3];"
+          ]
+        ]
+      },
+      {
+        "name": "missing rank rejection",
+        "fail": [
+          "helper"
+        ],
+        "replace": [],
+        "append": "",
+        "helper": [
+          [
+            "    if rank(A) < n_cols\n        error('Equations do not define a unique solution.');\n    end\n",
+            ""
+          ]
+        ]
+      },
+      {
+        "name": "edited helper correction",
+        "fail": [],
+        "replace": [],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "wrong coefficient sign",
+        "fail": [
+          "matrix",
+          "known"
+        ],
+        "replace": [
+          [
+            "[3 -1 0; -1 3 -1; 0 -1 2]",
+            "[3 1 0; -1 3 -1; 0 -1 2]"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "row right side",
+        "fail": [
+          "execution",
+          "matrix"
+        ],
+        "replace": [
+          [
+            "b_V = [supply_V; 0; 0];",
+            "b_V = [supply_V 0 0];"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "wrong right-side length",
+        "fail": [
+          "execution",
+          "matrix"
+        ],
+        "replace": [
+          [
+            "b_V = [supply_V; 0; 0];",
+            "b_V = [supply_V; 0];"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "currents in amperes",
+        "fail": [
+          "application"
+        ],
+        "replace": [
+          [
+            "1000 *",
+            "1 *"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "wrong known answer true flag",
+        "fail": [
+          "known"
+        ],
+        "replace": [],
+        "append": "known_voltage_V = [0; 0; 0]; known_test_passed = true; known_error_V = 0;",
+        "helper": []
+      },
+      {
+        "name": "negative current norm",
+        "fail": [
+          "application"
+        ],
+        "replace": [],
+        "append": "max_kcl_balance_mA = -1e-12;",
+        "helper": []
+      },
+      {
+        "name": "signed voltage magnitude",
+        "fail": [
+          "change"
+        ],
+        "replace": [],
+        "append": "voltage_change_pct = -10;",
+        "helper": []
+      },
+      {
+        "name": "row baseline solution",
+        "fail": [
+          "baseline",
+          "residual"
+        ],
+        "replace": [],
+        "append": "node_voltage_V = node_voltage_V';",
+        "helper": []
+      },
+      {
+        "name": "changed residual original rhs",
+        "fail": [
+          "change"
+        ],
+        "replace": [],
+        "append": "changed_residual_V = A*changed_node_voltage_V-b_V; changed_max_residual_V = norm(changed_residual_V,Inf);",
+        "helper": []
+      },
+      {
+        "name": "wrong plot series",
+        "fail": [
+          "plot"
+        ],
+        "replace": [
+          [
+            "node_number, changed_node_voltage_V,",
+            "node_number, node_voltage_V,"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "swapped legend",
+        "fail": [
+          "plot"
+        ],
+        "replace": [
+          [
+            "legend('Original supply (12 V)', 'Changed supply (10.8 V)');",
+            "legend('Changed supply (10.8 V)', 'Original supply (12 V)');"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "missing output units",
+        "fail": [
+          "output"
+        ],
+        "replace": [
+          [
+            "Source current (mA):",
+            "Source current:"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "wrong output numbers",
+        "fail": [
+          "output"
+        ],
+        "replace": [
+          [
+            "', source_current_mA);",
+            "', 900);"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "missing output numbers",
+        "fail": [
+          "output"
+        ],
+        "replace": [
+          [
+            "Source current (mA): %.6f",
+            "Source current (mA):"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "altered tiny tolerance",
+        "fail": [
+          "inputs"
+        ],
+        "replace": [],
+        "append": "tolerance_V = 1.1e-10;",
+        "helper": []
+      },
+      {
+        "name": "negative residual maximum",
+        "fail": [
+          "residual"
+        ],
+        "replace": [],
+        "append": "max_residual_V = -1e-12;",
+        "helper": []
+      },
+      {
+        "name": "rounded valid output",
+        "fail": [],
+        "replace": [
+          [
+            "%.6f",
+            "%.3f"
+          ],
+          [
+            "norm(residual_V, Inf)",
+            "max(abs(residual_V))"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "no grid",
+        "fail": [
+          "plot"
+        ],
+        "replace": [
+          [
+            "grid on;",
+            "grid off;"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "indistinguishable styles",
+        "fail": [
+          "plot"
+        ],
+        "replace": [
+          [
+            "'--s'",
+            "'-o'"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "valid alternate styles",
+        "fail": [],
+        "replace": [
+          [
+            "'-o'",
+            "':d'"
+          ],
+          [
+            "'--s'",
+            "'-.^'"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "changed residual label cannot replace baseline",
+        "fail": [
+          "output"
+        ],
+        "replace": [
+          [
+            "Baseline maximum residual (V):",
+            "Changed maximum residual (V):"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "corrected final reference",
+        "fail": [],
+        "replace": [],
+        "append": "",
+        "helper": []
+      }
+    ]
+  },
+  "apa": {
+    "id": "u07-apa07-force-recovery",
+    "file": "U07_APA07_ForceRecovery.m",
+    "starterScore": 3,
+    "cases": [
+      {
+        "name": "complete reference",
+        "fail": [],
+        "replace": [],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "repeat reference",
+        "fail": [],
+        "replace": [],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "blank personalization",
+        "fail": [
+          "personalization"
+        ],
+        "replace": [
+          [
+            "Instructor Reference",
+            ""
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "runtime error",
+        "fail": [
+          "execution"
+        ],
+        "replace": [],
+        "append": "error('intentional Unit 7 error');",
+        "helper": []
+      },
+      {
+        "name": "corrected after error",
+        "fail": [],
+        "replace": [],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "hard-coded helper",
+        "fail": [
+          "helper"
+        ],
+        "replace": [],
+        "append": "",
+        "helper": [
+          [
+            "x = A\\b;",
+            "x = [1; 2; 3];"
+          ]
+        ]
+      },
+      {
+        "name": "missing rank rejection",
+        "fail": [
+          "helper"
+        ],
+        "replace": [],
+        "append": "",
+        "helper": [
+          [
+            "    if rank(A) < n_cols\n        error('Equations do not define a unique solution.');\n    end\n",
+            ""
+          ]
+        ]
+      },
+      {
+        "name": "edited helper correction",
+        "fail": [],
+        "replace": [],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "rounded coefficient",
+        "fail": [
+          "execution",
+          "matrix"
+        ],
+        "replace": [
+          [
+            "1.00 0.201 0.10",
+            "1.00 0.200 0.10"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "row reading vector",
+        "fail": [
+          "inputs",
+          "execution"
+        ],
+        "replace": [
+          [
+            "[118.00; 117.96; 54.00]",
+            "[118.00 117.96 54.00]"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "percent fractions",
+        "fail": [
+          "application"
+        ],
+        "replace": [
+          [
+            "100 * norm",
+            "norm"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "component percentage",
+        "fail": [
+          "application"
+        ],
+        "replace": [],
+        "append": "force_change_pct = 100*abs(delta_force_N(2))/abs(force_N(2));",
+        "helper": []
+      },
+      {
+        "name": "infinity norm percentages",
+        "fail": [
+          "application"
+        ],
+        "replace": [],
+        "append": "input_change_pct=100*norm(delta_sensor_mV,Inf)/norm(sensor_mV,Inf); force_change_pct=100*norm(delta_force_N,Inf)/norm(force_N,Inf);",
+        "helper": []
+      },
+      {
+        "name": "wrong known answer true flag",
+        "fail": [
+          "known"
+        ],
+        "replace": [],
+        "append": "recovered_known_force_N = [21;-10;30]; known_test_passed = true; known_error_N = 0;",
+        "helper": []
+      },
+      {
+        "name": "changed residual original readings",
+        "fail": [
+          "change"
+        ],
+        "replace": [],
+        "append": "changed_residual_mV = C*changed_force_N-sensor_mV; changed_max_residual_mV = norm(changed_residual_mV,Inf);",
+        "helper": []
+      },
+      {
+        "name": "wrong perturbation channel",
+        "fail": [
+          "change"
+        ],
+        "replace": [
+          [
+            "changed_sensor_mV = sensor_mV + delta_sensor_mV;",
+            "changed_sensor_mV = sensor_mV + [0.020;0;0];"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "plot readings",
+        "fail": [
+          "plot"
+        ],
+        "replace": [
+          [
+            "component_number, force_N,",
+            "component_number, sensor_mV,"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "swap one plot series",
+        "fail": [
+          "plot"
+        ],
+        "replace": [
+          [
+            "component_number, changed_force_N,",
+            "component_number, force_N,"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "clip negative Fy",
+        "fail": [
+          "plot"
+        ],
+        "replace": [],
+        "append": "ylim([0 130]);",
+        "helper": []
+      },
+      {
+        "name": "swapped legend",
+        "fail": [
+          "plot"
+        ],
+        "replace": [
+          [
+            "legend('Original readings', 'Changed readings');",
+            "legend('Changed readings', 'Original readings');"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "wrong component labels",
+        "fail": [
+          "plot"
+        ],
+        "replace": [
+          [
+            "{'Fx', 'Fy', 'Fz'}",
+            "{'Fy', 'Fx', 'Fz'}"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "missing output units",
+        "fail": [
+          "output"
+        ],
+        "replace": [
+          [
+            "Original forces (N):",
+            "Original forces:"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "wrong output numbers",
+        "fail": [
+          "output"
+        ],
+        "replace": [
+          [
+            "', force_N);",
+            "', [1;2;3]);"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "row solution",
+        "fail": [
+          "baseline",
+          "residual"
+        ],
+        "replace": [],
+        "append": "force_N = force_N';",
+        "helper": []
+      },
+      {
+        "name": "complex computed value",
+        "fail": [
+          "baseline"
+        ],
+        "replace": [],
+        "append": "force_N = force_N + 1i;",
+        "helper": []
+      },
+      {
+        "name": "nonfinite computed value",
+        "fail": [
+          "baseline"
+        ],
+        "replace": [],
+        "append": "condition_number = Inf;",
+        "helper": []
+      },
+      {
+        "name": "inconsistent reported norm",
+        "fail": [
+          "residual"
+        ],
+        "replace": [],
+        "append": "residual_mV=[0;5e-10;0]; max_residual_mV=0;",
+        "helper": []
+      },
+      {
+        "name": "negative known error",
+        "fail": [
+          "known"
+        ],
+        "replace": [],
+        "append": "known_error_N=-1e-12;",
+        "helper": []
+      },
+      {
+        "name": "rounded valid output",
+        "fail": [],
+        "replace": [
+          [
+            "%.6f",
+            "%.3f"
+          ],
+          [
+            "norm(residual_mV, Inf)",
+            "max(abs(residual_mV))"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "no grid",
+        "fail": [
+          "plot"
+        ],
+        "replace": [
+          [
+            "grid on;",
+            "grid off;"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "indistinguishable styles",
+        "fail": [
+          "plot"
+        ],
+        "replace": [
+          [
+            "'--s'",
+            "'-o'"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "valid alternate styles",
+        "fail": [],
+        "replace": [
+          [
+            "'-o'",
+            "':d'"
+          ],
+          [
+            "'--s'",
+            "'-.^'"
+          ]
+        ],
+        "append": "",
+        "helper": []
+      },
+      {
+        "name": "corrected final reference",
+        "fail": [],
+        "replace": [],
+        "append": "",
+        "helper": []
+      }
+    ]
+  }
+}

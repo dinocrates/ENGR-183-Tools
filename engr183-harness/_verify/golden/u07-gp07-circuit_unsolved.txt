@@ -1,0 +1,38 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U07-GP07-CIRCUIT  |  code-check feedback
+--------------------------------------------------------------------
+[ FAIL ] Personalization: completed Name and Date                0/1
+         -> your code raised an error: Fill in the Name comment instead of leaving it blank or at the starter placeholder.
+[ PASS ] Execution: main script completes                        1/1
+[ PASS ] Inputs: values and scalar/column dimensions             1/1
+[ FAIL ] Matrix: supplied coefficients and right side            0/1
+         -> your code raised an error: Create the variable A.
+[ FAIL ] Helper: general solves and input rejection              0/1
+         -> your code raised an error: Helper must solve finite full-rank 2-by-2 systems: element number 1 undefined in return list
+[ FAIL ] Baseline: solution, rank and conditioning               0/1
+         -> your code raised an error: Create the variable node_voltage_V.
+[ FAIL ] Residual: matching equations and maximum                0/1
+         -> your code raised an error: Create the variable A.
+[ FAIL ] Known answer: independent data and error                0/1
+         -> your code raised an error: Create the variable known_b_V.
+[ FAIL ] Application: currents and current balance               0/1
+         -> your code raised an error: Create the variable source_current_mA.
+[ FAIL ] Changed system: solution and sensitivity                0/1
+         -> your code raised an error: Create the variable changed_b_V.
+[ FAIL ] Plot: data, labels, legend, styles and range            0/1
+         -> your code raised an error: Create one figure with one plotting axes comparing both cases.
+[ FAIL ] Output: labeled numbers and units                       0/1
+         -> your code raised an error: Print matrix rank with recognizable labels, correct numbers and units (ordinary rounding is fine).
+--------------------------------------------------------------------
+Score: 2/12 points (17%)   Criteria met: 2 of 12
+
+Practice feedback only; this is not the final Canvas grade.
+Review calculation methods and interpretation with the Canvas rubric.
+Inspect the figure and export the PNG; download the main script and helper.
+Canvas rubric: Directions 30%, Compilation/Syntax 15%, Runtime/IO 30%, Correctness 25%.
+Submit those three completed files, not tests or test transcripts.
+Check filenames, readability and complete submission in Canvas.
+Run Tests never submits to Canvas.
+--------------------------------------------------------------------
+

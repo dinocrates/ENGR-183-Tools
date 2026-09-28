@@ -1,0 +1,12 @@
+{
+  "id": "u07-gp07-circuit",
+  "title": "Unit 7 — GP-07: Solving a Resistor Network",
+  "description": "Use MATLAB to solve a three-node resistor network, check an independent known answer and current balance, and compare node voltages after a supply change. Follow the GP-07 Canvas page and video while completing the numbered TODOs.",
+  "files": [
+    "U07_GP07_Circuit.m",
+    "solve_checked_system.m"
+  ],
+  "note": "All inputs are included. This is an ideal teaching circuit. Run the main script; the helper is called with inputs. Run Tests gives feedback and does not submit to Canvas.",
+  "category": "guided-practice",
+  "unitNumber": 7
+}

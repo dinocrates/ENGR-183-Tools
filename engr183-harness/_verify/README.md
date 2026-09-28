@@ -1,5 +1,9 @@
 Scratch-only. Not part of the shipped harness, not mounted into the WASM VFS.
 
+Unit 7: see [UNIT07.md](UNIT07.md) for both project IDs, 2/12 GP and 3/12 APA
+starter baselines, 12/12 reference totals, fixture/golden commands, shared
+mutations, session-isolation checks, and browser/camera acceptance evidence.
+
 `solved/<unit>/` and `unsolved/<unit>/` hold reference solutions and pristine unsolved
 stubs for each unit, used to record the intended starter baseline in
 `../assignments/<unit>/` and full marks once solved. `new_unit.py` scaffolds both when

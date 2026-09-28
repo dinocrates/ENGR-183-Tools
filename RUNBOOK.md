@@ -94,6 +94,13 @@ return value entirely from variables assigned *after* execution. `unit01_check.m
 
 ## The dev/main kernel-sharing gotcha
 
+Unit 7 GP-07 and APA-07 verification is documented in
+[`engr183-harness/_verify/UNIT07.md`](engr183-harness/_verify/UNIT07.md).
+The projects are `u07-gp07-circuit` (starter 2/12) and
+`u07-apa07-force-recovery` (starter 3/12); both references earn 12/12 practice
+feedback. Each has two MATLAB files with an independent helper copy. Rebuild
+the mount before the app, and verify the mounted Unit 7 checker SHA in-browser.
+
 Unit 6 plotting assignments have additional focused verification documented in
 [`engr183-harness/_verify/UNIT06.md`](engr183-harness/_verify/UNIT06.md).
 Their untouched starters intentionally score 2/10; solved fixtures score 10/10
