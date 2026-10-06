@@ -3,6 +3,17 @@ Playwright/Node scripts used to produce `../M0-FINDINGS.md`. Scratch, not shippe
 Requires the M0 spike site built and served locally (see M0-FINDINGS.md T0.1) at
 `http://localhost:8000`. `npm install && npx playwright install chromium` first.
 
+## CSV view regression checks
+
+For the current app, build with Node 24 and serve with `vite preview`.
+Run from this directory:
+
+- `node --test t142-csv-data.js` — quoted fields, record endings, blank cells,
+  malformed input and header detection against the assignment CSVs.
+- `node t143-csv-view.js http://127.0.0.1:4186/` — Raw/Table switching,
+  preference persistence, header overrides, code edits/undo/breakpoints,
+  uploads, unchanged downloads, pagination, themes and assignment tables.
+
 ## Saved figure regression checks
 
 For the current app, build with Node 24 and serve with `vite preview`.

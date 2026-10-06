@@ -4,13 +4,14 @@ import type { editor as MonacoEditorNS } from 'monaco-editor'
 import { OCTAVE_LANGUAGE_ID, registerOctaveLanguage } from './octaveLanguage'
 import { registerCustomMonacoThemes } from './monacoThemes'
 import { FontSizeControls } from './FontSizeControls'
+import { CsvTable } from './CsvTable'
 import { useTheme } from '../theme'
 
 interface EditorProps {
   files: string[]
   // Bundled read-only data files (e.g. a CSV). Rendered as extra tabs after
-  // the editable ones; opening one shows it read-only, as plain text, with
-  // an inert breakpoint gutter (clicks set nothing).
+  // the editable ones; CSVs offer raw text and table views. The raw view
+  // is read-only, with an inert breakpoint gutter (clicks set nothing).
   dataFiles?: string[]
   // Student-uploaded read-only data files ("My files"). Same read-only
   // treatment as dataFiles, different tab icon.
@@ -47,6 +48,7 @@ function handleBeforeMount(monaco: Monaco): void {
 
 const FONT_SIZE_KEY = 'engr183-editor-font-size'
 const DEFAULT_FONT_SIZE = 13
+const CSV_VIEW_KEY = 'engr183-csv-view'
 
 export function Editor({
   files,
@@ -64,6 +66,12 @@ export function Editor({
 }: EditorProps) {
   const { theme } = useTheme()
   const activeIsData = dataFiles.includes(activeFile) || uploads.includes(activeFile) || outputs.includes(activeFile)
+  const activeIsCsv = activeIsData && /\.csv$/i.test(activeFile)
+  const [csvView, setCsvView] = useState<'raw' | 'table'>(() =>
+    localStorage.getItem(CSV_VIEW_KEY) === 'table' ? 'table' : 'raw',
+  )
+  const [csvHeaders, setCsvHeaders] = useState<Record<string, boolean>>({})
+  const showCsvTable = activeIsCsv && csvView === 'table'
   const [fontSize, setFontSize] = useState(() => {
     const stored = Number(localStorage.getItem(FONT_SIZE_KEY))
     return stored > 0 ? stored : DEFAULT_FONT_SIZE
@@ -148,71 +156,94 @@ export function Editor({
 
   return (
     <div className="flex h-full flex-1 flex-col overflow-hidden">
-      <div className="flex items-center border-b border-line bg-surface">
-        {files.map((file) => (
-          <button
-            key={file}
-            className={`border-r border-line border-t-2 px-3 py-1.5 text-sm ${
-              file === activeFile
-                ? 'border-t-accent-fg bg-app text-primary'
-                : 'border-t-transparent text-muted hover:bg-raised'
-            }`}
-            onClick={() => onSelectTab(file)}
-          >
-            {file}
-            {dirtyFiles.has(file) && <span className="ml-1.5 text-accent-fg">●</span>}
-          </button>
-        ))}
-        {dataFiles.map((file) => (
-          <button
-            key={file}
-            className={`flex items-center gap-1.5 border-r border-line border-t-2 px-3 py-1.5 text-sm ${
-              file === activeFile
-                ? 'border-t-accent-fg bg-app text-primary'
-                : 'border-t-transparent text-muted hover:bg-raised'
-            }`}
-            onClick={() => onSelectTab(file)}
-            title="Bundled data file — read-only"
-          >
-            <span aria-hidden>🔒</span>
-            {file}
-          </button>
-        ))}
-        {uploads.map((file) => (
-          <button
-            key={file}
-            className={`flex items-center gap-1.5 border-r border-line border-t-2 px-3 py-1.5 text-sm ${
-              file === activeFile
-                ? 'border-t-accent-fg bg-app text-primary'
-                : 'border-t-transparent text-muted hover:bg-raised'
-            }`}
-            onClick={() => onSelectTab(file)}
-            title="Your uploaded file — read-only"
-          >
-            <span aria-hidden>📎</span>
-            {file}
-          </button>
-        ))}
-        {outputs.map((file) => (
-          <button
-            key={file}
-            className={`flex items-center gap-1.5 border-r border-line border-t-2 px-3 py-1.5 text-sm ${
-              file === activeFile
-                ? 'border-t-accent-fg bg-app text-primary'
-                : 'border-t-transparent text-muted hover:bg-raised'
-            }`}
-            onClick={() => onSelectTab(file)}
-            title="Written by your own code — read-only"
-          >
-            <span aria-hidden>📤</span>
-            {file}
-          </button>
-        ))}
-        <div className="ml-auto flex items-center pr-2">
+      <div className="flex shrink-0 items-center border-b border-line bg-surface">
+        <div className="flex min-w-0 flex-1 overflow-x-auto [&>button]:shrink-0">
+          {files.map((file) => (
+            <button
+              key={file}
+              className={`border-r border-line border-t-2 px-3 py-1.5 text-sm ${
+                file === activeFile
+                  ? 'border-t-accent-fg bg-app text-primary'
+                  : 'border-t-transparent text-muted hover:bg-raised'
+              }`}
+              onClick={() => onSelectTab(file)}
+            >
+              {file}
+              {dirtyFiles.has(file) && <span className="ml-1.5 text-accent-fg">●</span>}
+            </button>
+          ))}
+          {dataFiles.map((file) => (
+            <button
+              key={file}
+              className={`flex items-center gap-1.5 border-r border-line border-t-2 px-3 py-1.5 text-sm ${
+                file === activeFile
+                  ? 'border-t-accent-fg bg-app text-primary'
+                  : 'border-t-transparent text-muted hover:bg-raised'
+              }`}
+              onClick={() => onSelectTab(file)}
+              title="Bundled data file — read-only"
+            >
+              <span aria-hidden>🔒</span>
+              {file}
+            </button>
+          ))}
+          {uploads.map((file) => (
+            <button
+              key={file}
+              className={`flex items-center gap-1.5 border-r border-line border-t-2 px-3 py-1.5 text-sm ${
+                file === activeFile
+                  ? 'border-t-accent-fg bg-app text-primary'
+                  : 'border-t-transparent text-muted hover:bg-raised'
+              }`}
+              onClick={() => onSelectTab(file)}
+              title="Your uploaded file — read-only"
+            >
+              <span aria-hidden>📎</span>
+              {file}
+            </button>
+          ))}
+          {outputs.map((file) => (
+            <button
+              key={file}
+              className={`flex items-center gap-1.5 border-r border-line border-t-2 px-3 py-1.5 text-sm ${
+                file === activeFile
+                  ? 'border-t-accent-fg bg-app text-primary'
+                  : 'border-t-transparent text-muted hover:bg-raised'
+              }`}
+              onClick={() => onSelectTab(file)}
+              title="Written by your own code — read-only"
+            >
+              <span aria-hidden>📤</span>
+              {file}
+            </button>
+          ))}
+        </div>
+        <div className="ml-auto flex shrink-0 items-center gap-2 px-2">
+          {activeIsCsv && (
+            <div role="group" aria-label="CSV view" className="flex rounded border border-line p-0.5 text-xs">
+              {(['raw', 'table'] as const).map(view => (
+                <button
+                  key={view}
+                  type="button"
+                  aria-pressed={csvView === view}
+                  className={`rounded px-2 py-1 focus-visible:outline-2 focus-visible:outline-accent-fg ${
+                    csvView === view ? 'bg-raised text-accent-fg' : 'text-muted hover:bg-raised hover:text-primary'
+                  }`}
+                  onClick={() => {
+                    setCsvView(view)
+                    localStorage.setItem(CSV_VIEW_KEY, view)
+                  }}
+                >
+                  {view === 'raw' ? 'Raw' : 'Table'}
+                </button>
+              ))}
+            </div>
+          )}
           <FontSizeControls size={fontSize} onChange={updateFontSize} />
         </div>
       </div>
-      <div className="flex-1">
+      {/* Keep Monaco mounted to retain models, undo history and decorations. */}
+      <div className={`min-h-0 min-w-0 flex-1 ${showCsvTable ? 'hidden' : ''}`}>
         <MonacoEditor
           path={activeFile}
           language={activeIsData ? 'plaintext' : OCTAVE_LANGUAGE_ID}
@@ -258,6 +289,18 @@ export function Editor({
           }}
         />
       </div>
+      {showCsvTable && (
+        <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
+          <CsvTable
+            key={activeFile}
+            filename={activeFile}
+            content={contents[activeFile] ?? ''}
+            fontSize={fontSize}
+            headerOverride={csvHeaders[activeFile]}
+            onHeaderChange={hasHeader => setCsvHeaders(previous => ({ ...previous, [activeFile]: hasHeader }))}
+          />
+        </div>
+      )}
     </div>
   )
 }
