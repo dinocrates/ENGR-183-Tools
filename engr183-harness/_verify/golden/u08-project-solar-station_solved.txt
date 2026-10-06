@@ -1,0 +1,29 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U08-PROJECT-SOLAR-STATION  |  code-check feedback
+--------------------------------------------------------------------
+[ PASS ] Data: import and one shared cleaning mask (TO...        1/1
+[ PASS ] Power: element-wise values and sensor columns...        1/1
+[ PASS ] Summaries: all retained observations, counts ...        1/1
+[ PASS ] Helper costs: quantities times unit prices an...        1/1
+[ PASS ] Helper decisions: four outcomes and inclusive...        1/1
+[ PASS ] Required technique: executable decision branc...        1/1
+[ PASS ] Integration: helper arguments and all returne...        1/1
+[ PASS ] Recommendation: cheapest qualifying system (T...        1/1
+[ PASS ] Changed inputs: price change and no qualifyin...        1/1
+[ PASS ] Power figure: selected day, three systems and...        1/1
+[ PASS ] Percentage figure: all days, bars and 80 perc...        1/1
+[ PASS ] Output: counts, labeled comparison and recomm...        1/1
+--------------------------------------------------------------------
+Score: 12/12 points (100%)   Criteria met: 12 of 12
+
+Practice feedback only; this is not the final Canvas grade.
+Review calculation methods and interpretation with the Canvas rubric.
+Export both figures for your 3-4 page PDF report.
+Submit LastName_SolarStation_Report.pdf and all completed .m files.
+The supplied CSV, tests and test transcripts are not required submissions.
+These checks do not assess the written report or replace instructor review.
+Check filenames, readability and complete submission in Canvas.
+Run Tests never submits to Canvas.
+--------------------------------------------------------------------
+

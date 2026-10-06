@@ -84,3 +84,24 @@ Regression: `node m0-spike-driver/t141-legend-markers.js http://127.0.0.1:4184/`
 runs the two-point load-sensor calibration and checks actual SVG markers,
 saved figure reopening, PNG/ZIP exports, property updates, reordered
 legends, horizontal placement, returned handles, recreation, and repeated runs.
+
+## Bar rectangles
+
+The pinned toolkit emits empty traces for native bar hggroups and their patches.
+`bar.m` calls the saved native function, preserving its handles and multiple-output
+geometry form. Property listeners publish the actual patch rectangles through
+`__engr183_bar_snapshot__.m`. `plotBars.ts` matches the native axes domains and
+adds Plotly bar traces below reference lines. Late geometry updates refresh the
+existing figure; saved figures and PNG/ZIP exports receive those same traces.
+
+The adapter covers ordinary vertical `bar` calls, grouped/stacked native rectangle
+geometry, negative values, widths, bases, RGB colors, opacity and property updates.
+It does not wrap `barh` separately. Per-vertex CData and interpolated colors are
+not reproduced; flat/interpolated colors fall back to the axes palette. Native
+Octave graphics objects are unchanged. The existing WASM JSON/graphics lifecycle
+limitations described above remain.
+
+Regression: `node m0-spike-driver/u08-bar-probe.js http://127.0.0.1:4188/`
+checks actual rectangles, returned handles, changed ydata, negative values,
+clearing and grouped bars. `u08-project.js` additionally checks the three project
+percentages, native reference lines, saved figures and real PNG/ZIP downloads.

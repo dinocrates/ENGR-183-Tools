@@ -15,7 +15,8 @@ function report(unit, results, noisy)
   width = 68;
   rule = repmat('-', 1, width);
   unit7 = any(strcmp(unit, {'u07-gp07-circuit', 'u07-apa07-force-recovery'}));
-  practice = unit7 || any(strcmp(unit, {'u06-gp06-cooling', 'u06-apa06-battery-discharge'}));
+  unit8 = strcmp(unit, 'u08-project-solar-station');
+  practice = unit8 || unit7 || any(strcmp(unit, {'u06-gp06-cooling', 'u06-apa06-battery-discharge'}));
   reportLabel = 'rubric check';
   if practice, reportLabel = 'code-check feedback'; end
 
@@ -75,7 +76,12 @@ function report(unit, results, noisy)
   if practice
     fprintf(['\nPractice feedback only; this is not the final Canvas grade.\n' ...
       'Review calculation methods and interpretation with the Canvas rubric.\n']);
-    if unit7
+    if unit8
+      fprintf(['Export both figures for your 3-4 page PDF report.\n' ...
+        'Submit LastName_SolarStation_Report.pdf and all completed .m files.\n' ...
+        'The supplied CSV, tests and test transcripts are not required submissions.\n' ...
+        'These checks do not assess the written report or replace instructor review.\n']);
+    elseif unit7
       fprintf(['Inspect the figure and export the PNG; download the main script and helper.\n' ...
         'Canvas rubric: Directions 30%%, Compilation/Syntax 15%%, Runtime/IO 30%%, Correctness 25%%.\n' ...
         'Submit those three completed files, not tests or test transcripts.\n']);

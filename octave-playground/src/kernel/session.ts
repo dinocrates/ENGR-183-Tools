@@ -9,6 +9,7 @@ import { KernelSpecs, type IKernel } from '@jupyterlite/services';
 import { WebWorkerKernel } from '@jupyterlite/xeus';
 import { PageConfig } from '@jupyterlab/coreutils';
 import { PlotTitles } from './plotTitles';
+import { PlotBars } from './plotBars';
 import { installGraphicsCode } from './graphicsCompatibility';
 
 const KERNEL_NAME = 'xoctave';
@@ -59,6 +60,7 @@ export class OctaveKernelSession {
   /** A long execution is advisory, not evidence of a hung kernel. */
   onSlowExecution: ((slow: boolean) => void) | null = null;
   private plotTitles = new PlotTitles();
+  private plotBars = new PlotBars();
   private kernel: IKernel | null = null;
   private kernelSpecs = new KernelSpecs();
   private sessionId = crypto.randomUUID();
@@ -125,6 +127,7 @@ export class OctaveKernelSession {
 
     await this.kernel.ready;
     this.plotTitles = new PlotTitles();
+    this.plotBars = new PlotBars();
     await this.execute(installGraphicsCode());
   }
 
@@ -323,11 +326,18 @@ export class OctaveKernelSession {
           ).content;
           const bundle = content.data as Record<string, unknown>;
           if (this.plotTitles.consume(bundle)) return;
+          if (this.plotBars.consume(bundle)) {
+            // Native property listeners may publish updated rectangle geometry
+            // after the toolkit's figure payload. Refresh that existing figure.
+            const update = this.plotBars.refresh();
+            if (update) onOutput?.({ kind: 'display', ...update });
+            return;
+          }
           const displayId = content.transient?.display_id as string | undefined;
           onOutput?.({
             kind: 'display',
             displayId,
-            mimeBundle: this.plotTitles.apply(displayId, bundle),
+            mimeBundle: this.plotBars.apply(displayId, this.plotTitles.apply(displayId, bundle)),
           });
         } else if (msg.header.msg_type === 'execute_reply') {
           finish();

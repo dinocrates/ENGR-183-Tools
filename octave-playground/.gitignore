@@ -59,3 +59,8 @@ m0-spike-driver/u06-probe-output.txt
 # Local evidence from the focused Unit 7 browser checks.
 m0-spike-driver/u07-*-results.json
 m0-spike-driver/u07-*-last-output.txt
+
+# Local evidence from the focused Unit 8 project checks.
+m0-spike-driver/u08-results.json
+m0-spike-driver/u08-last-output.txt
+m0-spike-driver/u08-bar-probe.json

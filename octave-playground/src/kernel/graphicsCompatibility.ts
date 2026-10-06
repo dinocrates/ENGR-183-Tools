@@ -3,6 +3,8 @@ import installLegendCompatibility from './octave/installLegendCompatibility.m?ra
 import deleteLegend from './octave/__engr183_delete_legend__.m?raw';
 import legendLinks from './octave/__engr183_legend_links__.m?raw';
 import legendChildren from './octave/__engr183_legend_children__.m?raw';
+import barSource from './octave/bar.m?raw';
+import barSnapshot from './octave/__engr183_bar_snapshot__.m?raw';
 
 function writeSource(name: string, source: string): string {
   const bytes = Array.from(new TextEncoder().encode(source));
@@ -17,12 +19,15 @@ function writeSource(name: string, source: string): string {
 export function installGraphicsCode(): string {
   return [
     `setappdata(0, '__engr183_native_title__', @title);`,
+    `setappdata(0, '__engr183_native_bar__', @bar);`,
     `mkdir('/tmp/engr183-graphics');`,
     writeSource('__engr183_delete_legend__', deleteLegend),
     writeSource('__engr183_legend_links__', legendLinks),
     writeSource('__engr183_legend_children__', legendChildren),
     installLegendCompatibility,
     writeSource('title', titleSource),
+    writeSource('bar', barSource),
+    writeSource('__engr183_bar_snapshot__', barSnapshot),
     // These intentional shadows should not produce student-facing warnings.
     `__engr183_warning__ = warning('query', 'Octave:shadowed-function');`,
     `warning('off', 'Octave:shadowed-function');`,

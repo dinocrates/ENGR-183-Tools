@@ -8,6 +8,8 @@ interface ProblemStatementProps {
   // rendered output.
   note?: string
   sourceUrl?: string
+  instructionsUrl?: string
+  dataReadExample?: string
   // Bundled read-only data files for this unit. When present, a short
   // "how to open it" line is shown; absent/empty renders nothing.
   dataFiles?: string[]
@@ -18,6 +20,8 @@ export function ProblemStatement({
   description,
   note,
   sourceUrl,
+  instructionsUrl,
+  dataReadExample,
   dataFiles = [],
 }: ProblemStatementProps) {
   const [collapsed, setCollapsed] = useState(false)
@@ -45,9 +49,9 @@ export function ProblemStatement({
                   <li key={file} className="text-xs leading-relaxed text-muted">
                     <span className="text-secondary">🔒 {file}</span> — open it with{' '}
                     <code className="rounded bg-raised px-1 py-0.5 text-accent-fg">
-                      engr183.data('{file}')
+                      {dataReadExample ?? `engr183.data('${file}')`}
                     </code>
-                    {/\.csv$/i.test(file) && (
+                    {!dataReadExample && /\.csv$/i.test(file) && (
                       <>
                         , e.g.{' '}
                         <code className="rounded bg-raised px-1 py-0.5 text-accent-fg">
@@ -61,6 +65,14 @@ export function ProblemStatement({
             </div>
           )}
           {note && <p className="mt-2 text-xs leading-relaxed text-muted">{note}</p>}
+          {instructionsUrl && (
+            <p className="mt-2 text-sm">
+              <a href={`${import.meta.env.BASE_URL}${instructionsUrl}`} target="_blank"
+                rel="noopener noreferrer" className="text-accent-fg underline hover:no-underline">
+                Assignment guide: equations, requirements and report
+              </a>
+            </p>
+          )}
           {sourceUrl && (
             <p className="mt-1 text-xs">
               <a

@@ -1,0 +1,20 @@
+{
+  "id": "u08-project-solar-station",
+  "title": "Unit 8 — Project: Solar-Panel Analysis and Report",
+  "description": "Use MATLAB and the supplied equations to compare three solar-panel systems for a campus charging station. Clean the shared measurements, calculate component costs, classify each system with if/elseif/else in evaluate_system, and support your recommendation with two figures and a 3–4 page technical report.",
+  "files": [
+    "SolarStation_Analysis.m",
+    "evaluate_system.m"
+  ],
+  "dataFiles": [
+    "solar_station_measurements.csv"
+  ],
+  "submissionExclude": [
+    "solar_station_measurements.csv"
+  ],
+  "category": "individual-assignment",
+  "unitNumber": 8,
+  "note": "Both MATLAB starters and the exact simulated CSV are preloaded. Open the assignment guide for equations, data rules and report requirements. Run Tests provides programming feedback; it does not grade the PDF or submit to Canvas. Submit LastName_SolarStation_Report.pdf and all completed .m files. Export figures using the existing PNG controls.",
+  "instructionsUrl": "project-guides/unit08/assignment.html",
+  "dataReadExample": "readmatrix('solar_station_measurements.csv')"
+}

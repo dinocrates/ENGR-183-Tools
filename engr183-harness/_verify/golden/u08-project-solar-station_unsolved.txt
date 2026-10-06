@@ -1,0 +1,41 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U08-PROJECT-SOLAR-STATION  |  code-check feedback
+--------------------------------------------------------------------
+[ FAIL ] Data: import and one shared cleaning mask (TO...        0/1
+         -> your code raised an error: Complete the TODO that creates raw_data.
+[ FAIL ] Power: element-wise values and sensor columns...        0/1
+         -> your code raised an error: Complete the TODO that creates voltage_V.
+[ FAIL ] Summaries: all retained observations, counts ...        0/1
+         -> your code raised an error: Complete the TODO that creates average_power_W.
+[ FAIL ] Helper costs: quantities times unit prices an...        0/1
+         -> your code raised an error: TODO 4a-4b: evaluate_system must return all four outputs on valid inputs (case 1): element number 1 undefined in return list
+[ FAIL ] Helper decisions: four outcomes and inclusive...        0/1
+         -> your code raised an error: TODO 4a-4b: evaluate_system must return all four outputs on valid inputs (case 1): element number 1 undefined in return list
+[ FAIL ] Required technique: executable decision branc...        0/1
+         -> your code raised an error: TODO 4b: use meaningful if/elseif/else (nested if/else is fine) to classify cost and performance. Comments and strings do not count.
+[ FAIL ] Integration: helper arguments and all returne...        0/1
+         -> your code raised an error: Complete the TODO that creates line_cost_USD.
+[ FAIL ] Recommendation: cheapest qualifying system (T...        0/1
+         -> your code raised an error: Complete the TODO that creates recommended_index.
+[ FAIL ] Changed inputs: price change and no qualifyin...        0/1
+         -> your code raised an error: Complete TODO 4-5 before testing changed prices and budget.
+[ FAIL ] Power figure: selected day, three systems and...        0/1
+         -> your code raised an error: Complete the TODO that creates day_rows.
+[ FAIL ] Percentage figure: all days, bars and 80 perc...        0/1
+         -> your code raised an error: TODO 7: create A/B/C bars using the all-days met_pct values (0-100).
+[ FAIL ] Output: counts, labeled comparison and recomm...        0/1
+         -> your code raised an error: TODO 6: print a readable label for original.
+--------------------------------------------------------------------
+Score: 0/12 points (0%)   Criteria met: 0 of 12
+
+Practice feedback only; this is not the final Canvas grade.
+Review calculation methods and interpretation with the Canvas rubric.
+Export both figures for your 3-4 page PDF report.
+Submit LastName_SolarStation_Report.pdf and all completed .m files.
+The supplied CSV, tests and test transcripts are not required submissions.
+These checks do not assess the written report or replace instructor review.
+Check filenames, readability and complete submission in Canvas.
+Run Tests never submits to Canvas.
+--------------------------------------------------------------------
+

@@ -94,6 +94,14 @@ return value entirely from variables assigned *after* execution. `unit01_check.m
 
 ## The dev/main kernel-sharing gotcha
 
+Unit 8's individual midterm project is documented in
+[`engr183-harness/_verify/UNIT08.md`](engr183-harness/_verify/UNIT08.md).
+The route is `u08-project-solar-station`, with two MATLAB starters and an exact
+preloaded CSV. Its assignment guide supplies the equations and report
+requirements; the overview has a video placeholder. Untouched starters score
+0/12 and the instructor reference scores 12/12 programming feedback. The PDF
+is assessed separately. Repack the harness mount before browser verification.
+
 Unit 7 GP-07 and APA-07 verification is documented in
 [`engr183-harness/_verify/UNIT07.md`](engr183-harness/_verify/UNIT07.md).
 The projects are `u07-gp07-circuit` (starter 2/12) and

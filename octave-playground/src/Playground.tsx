@@ -1023,6 +1023,8 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
               description={unit.description}
               note={unit.note}
               sourceUrl={unit.sourceUrl}
+              instructionsUrl={unit.instructionsUrl}
+              dataReadExample={unit.dataReadExample}
               dataFiles={dataFiles}
             />
             <Group orientation="vertical" className="flex-1 overflow-hidden">

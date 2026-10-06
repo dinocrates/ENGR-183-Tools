@@ -1,0 +1,2 @@
+# Preserve the supplied Unit 8 CSV bytes on every checkout/platform.
+engr183-harness/assignments/u08-project-solar-station/solar_station_measurements.csv -text

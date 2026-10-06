@@ -35,6 +35,9 @@ export interface UnitMeta {
   // alongside `note` in ProblemStatement. Absent for every unit that
   // doesn't need one -- no visual change when omitted.
   sourceUrl?: string
+  // Optional local assignment guide, resolved against the app's base URL.
+  instructionsUrl?: string
+  dataReadExample?: string
   // Filenames excluded from Download All (.zip)'s output -- e.g. APA-03's
   // supplied public-check tab, which is part of the five-tab working
   // project but must not appear in the four-file Canvas submission ZIP.
@@ -69,10 +72,12 @@ export interface UnitMeta {
 // engr183-harness/tests/u02_gp02_tensile_check.m's header comment for why
 // the id itself keeps its hyphens even though the underlying Octave
 // function name can't.
+// Projects (beginning with Unit 8) have their own additive route pattern.
 const modules = {
   ...(import.meta.glob('./unit*.json', { eager: true }) as Record<string, UnitMeta>),
   ...(import.meta.glob('./u0*-gp*.json', { eager: true }) as Record<string, UnitMeta>),
   ...(import.meta.glob('./u0*-apa*.json', { eager: true }) as Record<string, UnitMeta>),
+  ...(import.meta.glob('./u0*-project-*.json', { eager: true }) as Record<string, UnitMeta>),
 }
 
 export const units: UnitMeta[] = Object.values(modules).sort((a, b) =>

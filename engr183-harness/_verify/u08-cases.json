@@ -1,0 +1,385 @@
+[
+  {
+    "name": "complete reference",
+    "fail": [],
+    "replace": [],
+    "helper": [],
+    "append": ""
+  },
+  {
+    "name": "selected day five",
+    "fail": [],
+    "replace": [
+      [
+        "selected_day = 1;",
+        "selected_day = 5;"
+      ]
+    ],
+    "helper": [],
+    "append": ""
+  },
+  {
+    "name": "recommendation after plotting",
+    "fail": [],
+    "replace": [
+      [
+        "recommended_index = 0;\nrecommended_system = 'none';\neligible_indices = find(qualifies);\nif ~isempty(eligible_indices)\n    [~, cheapest] = min(total_cost_USD(eligible_indices));\n    recommended_index = eligible_indices(cheapest);\n    recommended_system = system_names{recommended_index};\nend",
+        ""
+      ],
+      [
+        "fprintf('Recommended system: %s\\n', recommended_system);",
+        ""
+      ]
+    ],
+    "helper": [],
+    "append": "recommended_index = 0;\nrecommended_system = 'none';\neligible_indices = find(qualifies);\nif ~isempty(eligible_indices)\n    [~, cheapest] = min(total_cost_USD(eligible_indices));\n    recommended_index = eligible_indices(cheapest);\n    recommended_system = system_names{recommended_index};\nend\nfprintf('Recommended system: %s\\n', recommended_system);"
+  },
+  {
+    "name": "numbered figures",
+    "fail": [],
+    "replace": [
+      [
+        "figure;\nplot(time_hr",
+        "figure(1);\nplot(time_hr"
+      ],
+      [
+        "figure;\nbar(1:3",
+        "figure(2);\nbar(1:3"
+      ]
+    ],
+    "helper": [],
+    "append": ""
+  },
+  {
+    "name": "omitted panel quantity",
+    "fail": [
+      "helper_costs",
+      "integration"
+    ],
+    "replace": [],
+    "helper": [
+      [
+        "component_quantity .* unit_price_USD",
+        "unit_price_USD"
+      ]
+    ],
+    "append": ""
+  },
+  {
+    "name": "hard-coded baseline totals",
+    "fail": [
+      "dynamic"
+    ],
+    "replace": [],
+    "helper": [],
+    "append": "total_cost_USD = [480 690 980];"
+  },
+  {
+    "name": "ignored unit price argument",
+    "fail": [
+      "helper_costs"
+    ],
+    "replace": [],
+    "helper": [
+      [
+        "line_cost_USD = component_quantity .* unit_price_USD;",
+        "unit_price_USD = [120 80 75 45 40];\n    line_cost_USD = component_quantity .* unit_price_USD;"
+      ]
+    ],
+    "append": ""
+  },
+  {
+    "name": "rounded before decision",
+    "fail": [
+      "helper_decisions",
+      "branching"
+    ],
+    "replace": [],
+    "helper": [
+      [
+        "    if met_pct >=",
+        "    met_pct = round(met_pct);\n    if met_pct >="
+      ]
+    ],
+    "append": ""
+  },
+  {
+    "name": "strict percentage boundary",
+    "fail": [
+      "helper_decisions"
+    ],
+    "replace": [],
+    "helper": [
+      [
+        "met_pct >= minimum_met_pct",
+        "met_pct > minimum_met_pct"
+      ]
+    ],
+    "append": ""
+  },
+  {
+    "name": "strict budget boundary",
+    "fail": [
+      "helper_decisions"
+    ],
+    "replace": [],
+    "helper": [
+      [
+        "total_cost_USD <= budget_USD",
+        "total_cost_USD < budget_USD"
+      ]
+    ],
+    "append": ""
+  },
+  {
+    "name": "missing over-budget outcome",
+    "fail": [
+      "helper_decisions"
+    ],
+    "replace": [],
+    "helper": [
+      [
+        "status_code = 'over_budget';",
+        "status_code = 'qualifies';"
+      ]
+    ],
+    "append": ""
+  },
+  {
+    "name": "missing fails-both outcome",
+    "fail": [
+      "helper_decisions"
+    ],
+    "replace": [],
+    "helper": [
+      [
+        "status_code = 'fails_both';",
+        "status_code = 'fails_performance';"
+      ]
+    ],
+    "append": ""
+  },
+  {
+    "name": "ignored supplied thresholds",
+    "fail": [
+      "helper_decisions"
+    ],
+    "replace": [],
+    "helper": [
+      [
+        "met_pct >= minimum_met_pct",
+        "met_pct >= 80"
+      ],
+      [
+        "met_pct < minimum_met_pct",
+        "met_pct < 80"
+      ],
+      [
+        "total_cost_USD <= budget_USD",
+        "total_cost_USD <= 800"
+      ],
+      [
+        "total_cost_USD > budget_USD",
+        "total_cost_USD > 800"
+      ]
+    ],
+    "append": ""
+  },
+  {
+    "name": "per-system cleaning",
+    "fail": [
+      "cleaning",
+      "summaries"
+    ],
+    "replace": [
+      [
+        "raw_data(:, 3:11)",
+        "raw_data(:, 3:5)"
+      ],
+      [
+        "raw_data(:, [3,4,6,7,9,10])",
+        "raw_data(:, [3,4])"
+      ]
+    ],
+    "helper": [],
+    "append": ""
+  },
+  {
+    "name": "omitted last row",
+    "fail": [
+      "cleaning",
+      "summaries"
+    ],
+    "replace": [
+      [
+        "raw_data = readmatrix(data_filename);",
+        "raw_data = readmatrix(data_filename);\nraw_data = raw_data(1:end-1,:);"
+      ]
+    ],
+    "helper": [],
+    "append": ""
+  },
+  {
+    "name": "hard-coded recommendation",
+    "fail": [
+      "dynamic"
+    ],
+    "replace": [],
+    "helper": [],
+    "append": "recommended_index = 2; recommended_system = 'B';"
+  },
+  {
+    "name": "unused helper results",
+    "fail": [
+      "dynamic"
+    ],
+    "replace": [],
+    "helper": [],
+    "append": "qualifies = logical([0 1 0]); status_code = {'fails_performance','qualifies','over_budget'};"
+  },
+  {
+    "name": "rounded stored percentages",
+    "fail": [
+      "summaries",
+      "integration"
+    ],
+    "replace": [
+      [
+        "met_pct = 100 * meeting_count / retained_count;",
+        "met_pct = round(100 * meeting_count / retained_count);"
+      ]
+    ],
+    "helper": [],
+    "append": ""
+  },
+  {
+    "name": "multiplied system power by panel quantity",
+    "fail": [
+      "power",
+      "summaries"
+    ],
+    "replace": [
+      [
+        "power_W = voltage_V .* current_A;",
+        "power_W = 2 * voltage_V .* current_A;"
+      ]
+    ],
+    "helper": [],
+    "append": ""
+  },
+  {
+    "name": "wrong day plotted",
+    "fail": [
+      "power_plot"
+    ],
+    "replace": [
+      [
+        "day_rows = test_day == selected_day;",
+        "day_rows = test_day == 2;"
+      ]
+    ],
+    "helper": [],
+    "append": ""
+  },
+  {
+    "name": "percent fractions in chart",
+    "fail": [
+      "percent_plot"
+    ],
+    "replace": [
+      [
+        "bar(1:3, met_pct);",
+        "bar(1:3, met_pct / 100);"
+      ]
+    ],
+    "helper": [],
+    "append": ""
+  },
+  {
+    "name": "wrong power threshold line",
+    "fail": [
+      "power_plot"
+    ],
+    "replace": [
+      [
+        "[required_power_W required_power_W]",
+        "[90 90]"
+      ]
+    ],
+    "helper": [],
+    "append": ""
+  },
+  {
+    "name": "wrong percentage reference",
+    "fail": [
+      "percent_plot"
+    ],
+    "replace": [
+      [
+        "[minimum_met_pct minimum_met_pct]",
+        "[75 75]"
+      ]
+    ],
+    "helper": [],
+    "append": ""
+  },
+  {
+    "name": "runtime failure",
+    "fail": [
+      "output"
+    ],
+    "replace": [],
+    "helper": [],
+    "append": "error('intentional Unit 8 error');"
+  },
+  {
+    "name": "accumulation loop",
+    "fail": [],
+    "replace": [],
+    "helper": [
+      [
+        "total_cost_USD = sum(line_cost_USD);",
+        "total_cost_USD = 0;\n    for j=1:numel(line_cost_USD)\n        total_cost_USD = total_cost_USD + line_cost_USD(j);\n    end"
+      ]
+    ],
+    "append": ""
+  },
+  {
+    "name": "nested reordered alias predicates",
+    "fail": [],
+    "replace": [],
+    "helper": [
+      [
+        "    if met_pct >= minimum_met_pct && total_cost_USD <= budget_USD\n        qualifies = true;\n        status_code = 'qualifies';\n    elseif met_pct < minimum_met_pct && total_cost_USD <= budget_USD\n        qualifies = false;\n        status_code = 'fails_performance';\n    elseif met_pct >= minimum_met_pct && total_cost_USD > budget_USD\n        qualifies = false;\n        status_code = 'over_budget';\n    else\n        qualifies = false;\n        status_code = 'fails_both';\n    end",
+        "    affordable = total_cost_USD <= budget_USD;\n    performs = met_pct >= minimum_met_pct;\n    qualifies = false;\n    if ~affordable\n        if performs\n            status_code = 'over_budget';\n        else\n            status_code = 'fails_both';\n        end\n    else\n        if performs\n            qualifies = true;\n            status_code = 'qualifies';\n        else\n            status_code = 'fails_performance';\n        end\n    end"
+      ]
+    ],
+    "append": ""
+  },
+  {
+    "name": "continued branch conditions",
+    "fail": [],
+    "replace": [],
+    "helper": [
+      [
+        " && total_cost_USD",
+        " && ...\n        total_cost_USD"
+      ]
+    ],
+    "append": ""
+  },
+  {
+    "name": "lookup plus comment/string keywords",
+    "fail": [
+      "branching"
+    ],
+    "replace": [],
+    "helper": [
+      [
+        "    if met_pct >= minimum_met_pct && total_cost_USD <= budget_USD\n        qualifies = true;\n        status_code = 'qualifies';\n    elseif met_pct < minimum_met_pct && total_cost_USD <= budget_USD\n        qualifies = false;\n        status_code = 'fails_performance';\n    elseif met_pct >= minimum_met_pct && total_cost_USD > budget_USD\n        qualifies = false;\n        status_code = 'over_budget';\n    else\n        qualifies = false;\n        status_code = 'fails_both';\n    end",
+        "    % if total_cost_USD <= budget_USD && met_pct >= minimum_met_pct\n    % else fake comment evidence\n    bait = \"if elseif else total_cost_USD met_pct\";\n    qualifies = (met_pct >= minimum_met_pct) && (total_cost_USD <= budget_USD);\n    codes = {'fails_both','over_budget','fails_performance','qualifies'};\n    status_code = codes{1 + (met_pct >= minimum_met_pct) + 2*(total_cost_USD <= budget_USD)};"
+      ]
+    ],
+    "append": ""
+  }
+]
