@@ -37,7 +37,7 @@ export interface UnitMeta {
   sourceUrl?: string
   // Optional local assignment guide, resolved against the app's base URL.
   instructionsUrl?: string
-  dataReadExample?: string
+  dataReadExample?: string | Record<string, string>
   // Filenames excluded from Download All (.zip)'s output -- e.g. APA-03's
   // supplied public-check tab, which is part of the five-tab working
   // project but must not appear in the four-file Canvas submission ZIP.

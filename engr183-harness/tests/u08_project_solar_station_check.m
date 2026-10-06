@@ -217,7 +217,10 @@ function s=capture(directory,mode,analysisOnly)
       ['Create ' required{1} ' in this project and complete its TODOs.']);
   end
   for k=1:numel(files), writeText(fullfile(scratch,files(k).name),fileread(fullfile(directory,files(k).name))); end
-  writeText(fullfile(scratch,'solar_station_measurements.csv'),fileread(fullfile(directory,'solar_station_measurements.csv')));
+  dataFiles=dir(fullfile(directory,'*.csv'));
+  for k=1:numel(dataFiles)
+    writeText(fullfile(scratch,dataFiles(k).name),fileread(fullfile(directory,dataFiles(k).name)));
+  end
   helper=fileread(fullfile(scratch,'evaluate_system.m'));
   [a,b]=regexp(u08_source(helper),'\<evaluate_system\>','start','end','once');
   require(~isempty(a),'Keep the evaluate_system function declaration in evaluate_system.m.');

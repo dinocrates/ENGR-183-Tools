@@ -5,9 +5,12 @@ Target route after deployment:
 https://dinocrates.github.io/ENGR-183-Tools/octave-playground/?unit=u08-project-solar-station
 
 `SolarStation_Analysis.m` opens first, followed by `evaluate_system.m`.
-`solar_station_measurements.csv` is preloaded as read-only data in the current
-working directory. The existing course `readmatrix` shim supports the supplied
-MATLAB import. No data download/upload is required. The CSV is excluded from
+`solar_station_measurements.csv` and `BOM.csv` are preloaded as read-only data in
+the current working directory. `BOM.csv` lists all five components, quantity per
+system and A/B/C unit prices; `readmatrix('BOM.csv', 'NumHeaderLines', 0, 'Range', 'B2:E6')` imports its
+numeric columns. Run Tests also copies both CSVs into its isolated workspace.
+The existing course `readmatrix` shim supports these MATLAB imports.
+No data download/upload is required. Both supplied CSVs are excluded from
 Download All; completed MATLAB sources and saved PNG/figure documents remain
 included. Students submit their 3–4 page PDF and completed MATLAB files in Canvas.
 Run Tests does not grade the report or submit work.

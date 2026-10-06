@@ -9,7 +9,7 @@ interface ProblemStatementProps {
   note?: string
   sourceUrl?: string
   instructionsUrl?: string
-  dataReadExample?: string
+  dataReadExample?: string | Record<string, string>
   // Bundled read-only data files for this unit. When present, a short
   // "how to open it" line is shown; absent/empty renders nothing.
   dataFiles?: string[]
@@ -45,13 +45,16 @@ export function ProblemStatement({
                 {dataFiles.length === 1 ? 'Data file' : 'Data files'} (read-only):
               </p>
               <ul className="mt-1 space-y-1">
-                {dataFiles.map((file) => (
+                {dataFiles.map((file) => {
+                  const readExample = typeof dataReadExample === 'string'
+                    ? dataReadExample : dataReadExample?.[file]
+                  return (
                   <li key={file} className="text-xs leading-relaxed text-muted">
                     <span className="text-secondary">🔒 {file}</span> — open it with{' '}
                     <code className="rounded bg-raised px-1 py-0.5 text-accent-fg">
-                      {dataReadExample ?? `engr183.data('${file}')`}
+                      {readExample ?? `engr183.data('${file}')`}
                     </code>
-                    {!dataReadExample && /\.csv$/i.test(file) && (
+                    {!readExample && /\.csv$/i.test(file) && (
                       <>
                         , e.g.{' '}
                         <code className="rounded bg-raised px-1 py-0.5 text-accent-fg">
@@ -60,7 +63,8 @@ export function ProblemStatement({
                       </>
                     )}
                   </li>
-                ))}
+                  )
+                })}
               </ul>
             </div>
           )}

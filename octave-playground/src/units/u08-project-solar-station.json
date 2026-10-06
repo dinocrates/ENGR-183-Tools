@@ -7,14 +7,19 @@
     "evaluate_system.m"
   ],
   "dataFiles": [
-    "solar_station_measurements.csv"
+    "solar_station_measurements.csv",
+    "BOM.csv"
   ],
   "submissionExclude": [
-    "solar_station_measurements.csv"
+    "solar_station_measurements.csv",
+    "BOM.csv"
   ],
   "category": "individual-assignment",
   "unitNumber": 8,
-  "note": "Both MATLAB starters and the exact simulated CSV are preloaded. Open the assignment guide for equations, data rules and report requirements. Run Tests provides programming feedback; it does not grade the PDF or submit to Canvas. Submit LastName_SolarStation_Report.pdf and all completed .m files. Export figures using the existing PNG controls.",
+  "note": "Both MATLAB starters, the simulated measurements CSV, and BOM.csv with component quantities and unit prices are preloaded. Open the assignment guide for equations, data rules and report requirements. Run Tests provides programming feedback; it does not grade the PDF or submit to Canvas. Submit LastName_SolarStation_Report.pdf and all completed .m files. Export figures using the existing PNG controls.",
   "instructionsUrl": "project-guides/unit08/assignment.html",
-  "dataReadExample": "readmatrix('solar_station_measurements.csv')"
+  "dataReadExample": {
+    "solar_station_measurements.csv": "readmatrix('solar_station_measurements.csv')",
+    "BOM.csv": "readmatrix('BOM.csv', 'NumHeaderLines', 0, 'Range', 'B2:E6')"
+  }
 }
