@@ -94,6 +94,17 @@ return value entirely from variables assigned *after* execution. `unit01_check.m
 
 ## The dev/main kernel-sharing gotcha
 
+Unit 9's two standalone MATLAB-compatible scripts, formative checks and local
+verification are documented in
+[`engr183-harness/_verify/UNIT09.md`](engr183-harness/_verify/UNIT09.md).
+Projects `u09-gp09-cooling` and `u09-apa09-pump` both start at 2/12; completed
+references target 12/12. Each submission is one `.m` and two named PNGs.
+Browser PNG `print` calls explain how to export through Saved figures/camera;
+they do not create native PNG files. MATLAB and desktop Octave retain native
+`print`. Run native fixture/mutation processes to completion and verify that
+canonical sources match untouched fixtures **before** syncing assets. The
+verifier temporarily installs private solutions in `assignments/`.
+
 Unit 8's individual midterm project is documented in
 [`engr183-harness/_verify/UNIT08.md`](engr183-harness/_verify/UNIT08.md).
 The route is `u08-project-solar-station`, with two MATLAB starters and an exact

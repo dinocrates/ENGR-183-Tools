@@ -1,0 +1,30 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U09-APA09-PUMP  |  code-check feedback
+--------------------------------------------------------------------
+[ PASS ] Personalization: completed Name and Date                1/1
+[ PASS ] Execution: saved script runs once                       1/1
+[ PASS ] Inputs: supplied data, model and settings               1/1
+[ PASS ] Interpolation: queries and domain                       1/1
+[ PASS ] Fits/residuals: both models and training RMSE           1/1
+[ PASS ] Fit figure: panels, series, scales and labels           1/1
+[ PASS ] Selection: model and original bracket                   1/1
+[ PASS ] Bisection: estimate and input error bound               1/1
+[ PASS ] fzero: selected root and head balance                   1/1
+[ PASS ] Comparison: both roots and flow decisions               1/1
+[ PASS ] Extrapolation: estimates outside observations           1/1
+[ PASS ] Operating figure and labeled results                    1/1
+--------------------------------------------------------------------
+Score: 12/12 points (100%)   Criteria met: 12 of 12
+
+Practice feedback only; this is not the final Canvas grade.
+Review calculation methods and interpretation with the Canvas rubric.
+Submit one completed .m file and both named PNG figures in Canvas.
+Use MATLAB print or select each browser saved figure and export/rename its PNG.
+Canvas rubric: Directions 30%, Compilation/Syntax 15%, Runtime/IO 30%, Correctness 25%.
+Bisection logic, if/else, solver status checks, interpretation and final figure quality require instructor review.
+MATLAB users do not need browser tests; tests and score screenshots are not submissions.
+Check filenames, readability and complete submission in Canvas.
+Run Tests never submits to Canvas.
+--------------------------------------------------------------------
+

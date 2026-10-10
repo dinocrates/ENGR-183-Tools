@@ -1,5 +1,29 @@
 # Browser graphics compatibility
 
+## PNG print and figure dimensions (Unit 9)
+
+The WASM runtime has no Ghostscript. `print.m` intercepts only no-return-value
+PNG calls on Plotly figures with a `.png` filename, `-dpng`, and optional numeric
+`-r...`. It prints a handoff to Saved figures / PNG / camera with the requested
+filename and explicitly states that no native file was written. It never
+creates a placeholder image. Other devices/options and invalid calls go to the
+original `print` for normal validation. Desktop Octave and downloaded student
+scripts do not use this adapter. Browser downloads must be renamed to the
+assignment's required filenames; final PNG quality is instructor review.
+
+The existing title snapshot also carries figure pixel dimensions. The viewer
+uses these until manually resized, and saved PNGs retain them. This supports
+ordinary `set(gcf,'Position',[100 100 1000 700])` without crowding four-panel
+labels into the toolkit's fixed 560-by-420 payload. No student-only commands
+or helper dependencies are introduced.
+
+Regression: `m0-spike-driver/u09-assignments.js` exercises the unmodified
+reference print/Position calls and real camera exports; `t134-plot-title.js`
+checks existing title/figure behavior. Native PNG printing is checked separately
+in the private desktop reference directories.
+
+## Titles
+
 `title.m` fills a gap in xeus-octave 0.6.2's Plotly toolkit: the native
 figure payload includes axis labels but omits the axes title object.
 

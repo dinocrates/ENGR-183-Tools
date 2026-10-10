@@ -1,0 +1,11 @@
+{
+  "id": "u09-gp09-cooling",
+  "title": "Unit 9 — GP-09: Cooling Data Explorer",
+  "description": "Interpolate cooling data, compare linear and quadratic fits and residuals, and locate a target temperature with bisection and fzero. Follow the guided practice page and video.",
+  "files": [
+    "U09_GP09_Cooling.m"
+  ],
+  "note": "Choose MATLAB or the Octave Playground. All data are included. Submit your completed .m file and both figure PNGs in Canvas. Run Tests provides feedback and does not submit your work. In MATLAB, download the starter and run it there; browser tests are optional for this route. Export GP09_fit_residuals.png and GP09_target.png. In the browser, select each saved figure and use its PNG/camera control, then rename the downloads as shown.",
+  "category": "guided-practice",
+  "unitNumber": 9
+}

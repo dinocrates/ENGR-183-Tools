@@ -64,3 +64,7 @@ m0-spike-driver/u07-*-last-output.txt
 m0-spike-driver/u08-results.json
 m0-spike-driver/u08-last-output.txt
 m0-spike-driver/u08-bar-probe.json
+
+# Local Unit 9 browser evidence; drivers stay in version control.
+m0-spike-driver/u09-*-results.json
+m0-spike-driver/u09-*-output.txt

@@ -1,0 +1,11 @@
+{
+  "id": "u09-apa09-pump",
+  "title": "Unit 9 — APA-09: Pump Operating Point",
+  "description": "Interpolate pump measurements, compare fitted models, solve the pump/system head balance, and justify whether the predicted flow meets the exercise requirement.",
+  "files": [
+    "U09_APA09_Pump.m"
+  ],
+  "note": "Choose MATLAB or the Octave Playground. Synthetic pump data and the system model are included. Submit your completed .m file and both figure PNGs in Canvas. Run Tests provides feedback and does not submit your work. In MATLAB, download the starter and run it there; browser tests are optional for this route. Export APA09_fit_residuals.png and APA09_operating_point.png. In the browser, select each saved figure and use its PNG/camera control, then rename the downloads as shown.",
+  "category": "individual-assignment",
+  "unitNumber": 9
+}

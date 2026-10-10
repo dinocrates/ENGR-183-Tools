@@ -5,6 +5,11 @@ function h = title(varargin)
   native_title = getappdata(0, '__engr183_native_title__');
   ht = native_title(varargin{:});
   ax = get(ht, 'parent');
+  fig = ancestor(ax, 'figure');
+  if ~isappdata(fig, '__engr183_title_size_listener__')
+    setappdata(fig, '__engr183_title_size_listener__', true);
+    addlistener(fig, 'position', @(~, ~) publish_figure_titles(fig));
+  end
 
   if ~isappdata(ht, '__engr183_title_listener__')
     setappdata(ht, '__engr183_title_listener__', true);
@@ -24,6 +29,12 @@ function h = title(varargin)
   if nargout > 0
     h = ht;
   end
+end
+
+function publish_figure_titles(fig)
+  if ~ishghandle(fig) || strcmp(get(fig,'beingdeleted'),'on'), return; end
+  axes_handles=findall(fig,'type','axes');
+  if ~isempty(axes_handles), publish_titles(axes_handles(1)); end
 end
 
 function publish_titles(ax)
@@ -75,7 +86,8 @@ function publish_snapshot(ax)
   end
   out = struct();
   out.('application/vnd.engr183.plot-titles+json') = ...
-    ['{"figureId":' json_string(id) ',"annotations":[' strjoin(annotations, ',') ']}'];
+    ['{"figureId":' json_string(id) sprintf(',"width":%.17g,"height":%.17g',figpos(3),figpos(4)) ...
+     ',"annotations":[' strjoin(annotations, ',') ']}'];
   display_data(out);
 end
 

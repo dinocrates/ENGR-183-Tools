@@ -1,0 +1,40 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U09-APA09-PUMP  |  code-check feedback
+--------------------------------------------------------------------
+[ FAIL ] Personalization: completed Name and Date                0/1
+         -> your code raised an error: Fill in the Name comment; combined Name/Date or separate lines are accepted.
+[ PASS ] Execution: saved script runs once                       1/1
+[ PASS ] Inputs: supplied data, model and settings               1/1
+[ FAIL ] Interpolation: queries and domain                       0/1
+         -> your code raised an error: Create the variable H35.
+[ FAIL ] Fits/residuals: both models and training RMSE           0/1
+         -> your code raised an error: Create the variable p_linear.
+[ FAIL ] Fit figure: panels, series, scales and labels           0/1
+         -> your code raised an error: Create a separate figure with 4 data axes (legends/colorbars are excluded).
+[ FAIL ] Selection: model and original bracket                   0/1
+         -> your code raised an error: Create the variable a0.
+[ FAIL ] Bisection: estimate and input error bound               0/1
+         -> your code raised an error: Create the variable a0.
+[ FAIL ] fzero: selected root and head balance                   0/1
+         -> your code raised an error: Create the variable a0.
+[ FAIL ] Comparison: both roots and flow decisions               0/1
+         -> your code raised an error: Create the variable Q_linear.
+[ FAIL ] Extrapolation: estimates outside observations           0/1
+         -> your code raised an error: Create the variable H80_linear.
+[ FAIL ] Operating figure and labeled results                    0/1
+         -> your code raised an error: Create the variable a0.
+--------------------------------------------------------------------
+Score: 2/12 points (17%)   Criteria met: 2 of 12
+
+Practice feedback only; this is not the final Canvas grade.
+Review calculation methods and interpretation with the Canvas rubric.
+Submit one completed .m file and both named PNG figures in Canvas.
+Use MATLAB print or select each browser saved figure and export/rename its PNG.
+Canvas rubric: Directions 30%, Compilation/Syntax 15%, Runtime/IO 30%, Correctness 25%.
+Bisection logic, if/else, solver status checks, interpretation and final figure quality require instructor review.
+MATLAB users do not need browser tests; tests and score screenshots are not submissions.
+Check filenames, readability and complete submission in Canvas.
+Run Tests never submits to Canvas.
+--------------------------------------------------------------------
+

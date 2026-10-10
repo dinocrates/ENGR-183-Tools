@@ -1,0 +1,40 @@
+
+--------------------------------------------------------------------
+ENGR-183  |  U09-GP09-COOLING  |  code-check feedback
+--------------------------------------------------------------------
+[ FAIL ] Personalization: completed Name and Date                0/1
+         -> your code raised an error: Fill in the Name comment; combined Name/Date or separate lines are accepted.
+[ PASS ] Execution: saved script runs once                       1/1
+[ PASS ] Inputs: supplied data, model and settings               1/1
+[ FAIL ] Interpolation: queries and domain                       0/1
+         -> your code raised an error: Create the variable T5.
+[ FAIL ] Fits: coefficients and independent predictions          0/1
+         -> your code raised an error: Create the variable p1.
+[ FAIL ] Residuals: measured minus predicted and RMSE            0/1
+         -> your code raised an error: Create the variable r1.
+[ FAIL ] Fit figure: panels, series, scales and labels           0/1
+         -> your code raised an error: Create a separate figure with 4 data axes (legends/colorbars are excluded).
+[ FAIL ] Bracket: supplied model, signs and tolerance            0/1
+         -> your code raised an error: Create the variable tol_min.
+[ FAIL ] Bisection: estimate and input error bound               0/1
+         -> your code raised an error: Create the variable tol_min.
+[ FAIL ] fzero: convergence, temperature and agreement           0/1
+         -> your code raised an error: Create the variable tol_min.
+[ FAIL ] Target figure: model, target and verified root          0/1
+         -> your code raised an error: Create the variable tol_min.
+[ FAIL ] Output: labeled results and units                       0/1
+         -> your code raised an error: Print 47.5 with a meaningful 5.*min label and c units (reasonable rounding is accepted).
+--------------------------------------------------------------------
+Score: 2/12 points (17%)   Criteria met: 2 of 12
+
+Practice feedback only; this is not the final Canvas grade.
+Review calculation methods and interpretation with the Canvas rubric.
+Submit one completed .m file and both named PNG figures in Canvas.
+Use MATLAB print or select each browser saved figure and export/rename its PNG.
+Canvas rubric: Directions 30%, Compilation/Syntax 15%, Runtime/IO 30%, Correctness 25%.
+Bisection logic, if/else, solver status checks, interpretation and final figure quality require instructor review.
+MATLAB users do not need browser tests; tests and score screenshots are not submissions.
+Check filenames, readability and complete submission in Canvas.
+Run Tests never submits to Canvas.
+--------------------------------------------------------------------
+

@@ -1,0 +1,599 @@
+{
+  "gp": {
+    "id": "u09-gp09-cooling",
+    "file": "U09_GP09_Cooling.m",
+    "cases": [
+      {
+        "name": "completed reference",
+        "fail": [],
+        "replace": [],
+        "append": "",
+        "review": ""
+      },
+      {
+        "name": "separate Name Date",
+        "fail": [],
+        "replace": [
+          [
+            "% Name: Alex Rivera             Date: 2026-10-09",
+            "% Name: Alex Rivera\n% Date: 2026-10-09"
+          ]
+        ],
+        "append": "",
+        "review": ""
+      },
+      {
+        "name": "wrong interpolation query or order",
+        "fail": [
+          "interpolation"
+        ],
+        "replace": [],
+        "append": "T_queries=[40.5 47.5 58.5];",
+        "review": ""
+      },
+      {
+        "name": "accidental extrapolation",
+        "fail": [
+          "interpolation"
+        ],
+        "replace": [],
+        "append": "T14_linear=interp1(t,T,14,'linear','extrap');",
+        "review": ""
+      },
+      {
+        "name": "reversed residuals",
+        "fail": [
+          "residuals"
+        ],
+        "replace": [],
+        "append": "r1=-r1;",
+        "review": ""
+      },
+      {
+        "name": "RMSE without squaring",
+        "fail": [
+          "residuals"
+        ],
+        "replace": [],
+        "append": "rmse1=sqrt(mean(r1));",
+        "review": ""
+      },
+      {
+        "name": "negative RMSE",
+        "fail": [
+          "residuals"
+        ],
+        "replace": [],
+        "append": "rmse1=-rmse1;",
+        "review": ""
+      },
+      {
+        "name": "wrong polynomial degree",
+        "fail": [
+          "fits"
+        ],
+        "replace": [],
+        "append": "p2=polyfit(t,T,1);",
+        "review": ""
+      },
+      {
+        "name": "bad vector shape",
+        "fail": [
+          "residuals"
+        ],
+        "replace": [],
+        "append": "r1=ones(6,6);",
+        "review": ""
+      },
+      {
+        "name": "nonfinite scalar",
+        "fail": [
+          "interpolation"
+        ],
+        "replace": [],
+        "append": "T5=Inf;",
+        "review": ""
+      },
+      {
+        "name": "complex result",
+        "fail": [
+          "interpolation"
+        ],
+        "replace": [],
+        "append": "T5=47.5+1i;",
+        "review": ""
+      },
+      {
+        "name": "failed exitflag accepted",
+        "fail": [
+          "fzero"
+        ],
+        "replace": [],
+        "append": "exitflag=-5;",
+        "review": ""
+      },
+      {
+        "name": "falsified small residual",
+        "fail": [
+          "fzero"
+        ],
+        "replace": [],
+        "append": "t_root=t_root+.1; root_residual=0;",
+        "review": ""
+      },
+      {
+        "name": "stop on output residual",
+        "fail": [
+          "bisection"
+        ],
+        "replace": [
+          [
+            "half_width <= tol_min",
+            "abs(fm) <= tol_min"
+          ]
+        ],
+        "append": "",
+        "review": "This mutation fails the interval-width check. Source review is still required when a different output-residual stop happens to meet the input bound."
+      },
+      {
+        "name": "falsified half width",
+        "fail": [
+          "bisection"
+        ],
+        "replace": [],
+        "append": "half_width=0;",
+        "review": ""
+      },
+      {
+        "name": "predictions plotted as residuals",
+        "fail": [
+          "fit_plot"
+        ],
+        "replace": [
+          [
+            "plot(t,r1,",
+            "plot(t,polyval(p1,t),"
+          ]
+        ],
+        "append": "",
+        "review": ""
+      },
+      {
+        "name": "missing second figure",
+        "fail": [
+          "target_plot"
+        ],
+        "replace": [],
+        "append": "delete(gcf);",
+        "review": ""
+      },
+      {
+        "name": "clipped fit axes",
+        "fail": [
+          "fit_plot"
+        ],
+        "replace": [
+          [
+            "ylim([25 90])",
+            "ylim([45 70])"
+          ]
+        ],
+        "append": "",
+        "review": ""
+      },
+      {
+        "name": "wrong residual panel position",
+        "fail": [
+          "fit_plot"
+        ],
+        "replace": [
+          [
+            "subplot(2,2,3);",
+            "subplot(2,2,4);"
+          ]
+        ],
+        "append": "",
+        "review": ""
+      },
+      {
+        "name": "runtime error",
+        "fail": [
+          "execution"
+        ],
+        "replace": [],
+        "append": "error('intentional Unit 9 error');",
+        "review": ""
+      },
+      {
+        "name": "equivalent columns and alternate plot grid",
+        "fail": [],
+        "replace": [
+          [
+            "plot(t,T,",
+            "plot(t,T,"
+          ],
+          [
+            "tfine,polyval(p1,tfine)",
+            "linspace(0,10,71),polyval(p1,linspace(0,10,71))"
+          ]
+        ],
+        "append": "t=t(:); T=T(:); T_queries=T_queries(:); p1=p1(:); p2=p2(:); r1=r1(:); r2=r2(:);",
+        "review": ""
+      },
+      {
+        "name": "root of temperature instead of target",
+        "fail": [
+          "execution"
+        ],
+        "replace": [
+          [
+            "Tmodel(time) - target_C",
+            "Tmodel(time)"
+          ]
+        ],
+        "append": "",
+        "review": ""
+      },
+      {
+        "name": "wrong supplied model",
+        "fail": [
+          "bracket"
+        ],
+        "replace": [],
+        "append": "Tmodel=@(time) 24+60.*exp(-.2.*time);",
+        "review": ""
+      },
+      {
+        "name": "falsified solver difference",
+        "fail": [
+          "fzero"
+        ],
+        "replace": [],
+        "append": "solver_difference=0;",
+        "review": ""
+      }
+    ]
+  },
+  "apa": {
+    "id": "u09-apa09-pump",
+    "file": "U09_APA09_Pump.m",
+    "cases": [
+      {
+        "name": "completed reference",
+        "fail": [],
+        "replace": [],
+        "append": "",
+        "review": ""
+      },
+      {
+        "name": "separate Name Date",
+        "fail": [],
+        "replace": [
+          [
+            "% Name: Alex Rivera             Date: 2026-10-09",
+            "% Name: Alex Rivera\n% Date: 2026-10-09"
+          ]
+        ],
+        "append": "",
+        "review": ""
+      },
+      {
+        "name": "wrong interpolation query or order",
+        "fail": [
+          "interpolation"
+        ],
+        "replace": [],
+        "append": "H35=interp1(Q,H,36);",
+        "review": ""
+      },
+      {
+        "name": "accidental extrapolation",
+        "fail": [
+          "interpolation"
+        ],
+        "replace": [],
+        "append": "H80_interp=interp1(Q,H,80,'linear','extrap');",
+        "review": ""
+      },
+      {
+        "name": "reversed residuals",
+        "fail": [
+          "fits_residuals"
+        ],
+        "replace": [],
+        "append": "r_quad=-r_quad;",
+        "review": ""
+      },
+      {
+        "name": "RMSE without squaring",
+        "fail": [
+          "fits_residuals"
+        ],
+        "replace": [],
+        "append": "rmse_quad=sqrt(mean(r_quad));",
+        "review": ""
+      },
+      {
+        "name": "negative RMSE",
+        "fail": [
+          "fits_residuals"
+        ],
+        "replace": [],
+        "append": "rmse_quad=-rmse_quad;",
+        "review": ""
+      },
+      {
+        "name": "wrong polynomial degree",
+        "fail": [
+          "fits_residuals"
+        ],
+        "replace": [],
+        "append": "p_quad=polyfit(Q,H,1);",
+        "review": ""
+      },
+      {
+        "name": "bad vector shape",
+        "fail": [
+          "fits_residuals"
+        ],
+        "replace": [],
+        "append": "r_quad=ones(7,7);",
+        "review": ""
+      },
+      {
+        "name": "nonfinite scalar",
+        "fail": [
+          "interpolation"
+        ],
+        "replace": [],
+        "append": "H35=Inf;",
+        "review": ""
+      },
+      {
+        "name": "complex result",
+        "fail": [
+          "interpolation"
+        ],
+        "replace": [],
+        "append": "H35=31+1i;",
+        "review": ""
+      },
+      {
+        "name": "failed exitflag accepted",
+        "fail": [
+          "fzero_balance"
+        ],
+        "replace": [],
+        "append": "exitflag=-5;",
+        "review": ""
+      },
+      {
+        "name": "falsified small residual",
+        "fail": [
+          "fzero_balance"
+        ],
+        "replace": [],
+        "append": "Q_root=Q_root+.1; root_residual=0;",
+        "review": ""
+      },
+      {
+        "name": "stop on output residual",
+        "fail": [
+          "bisection"
+        ],
+        "replace": [
+          [
+            "half_width <= tol_Q",
+            "abs(fm) <= tol_Q"
+          ]
+        ],
+        "append": "",
+        "review": "This mutation fails the interval-width check. Source review is still required when a different output-residual stop happens to meet the input bound."
+      },
+      {
+        "name": "falsified half width",
+        "fail": [
+          "bisection"
+        ],
+        "replace": [],
+        "append": "half_width=0;",
+        "review": ""
+      },
+      {
+        "name": "predictions plotted as residuals",
+        "fail": [
+          "fit_plot"
+        ],
+        "replace": [
+          [
+            "plot(Q,r_linear,",
+            "plot(Q,polyval(p_linear,Q),"
+          ]
+        ],
+        "append": "",
+        "review": ""
+      },
+      {
+        "name": "missing second figure",
+        "fail": [
+          "figures_output"
+        ],
+        "replace": [],
+        "append": "delete(gcf);",
+        "review": ""
+      },
+      {
+        "name": "clipped fit axes",
+        "fail": [
+          "fit_plot"
+        ],
+        "replace": [
+          [
+            "ylim([0 50])",
+            "ylim([15 35])"
+          ]
+        ],
+        "append": "",
+        "review": ""
+      },
+      {
+        "name": "wrong residual panel position",
+        "fail": [
+          "fit_plot"
+        ],
+        "replace": [
+          [
+            "subplot(2,2,3);",
+            "subplot(2,2,4);"
+          ]
+        ],
+        "append": "",
+        "review": ""
+      },
+      {
+        "name": "runtime error",
+        "fail": [
+          "execution"
+        ],
+        "replace": [],
+        "append": "error('intentional Unit 9 error');",
+        "review": ""
+      },
+      {
+        "name": "equivalent columns and alternate plot grid",
+        "fail": [],
+        "replace": [
+          [
+            "Qfine,polyval(p_linear,Qfine)",
+            "linspace(0,60,71),polyval(p_linear,linspace(0,60,71))"
+          ]
+        ],
+        "append": "Q=Q(:); H=H(:); p_linear=p_linear(:); p_quad=p_quad(:); r_linear=r_linear(:); r_quad=r_quad(:);",
+        "review": ""
+      },
+      {
+        "name": "pump plus system",
+        "fail": [
+          "execution"
+        ],
+        "replace": [
+          [
+            "Hpump(q)-Hsystem(q)",
+            "Hpump(q)+Hsystem(q)"
+          ]
+        ],
+        "append": "",
+        "review": ""
+      },
+      {
+        "name": "reuse narrowed bracket for another model",
+        "fail": [
+          "execution"
+        ],
+        "replace": [
+          [
+            "fzero(F_linear,[0 60])",
+            "fzero(F_linear,[a b])"
+          ]
+        ],
+        "append": "",
+        "review": ""
+      },
+      {
+        "name": "wrong threshold comparison",
+        "fail": [
+          "comparison"
+        ],
+        "replace": [
+          [
+            "Q_linear >= Q_required",
+            "Q_linear < Q_required"
+          ]
+        ],
+        "append": "",
+        "review": ""
+      },
+      {
+        "name": "valid linear model selection",
+        "fail": [],
+        "replace": [
+          [
+            "p_selected = p_quad;",
+            "p_selected = p_linear;"
+          ],
+          [
+            "Selected quadratic pump fit",
+            "Selected linear pump fit"
+          ]
+        ],
+        "append": "",
+        "review": ""
+      },
+      {
+        "name": "flexible auxiliary variable names",
+        "fail": [],
+        "replace": [
+          [
+            "solver_difference",
+            "agreement_Q"
+          ],
+          [
+            "flag_linear",
+            "linear_status"
+          ],
+          [
+            "flag_quad",
+            "quadratic_status"
+          ],
+          [
+            "decision_linear",
+            "line_result"
+          ],
+          [
+            "decision_quad",
+            "curve_result"
+          ]
+        ],
+        "append": "",
+        "review": ""
+      },
+      {
+        "name": "unchecked comparison status",
+        "fail": [],
+        "replace": [
+          [
+            "if flag_linear ~= 1 || flag_quad ~= 1",
+            "if false"
+          ]
+        ],
+        "append": "",
+        "review": "Numerical outputs cannot establish that comparison exit flags are checked. Instructor must inspect both status guards."
+      },
+      {
+        "name": "rounded threshold source",
+        "fail": [],
+        "replace": [
+          [
+            "Q_linear >= Q_required",
+            "round(Q_linear) >= Q_required"
+          ],
+          [
+            "Q_quad >= Q_required",
+            "round(Q_quad) >= Q_required"
+          ]
+        ],
+        "append": "",
+        "review": "These particular decisions do not change on rounding; instructor source review must require the unrounded >= comparison."
+      },
+      {
+        "name": "wrong extrapolated coefficient result",
+        "fail": [
+          "extrapolation"
+        ],
+        "replace": [],
+        "append": "H80_quad=4;",
+        "review": ""
+      }
+    ]
+  }
+}

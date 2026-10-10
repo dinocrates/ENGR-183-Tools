@@ -12,3 +12,9 @@ More tools (visualizers, calculators, graphing tools) will be added here as thei
 ## For instructors
 
 [`RUNBOOK.md`](RUNBOOK.md) — adding a unit, deploying, rolling back, and what to tell a student whose work vanished.
+
+Unit 9 adds **GP-09: Cooling Data Explorer** (`u09-gp09-cooling`) and
+**APA-09: Pump Operating Point** (`u09-apa09-pump`). Students can use MATLAB or
+the preloaded Octave Playground and submit one completed `.m` file plus two
+named PNGs in Canvas. See [Unit 9 integration and verification](engr183-harness/_verify/UNIT09.md)
+for filenames, practice checks, instructor review, local verification and release status.

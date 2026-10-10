@@ -34,7 +34,16 @@ export function FloatingFigure({
   onFocus,
 }: FloatingFigureProps) {
   const [position, setPosition] = useState(initialPosition)
-  const [size, setSize] = useState(DEFAULT_SIZE)
+  const [manualSize, setSize] = useState<typeof DEFAULT_SIZE | null>(null)
+  const plot = mimeBundle['application/vnd.plotly.v1+json'] as { layout?: Record<string, unknown> } | undefined
+  const dimension = (value: unknown, fallback: number, min: number) =>
+    typeof value === 'number' && Number.isFinite(value) ? Math.max(min, Math.min(2400, value)) : fallback
+  // Honor MATLAB figure Position until the student manually resizes the window.
+  // The native browser payload can arrive after the initial empty figure shell.
+  const size = manualSize ?? {
+    width: dimension(plot?.layout?.width, DEFAULT_SIZE.width, MIN_SIZE.width),
+    height: dimension(plot?.layout?.height, DEFAULT_SIZE.height, MIN_SIZE.height),
+  }
   const [liveSize, setLiveSize] = useState<typeof DEFAULT_SIZE | null>(null)
   const [minimized, setMinimized] = useState(false)
   const dragState = useRef<{ startX: number; startY: number; originX: number; originY: number } | null>(null)

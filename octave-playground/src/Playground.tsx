@@ -442,9 +442,20 @@ function Playground({ unit, onBackToUnits }: PlaygroundProps) {
     const capture: FigureCapture = { sourceScript: sourceScript || null, plots: new Map() }
     const pending = new Set<string>()
     let succeeded = false
+    // Unit 9 inspects isolated, hidden figures inside Octave. Their initial
+    // display placeholders have no visible payload and must not open empty
+    // student windows. Keep Run File and earlier assignments' behavior intact.
+    const hiddenCheckFigures = sourceScript === false &&
+      (unit.id === 'u09-gp09-cooling' || unit.id === 'u09-apa09-pump')
     setStatus('running')
     try {
-      await sessionRef.current.execute(code, chunk => sourceScript === false ? handleExecuteChunk(chunk) : captureOutput(capture, pending, chunk), (req) => {
+      await sessionRef.current.execute(code, chunk => {
+        if (hiddenCheckFigures && chunk.kind === 'display' &&
+            (PLOTLY_MIME in chunk.mimeBundle ||
+             (chunk.displayId !== undefined && Object.keys(chunk.mimeBundle).length === 0))) return
+        if (sourceScript === false) handleExecuteChunk(chunk)
+        else captureOutput(capture, pending, chunk)
+      }, (req) => {
         setOutput((prev) => prev + req.prompt)
         setStdinPrompt(req.prompt)
       })
