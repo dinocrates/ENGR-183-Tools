@@ -129,3 +129,48 @@ Regression: `node m0-spike-driver/u08-bar-probe.js http://127.0.0.1:4188/`
 checks actual rectangles, returned handles, changed ydata, negative values,
 clearing and grouped bars. `u08-project.js` additionally checks the three project
 percentages, native reference lines, saved figures and real PNG/ZIP downloads.
+
+## Bar and reference-line legends (Unit 8)
+
+The full two-figure solar-station reproduction reached its final `disp`, but
+Figure 2 had only its empty display placeholder and valid auxiliary geometry;
+neither its native Plotly update nor `execute_reply` arrived within 70 seconds.
+Omitting only its legend completed. A single-execution synthetic bar, line and
+legend also blocked inside explicit `drawnow`, including when calling the saved
+native bar function without our bar wrapper. `drawnow('expose')` returned and
+published the native figure, while the subsequent ordinary `drawnow` blocked.
+This distinguishes event processing from toolkit serialization, browser rendering,
+display-ID matching, and post-execution saving or file cleanup.
+The pinned upstream [execution path](https://github.com/jupyter-xeus/xeus-octave/blob/v0.6.2/src/xinterpreter.cpp)
+calls `drawnow` after evaluating the script and before replying; its
+[Plotly toolkit](https://github.com/jupyter-xeus/xeus-octave/blob/v0.6.2/src/tk_plotly.cpp)
+does not serialize patch children.
+
+Temporary callback traces identified repeated `update_layout_cb` calls through
+`update_position_cb`. The WASM runtime delivers internal legend position events
+after the native `__updating_layout__` guard has cleared. The first is mistaken
+for a user move and changes Location to `none`; layout's points/normalized unit
+round trips then enqueue further position events indefinitely. The installer now
+records the final physical legend position at the end of native layout and ignores
+deferred position notifications whose current geometry matches it (within 1e-9
+points). `__get_position__` reads converted coordinates without changing units or
+queuing more events. Actual user moves still use the native callback and switch
+Location to `none`. Native handles, layout, labels, and property links are retained.
+
+The pinned toolkit also omits patch legend samples. The existing rectangle MIME
+bridge now includes the native legend patch coordinates and colors. A filled
+scatter polygon renders the sample on the toolkit's own legend axes, alongside
+its native label and dashed reference-line sample. Patch and legend position
+listeners refresh live changes; the merged payload flows unchanged into saved
+figures and PNG/ZIP exports. Existing saved charts need their source rerun to gain
+the previously absent sample. The kernel archives and student code are unchanged.
+
+Regression: `node m0-spike-driver/u08-bar-legend.js http://127.0.0.1:4188/`
+against a production build served with `vite preview`. Its fixture is the entire
+reported script, executed in one submission with the normal Unit 8 preload and
+a byte hash check against the existing CSV. It checks the no-legend control,
+three complete runs with `close all`, both line/bar legends, rendered rectangles
+and legend samples, A/B/C labels, percentage heights, the 80% line, Ready without
+Stop/restart, saved reopening, camera/saved PNG and ZIP exports, native returned
+handles, live color/data changes, and manual legend positioning. Temporary message
+and callback instrumentation is removed from the shipped code.

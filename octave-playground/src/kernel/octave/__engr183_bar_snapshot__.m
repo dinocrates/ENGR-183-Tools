@@ -1,5 +1,5 @@
 function __engr183_bar_snapshot__(ax)
-% Publish native bar patch geometry; do not create proxy graphics objects.
+% Publish native bar rectangles and patch legend samples without proxy objects.
   persistent publishing = false;
   if publishing || ~ishghandle(ax) || strcmp(get(ax,'beingdeleted'),'on'), return; end
   fig=ancestor(ax,'figure');
@@ -7,11 +7,13 @@ function __engr183_bar_snapshot__(ax)
   id=get(fig,'__plot_stream__'); if isempty(id), return; end
   unwind_protect
     publishing=true; entries={}; figpos=getpixelposition(fig);
-    groups=findall(fig,'type','hggroup');
+    groups=[findall(fig,'type','hggroup'); findall(fig,'type','axes','tag','legend')];
     for k=1:numel(groups)
       g=groups(k);
-      if ~isprop(g,'bargroup') || strcmp(get(g,'beingdeleted'),'on') || strcmp(get(g,'visible'),'off'), continue; end
-      a=ancestor(g,'axes'); if strcmp(get(a,'visible'),'off'), continue; end
+      legend=strcmp(get(g,'type'),'axes');
+      if (~legend && ~isprop(g,'bargroup')) || strcmp(get(g,'beingdeleted'),'on') || strcmp(get(g,'visible'),'off'), continue; end
+      if legend, a=g; else, a=ancestor(g,'axes'); end
+      if strcmp(get(a,'visible'),'off'), continue; end
       pos=getpixelposition(a,true);
       xd=[pos(1)-1,pos(1)-1+pos(3)]/figpos(3);
       yd=[pos(2)-1,pos(2)-1+pos(4)]/figpos(4);
@@ -20,11 +22,13 @@ function __engr183_bar_snapshot__(ax)
         p=patches(j);
         if strcmp(get(p,'beingdeleted'),'on') || strcmp(get(p,'visible'),'off'), continue; end
         x=get(p,'xdata'); y=get(p,'ydata');
+        if legend, x=x(:); y=y(:); end
         if size(x,1)~=4 || ~isequal(size(x),size(y)), continue; end
-        horizontal=strcmp(get(g,'horizontal'),'on');
+        horizontal=~legend && strcmp(get(g,'horizontal'),'on');
         if horizontal, tmp=x; x=y; y=tmp; end
         centers=(min(x,[],1)+max(x,[],1))/2; widths=max(x,[],1)-min(x,[],1);
         bases=y(1,:); heights=y(2,:)-y(1,:);
+        if legend, bases=min(y); heights=max(y)-bases; end
         orientation='v'; if horizontal, orientation='h'; end
         face=get(p,'facecolor'); edge=get(p,'edgecolor');
         if ischar(face) && strcmp(face,'none'), face='rgba(0,0,0,0)'; end
@@ -37,9 +41,10 @@ function __engr183_bar_snapshot__(ax)
         if ischar(edge) && strcmp(edge,'none'), edge='rgba(0,0,0,0)'; lineWidth=0; end
         entries{end+1}=sprintf(['{"xDomain":%s,"yDomain":%s,"centers":%s,' ...
           '"widths":%s,"heights":%s,"bases":%s,"orientation":%s,' ...
-          '"color":%s,"edgeColor":%s,"lineWidth":%.17g,"opacity":%.17g}'], ...
+          '"color":%s,"edgeColor":%s,"lineWidth":%.17g,"opacity":%.17g,"legend":%s}'], ...
           numbers(xd),numbers(yd),numbers(centers),numbers(widths),numbers(heights),numbers(bases), ...
-          quoted(orientation),quoted(color(face)),quoted(color(edge)),lineWidth,opacity);
+          quoted(orientation),quoted(color(face)),quoted(color(edge)),lineWidth,opacity, ...
+          ifelse(legend,'true','false'));
       end
     end
     out=struct(); out.('application/vnd.engr183.plot-bars+json')= ...

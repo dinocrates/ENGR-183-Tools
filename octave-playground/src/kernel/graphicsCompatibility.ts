@@ -3,6 +3,7 @@ import installLegendCompatibility from './octave/installLegendCompatibility.m?ra
 import deleteLegend from './octave/__engr183_delete_legend__.m?raw';
 import legendLinks from './octave/__engr183_legend_links__.m?raw';
 import legendChildren from './octave/__engr183_legend_children__.m?raw';
+import legendPatch from './octave/__engr183_legend_patch__.m?raw';
 import barSource from './octave/bar.m?raw';
 import barSnapshot from './octave/__engr183_bar_snapshot__.m?raw';
 import printSource from './octave/print.m?raw';
@@ -26,6 +27,7 @@ export function installGraphicsCode(): string {
     writeSource('__engr183_delete_legend__', deleteLegend),
     writeSource('__engr183_legend_links__', legendLinks),
     writeSource('__engr183_legend_children__', legendChildren),
+    writeSource('__engr183_legend_patch__', legendPatch),
     installLegendCompatibility,
     writeSource('title', titleSource),
     writeSource('bar', barSource),

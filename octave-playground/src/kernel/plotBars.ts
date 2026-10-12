@@ -5,6 +5,7 @@ interface BarGeometry {
   xDomain: number[]; yDomain: number[];
   centers: number[]; widths: number[]; heights: number[]; bases: number[];
   orientation: 'v' | 'h'; color: string; edgeColor: string; lineWidth: number; opacity: number;
+  legend?: boolean;
 }
 
 /** The pinned toolkit emits an empty trace for native bar hggroups/patches.
@@ -52,9 +53,21 @@ export class PlotBars {
         return limits?.length === 2 && limits.every((v, i) => Math.abs(v - domain[i]) < 1e-4);
       })?.[0].replace('axis', '');
     };
-    const traces = bars.flatMap(bar => {
+    const traces = bars.flatMap<Record<string, unknown>>(bar => {
       const xaxis = axis('x', bar.xDomain); const yaxis = axis('y', bar.yDomain);
       if (!xaxis || !yaxis || !Array.isArray(bar.centers) || !Array.isArray(bar.heights)) return [];
+      if (bar.legend) {
+        const left = bar.centers[0] - bar.widths[0] / 2;
+        const right = left + bar.widths[0];
+        const bottom = bar.bases[0]; const top = bottom + bar.heights[0];
+        return [{
+          type: 'scatter', xaxis, yaxis, mode: 'lines', fill: 'toself',
+          x: [left, right, right, left, left], y: [bottom, bottom, top, top, bottom],
+          fillcolor: bar.color, opacity: bar.opacity,
+          line: { color: bar.edgeColor, width: bar.lineWidth },
+          hoverinfo: 'skip', showlegend: false, name: '',
+        }];
+      }
       return [{
         type: 'bar', xaxis, yaxis, orientation: bar.orientation,
         x: bar.orientation === 'h' ? bar.heights : bar.centers,

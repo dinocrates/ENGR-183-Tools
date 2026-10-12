@@ -35,6 +35,15 @@ Run from this directory:
 The browser scripts also accept the deployed staging/production URL. PNG
 artifacts are ignored by Git.
 
+## Unit 8 bar and reference-line legend regression
+
+- `node u08-bar-legend.js http://127.0.0.1:4188/` — production build with the
+  real WASM kernel and normal Unit 8 CSV preload. Runs the full reported
+  two-figure script, its no-legend control, three repeated runs, and a synthetic
+  single-execution handle/property/position check. Checks rendered bars, both
+  legend samples, labels, reference lines, Ready, saved reopening and PNG/ZIP
+  exports. The original script is in `fixtures/u08-bar-legend.m`.
+
 ## Long-execution regression checks
 
 - `node t138-elapsed-run-time.js http://127.0.0.1:4180/` — real elapsed time
